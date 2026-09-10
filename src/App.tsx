@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react'
-import type { FollowUp, Prospect } from './types'
-import { C, FONT_HEAD, styles } from './ui/theme'
-import { Icon } from './ui/Icon'
+import type { Asset, FollowUp, Horizon, Prospect } from './types'
+import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { PipelineSection } from './features/pipeline/PipelineSection'
-import { FollowUpSection } from './features/followup/FollowUpSection'
+import { blankAsset, blankProspect } from './features/pipeline/blanks'
+import { PipelineTable } from './features/pipeline/PipelineTable'
+import { FollowUpTable } from './features/followup/FollowUpTable'
+import { daysUntil, fmtMoney, uid } from './lib/dates'
+import { defaultDue } from './features/followup/horizons'
 
-const SECTIONS = [
-  { id: 'pipeline', label: 'Pipeline', icon: 'briefcase', color: C.bannerBlue },
-  { id: 'followup', label: 'Follow-up', icon: 'clipboard', color: C.bannerRust },
+const VIEWS = [
+  { id: 'pipeline', label: 'Pipeline', icon: '💼', color: '#1d4ed8', bg: '#eff6ff' },
+  { id: 'followup', label: 'Follow-Up', icon: '📋', color: '#15803d', bg: '#f0fdf4' },
 ] as const
 
-type SectionId = (typeof SECTIONS)[number]['id']
+type ViewId = (typeof VIEWS)[number]['id']
 
 export default function App() {
-  const [active, setActive] = useState<SectionId>('pipeline')
+  const [view, setView] = useState<ViewId>('pipeline')
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [followUps, setFollowUps] = useState<FollowUp[]>([])
   const [loaded, setLoaded] = useState(false)
-  const [prefillProspect, setPrefillProspect] = useState<Prospect | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -43,143 +45,173 @@ export default function App() {
     if (loaded) void localRepository.saveFollowUps(followUps)
   }, [followUps, loaded])
 
-  function saveProspect(prospect: Prospect) {
+  const patchProspect = (id: string, patch: Partial<Prospect>) =>
     setProspects((prev) =>
-      prev.some((p) => p.id === prospect.id)
-        ? prev.map((p) => (p.id === prospect.id ? prospect : p))
-        : [prospect, ...prev],
+      prev.map((p) => (p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p)),
     )
-  }
 
-  function saveFollowUp(followUp: FollowUp) {
-    setFollowUps((prev) =>
-      prev.some((f) => f.id === followUp.id)
-        ? prev.map((f) => (f.id === followUp.id ? followUp : f))
-        : [followUp, ...prev],
+  const patchAsset = (prospectId: string, assetId: string, patch: Partial<Asset>) =>
+    setProspects((prev) =>
+      prev.map((p) =>
+        p.id === prospectId
+          ? { ...p, assets: p.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a)), updatedAt: new Date().toISOString() }
+          : p,
+      ),
     )
-  }
 
-  function addFollowUpFor(prospect: Prospect) {
-    setPrefillProspect(prospect)
-    setActive('followup')
-  }
+  const addAsset = (prospectId: string, patch: Partial<Asset> = {}) =>
+    setProspects((prev) =>
+      prev.map((p) => (p.id === prospectId ? { ...p, assets: [...p.assets, { ...blankAsset(), ...patch }] } : p)),
+    )
 
-  const activeSection = SECTIONS.find((s) => s.id === active)!
+  const deleteAsset = (prospectId: string, assetId: string) =>
+    setProspects((prev) =>
+      prev.map((p) => (p.id === prospectId ? { ...p, assets: p.assets.filter((a) => a.id !== assetId) } : p)),
+    )
+
+  const addFollowUp = (horizon: Horizon) =>
+    setFollowUps((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        title: '',
+        horizon,
+        prospectId: null,
+        owner: '',
+        dueOn: defaultDue(horizon),
+        done: false,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+      },
+    ])
+
+  const openProspects = prospects.filter((p) => p.stage !== 'lost' && p.stage !== 'stalled')
+  const inPlay = openProspects.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+  const moving = openProspects
+    .flatMap((p) => p.assets)
+    .filter((a) => a.status === 'paperwork' || a.status === 'in-transit')
+    .reduce((s, a) => s + (a.amount ?? 0), 0)
+  const funded = prospects
+    .filter((p) => p.stage === 'funded')
+    .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+
+  const openFollowUps = followUps.filter((f) => !f.done)
+  const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
+  const overdue = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
+
+  const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
+  const blurb =
+    view === 'pipeline' ? 'Opportunities we have uncovered' : 'Today, this week, this month'
+  const stamp = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 
   return (
-    <div style={{ minHeight: '100vh', background: C.page }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: SANS, color: FG }}>
       <style>{styles}</style>
 
-      <div
+      <aside
         style={{
-          background: C.surface,
-          borderBottom: `3px solid ${C.accent}`,
-          padding: '18px 28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          width: 220,
+          flexShrink: 0,
+          background: SIDEBAR,
+          borderRight: `1px solid ${BORDER}`,
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          overflowY: 'auto',
+          padding: '16px 12px',
         }}
       >
-        <div>
-          <div style={{ fontSize: 38, fontWeight: 700, color: C.accent, lineHeight: 1.1, fontFamily: FONT_HEAD }}>
-            Russell Wealth Group
-          </div>
-          <div style={{ fontSize: 19, color: C.text, fontWeight: 700, marginTop: 4, letterSpacing: '0.08em' }}>
-            PIPELINE &amp; FOLLOW-UP
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 17, color: C.muted }}>Today</div>
-          <div style={{ fontSize: 19, color: C.text, fontWeight: 500, marginTop: 2 }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 1500, margin: '0 auto', padding: '28px 32px' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            marginBottom: 26,
-            background: C.surface,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          {SECTIONS.map((s) => {
-            const isActive = active === s.id
-            const count = s.id === 'pipeline' ? prospects.length : followUps.filter((f) => !f.done).length
-            return (
-              <button
-                key={s.id}
-                onClick={() => setActive(s.id)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  padding: '14px 8px',
-                  border: `1px solid ${C.border}`,
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: 20,
-                  background: isActive ? s.color : C.surface,
-                  color: isActive ? '#ffffff' : C.text,
-                  transition: 'all 0.12s',
-                  lineHeight: 1.3,
-                }}
-              >
-                <Icon name={s.icon} size={30} />
-                <span>
-                  {s.label} {count > 0 && <span style={{ opacity: 0.8 }}>({count})</span>}
-                </span>
-              </button>
-            )
-          })}
+        <div style={{ padding: '4px 4px 16px' }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: FG, letterSpacing: '-0.01em' }}>Russell Wealth Group</div>
+          <div style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>Pipeline &amp; Follow-Up</div>
         </div>
 
-        <div
-          className="cat-banner"
-          style={{
-            marginBottom: 20,
-            background: activeSection.color,
-            padding: '12px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            fontSize: 34,
-            boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
-          }}
-        >
-          <Icon name={activeSection.icon} size={28} color="#ffffff" />
-          <span>{activeSection.label}</span>
-          <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 600, opacity: 0.9 }}>
-            {activeSection.id === 'pipeline' ? 'Opportunities we have uncovered' : 'What has to get done'}
-          </span>
-        </div>
+        <SideLabel>Views</SideLabel>
+        {VIEWS.map((v) => (
+          <button key={v.id} className="side-btn" aria-current={view === v.id} onClick={() => setView(v.id)}>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 5,
+                background: v.bg,
+                color: v.color,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                flexShrink: 0,
+              }}
+            >
+              {v.icon}
+            </span>
+            <span>{v.label}</span>
+          </button>
+        ))}
 
-        {active === 'pipeline' && (
-          <PipelineSection
-            prospects={prospects}
-            onSave={saveProspect}
-            onChange={(id, patch) => setProspects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))}
-            onDelete={(id) => setProspects((prev) => prev.filter((p) => p.id !== id))}
-            onAddFollowUp={addFollowUpFor}
-          />
+        <div style={{ margin: '14px 0', borderTop: `1px solid ${BORDER}` }} />
+
+        <SideLabel>Summary</SideLabel>
+        {view === 'pipeline' ? (
+          <>
+            <StatCard label="Assets in Play" value={fmtMoney(inPlay)} color={FG} />
+            <StatCard label="Actually Moving" value={fmtMoney(moving)} color={WARN} />
+            <StatCard label="Funded" value={fmtMoney(funded)} color={SUCCESS} />
+            <StatCard label="Open Opportunities" value={openProspects.length} />
+            <button className="btn-primary" onClick={() => setProspects((prev) => [...prev, blankProspect()])}>
+              + New Opportunity
+            </button>
+          </>
+        ) : (
+          <>
+            <StatCard label="Due Today" value={dueToday} color={dueToday > 0 ? WARN : FG} />
+            <StatCard label="Overdue" value={overdue} color={overdue > 0 ? '#dc2626' : FG} />
+            <StatCard label="Open" value={openFollowUps.length} />
+            <StatCard label="Done" value={followUps.length - openFollowUps.length} color={SUCCESS} />
+            <button className="btn-primary" onClick={() => addFollowUp('today')}>
+              + New Follow-Up
+            </button>
+          </>
         )}
+      </aside>
 
-        {active === 'followup' && (
-          <FollowUpSection
-            followUps={followUps}
-            prospects={prospects}
-            prefillProspect={prefillProspect}
-            onClearPrefill={() => setPrefillProspect(null)}
-            onSave={saveFollowUp}
-            onChange={(id, patch) => setFollowUps((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))}
-            onDelete={(id) => setFollowUps((prev) => prev.filter((f) => f.id !== id))}
-          />
-        )}
+      <div style={{ flex: 1, minWidth: 0, background: BG }}>
+        <div style={{ padding: '28px 28px 48px' }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: FG }}>
+                {heading}
+              </h1>
+              <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+          </div>
+
+          {view === 'pipeline' ? (
+            <PipelineTable
+              prospects={prospects}
+              onProspectChange={patchProspect}
+              onAssetChange={patchAsset}
+              onAddAsset={addAsset}
+              onDeleteAsset={deleteAsset}
+              onDeleteProspect={(id) => setProspects((prev) => prev.filter((p) => p.id !== id))}
+              onAddProspect={() => setProspects((prev) => [...prev, blankProspect()])}
+            />
+          ) : (
+            <FollowUpTable
+              followUps={followUps}
+              prospects={prospects}
+              onChange={(id, patch) => setFollowUps((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))}
+              onDelete={(id) => setFollowUps((prev) => prev.filter((f) => f.id !== id))}
+              onAdd={addFollowUp}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

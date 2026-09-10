@@ -13,9 +13,16 @@ pipeline opportunity they serve.
 
 ## Stack
 
-Vite + React 19 + TypeScript. The look and feel is carried over from Advisor
-Toolbox — the CatScan workbook palette (steel blue and rust banners, light-blue
-field labels, cream row highlight), serif headings, large type.
+Vite + React 19 + TypeScript.
+
+The look and feel comes from the **Trade Blotter** (`~/advisortool/advisortool`
+at commit `f35c984`, "Redesign Trade Blotter with shadcn/ui white style"): a zinc
+palette on white, Inter, a 220px sticky sidebar carrying brand / views / summary
+cards / primary action, and a dense spreadsheet where every cell is editable in
+place. Column groups get a colored header band, the column labels sit in a second
+sticky row beneath, and money totals live in a `tfoot`.
+
+Both screens are that same blotter: rows you type directly into, not forms.
 
 ## Run it
 
@@ -33,12 +40,11 @@ Also: `npm run build` (typecheck + production build), `npm run preview`, `npm ru
 | `src/types.ts` | Both domains: `Prospect`/`Asset` and `FollowUp`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting |
-| `src/ui/theme.ts` | Design tokens (`C`), serif stack, injected global styles |
-| `src/ui/Icon.tsx` | Lucide-style stroke icons |
-| `src/ui/primitives.tsx` | `Field`, `Badge`, `ActionBtn`, `Card`, `SubHead`, `StatTile`, `Empty` |
-| `src/features/pipeline/` | Stat tiles, stage strip, opportunity cards, the add/edit form with its asset editor |
-| `src/features/followup/` | The three horizon columns, quick-add, and the composer |
-| `src/App.tsx` | Shell: firm header, section tabs, banner, load/save wiring |
+| `src/ui/theme.ts` | Blotter tokens, column-group metadata, injected global styles |
+| `src/ui/primitives.tsx` | In-cell editors (`TextCell`, `SelectCell`, `MoneyCell`) plus `Chip`, `StatCard` |
+| `src/features/pipeline/PipelineTable.tsx` | The pipeline blotter: column defs, group spans, filters, totals |
+| `src/features/followup/FollowUpTable.tsx` | The follow-up blotter, split by commitment window |
+| `src/App.tsx` | Sidebar shell, summary figures, load/save wiring |
 
 ## Data model
 
@@ -55,6 +61,11 @@ and `lost` as off-track states that drop out of the open counts.
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), an optional
 `prospectId` linking it to an opportunity, an owner, a due date, and done state.
+
+The pipeline blotter shows **one row per account**, so a household with three
+pots of money is three rows. Household-level fields — name, type, source, stage,
+next step — render only on the first of those rows; the rest show `↳` and their
+own account columns, because one household has one stage, not one per account.
 
 No SSNs or account numbers are stored, deliberately — see below.
 

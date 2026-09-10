@@ -1,155 +1,145 @@
 import { useState } from 'react'
-import type { CSSProperties, ReactNode } from 'react'
-import { C, FONT_HEAD } from './theme'
-import { Icon } from './Icon'
+import type { CSSProperties } from 'react'
+import { BORDER, CARD, FG, MUTED, SANS } from './theme'
+import { fmtMoney, parseMoney } from '../lib/dates'
 
-const labelStyle: CSSProperties = {
-  fontSize: 17,
-  color: C.muted,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-}
-
-const inputBase: CSSProperties = {
-  width: '100%',
-  background: C.panel,
-  border: `1px solid ${C.border}`,
-  borderRadius: 8,
-  padding: '8px 12px',
-  color: C.text,
-  fontSize: 20,
+/** Borderless input that fills its table cell, as in the blotter. */
+const CELL_INPUT: CSSProperties = {
+  background: 'transparent',
+  border: 'none',
   outline: 'none',
-  transition: 'border 0.15s',
+  width: '100%',
+  height: '100%',
+  padding: '0 10px',
+  fontSize: 13,
+  fontWeight: 400,
+  color: FG,
+  fontFamily: SANS,
+  boxSizing: 'border-box',
 }
 
-type Option = { value: string; label: string }
-
-type FieldProps = {
-  label?: string
+export function TextCell({
+  value,
+  onCommit,
+  type = 'text',
+  placeholder,
+  label,
+}: {
   value: string
-  onChange: (value: string) => void
-  type?: string
+  onCommit: (value: string) => void
+  type?: 'text' | 'date' | 'email'
   placeholder?: string
-  options?: Option[]
-}
-
-export function Field({ label, value, onChange, type = 'text', placeholder = '', options }: FieldProps) {
+  label: string
+}) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {label && <label style={labelStyle}>{label}</label>}
-      {options ? (
-        <select value={value} onChange={(e) => onChange(e.target.value)} style={inputBase}>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      ) : type === 'textarea' ? (
-        <textarea
-          rows={3}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          style={{ ...inputBase, resize: 'vertical', lineHeight: 1.6 }}
-        />
-      ) : (
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          style={inputBase}
-        />
-      )}
-    </div>
+    <input
+      type={type}
+      aria-label={label}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onCommit(e.target.value)}
+      className="b-input"
+      style={CELL_INPUT}
+    />
   )
 }
 
-export function Badge({ label, color }: { label: string; color: string }) {
+export function SelectCell<T extends string>({
+  value,
+  options,
+  onCommit,
+  label,
+  color,
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onCommit: (value: T) => void
+  label: string
+  color?: string
+}) {
   return (
-    <span
-      style={{
-        fontSize: 17,
-        fontWeight: 600,
-        padding: '2px 8px',
-        borderRadius: 20,
-        background: color + '22',
-        color,
-        border: `1px solid ${C.border}`,
-        whiteSpace: 'nowrap',
-      }}
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(e) => onCommit(e.target.value as T)}
+      className="b-input"
+      style={{ ...CELL_INPUT, cursor: 'pointer', appearance: 'none', color: color ?? FG, fontWeight: color ? 500 : 400 }}
     >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label || '—'}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+/**
+ * Dollar cell: raw digits while focused so typing behaves, formatted when not.
+ * Local state avoids fighting the caret on every keystroke.
+ */
+export function MoneyCell({
+  value,
+  onCommit,
+  label,
+}: {
+  value: number | null
+  onCommit: (value: number | null) => void
+  label: string
+}) {
+  // `draft` only matters while focused — it is seeded on focus and read back on
+  // blur — so there is nothing to synchronise when the value changes elsewhere.
+  const [focused, setFocused] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  return (
+    <input
+      aria-label={label}
+      value={focused ? draft : value === null ? '' : fmtMoney(value)}
+      placeholder="—"
+      onFocus={() => {
+        setDraft(value === null ? '' : String(value))
+        setFocused(true)
+      }}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        setFocused(false)
+        onCommit(parseMoney(draft))
+      }}
+      className="b-input"
+      style={{ ...CELL_INPUT, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+    />
+  )
+}
+
+export function Chip({ label, color, bg, border }: { label: string; color: string; bg: string; border?: boolean }) {
+  return (
+    <span className="chip" style={{ background: bg, color, border: border ? `1px solid ${BORDER}` : undefined }}>
       {label}
     </span>
   )
 }
 
-type BtnProps = {
-  label: string
-  color?: string
-  onClick: () => void
-  small?: boolean
-  title?: string
-}
-
-export function ActionBtn({ label, color = C.accent, onClick, small, title }: BtnProps) {
-  const [hov, setHov] = useState(false)
+export function StatCard({ label, value, color = FG }: { label: string; value: string | number; color?: string }) {
   return (
-    <button
-      onClick={onClick}
-      title={title}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        background: hov ? color : color + '22',
-        color: hov ? '#fff' : color,
-        border: `1px solid ${C.border}`,
-        borderRadius: 7,
-        padding: small ? '4px 10px' : '7px 14px',
-        fontSize: small ? 18 : 19,
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
-export function Empty({ label, sub }: { label: string; sub: string }) {
-  return (
-    <div style={{ textAlign: 'center', padding: '48px 24px', color: C.muted }}>
-      <div style={{ marginBottom: 12 }}>
-        <Icon name="folder" size={48} />
-      </div>
-      <div style={{ fontWeight: 600, marginBottom: 6, fontSize: 20 }}>{label}</div>
-      <div style={{ fontSize: 19 }}>{sub}</div>
+    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 6 }}>
+      <div style={{ fontSize: 11, color: MUTED, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )
 }
 
-/** White panel with a colored top rule — the standard record container. */
-export function Card({
-  accent = C.accent,
-  children,
-  style,
-}: {
-  accent?: string
-  children: ReactNode
-  style?: CSSProperties
-}) {
+export function SideLabel({ children }: { children: string }) {
   return (
     <div
-      className="fade-in"
       style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
-        borderTop: `3px solid ${accent}`,
-        borderRadius: 8,
-        padding: '18px 18px',
-        ...style,
+        fontSize: 11,
+        fontWeight: 600,
+        color: MUTED,
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        padding: '0 4px',
+        marginBottom: 8,
       }}
     >
       {children}
@@ -157,86 +147,12 @@ export function Card({
   )
 }
 
-/** Sub-heading inside a section, in the workbook's banner style but quieter. */
-export function SubHead({ label, color = C.accent, icon }: { label: string; color?: string; icon?: string }) {
+export function EmptyRow({ colSpan, message }: { colSpan: number; message: string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        fontFamily: FONT_HEAD,
-        fontWeight: 700,
-        fontSize: 26,
-        color,
-        borderBottom: `2px solid ${color}33`,
-        paddingBottom: 6,
-        marginBottom: 14,
-      }}
-    >
-      {icon && <Icon name={icon} size={24} color={color} />}
-      <span>{label}</span>
-    </div>
-  )
-}
-
-export function StatTile({
-  value,
-  label,
-  sub,
-  color,
-  icon,
-  onClick,
-}: {
-  value: string | number
-  label: string
-  sub: string
-  color: string
-  icon: string
-  onClick?: () => void
-}) {
-  const text = String(value)
-  return (
-    <div
-      className={onClick ? 'stat-tile' : undefined}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={(e) => {
-        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          onClick()
-        }
-      }}
-      title={onClick ? `Go to ${label}` : undefined}
-      style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
-        borderTop: `3px solid ${color}`,
-        borderRadius: 8,
-        padding: '20px 18px',
-      }}
-    >
-      <div style={{ marginBottom: 10 }}>
-        <Icon name={icon} size={30} color={color} />
-      </div>
-      <div
-        style={{
-          // Step the serif down as the figure gets longer so seven-figure
-          // dollar amounts stay inside the tile.
-          fontSize: text.length > 9 ? 30 : text.length > 7 ? 36 : 44,
-          fontWeight: 800,
-          color,
-          lineHeight: 1.05,
-          fontFamily: FONT_HEAD,
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {value}
-      </div>
-      <div style={{ fontSize: 19, fontWeight: 700, color: C.text, marginTop: 6 }}>{label}</div>
-      <div style={{ fontSize: 17, color: C.muted, marginTop: 3 }}>{sub}</div>
-      {onClick && <div style={{ fontSize: 18, color, marginTop: 10, fontWeight: 700 }}>Open →</div>}
-    </div>
+    <tr>
+      <td colSpan={colSpan} style={{ padding: '40px 16px', textAlign: 'center', color: MUTED, fontSize: 13, background: CARD }}>
+        {message}
+      </td>
+    </tr>
   )
 }
