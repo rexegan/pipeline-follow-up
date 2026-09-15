@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { FollowUp, Horizon, Prospect } from '../../types'
 import { HORIZONS, HORIZON_LABELS } from '../../types'
-import { BORDER, CARD, FG, FOLLOW_GRP_META, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SUCCESS, WARN } from '../../ui/theme'
+import { BORDER, CARD, FG, FOLLOW_GRP_META, MUTED, MUTED_BG, SUCCESS, WARN } from '../../ui/theme'
 import type { FollowGroup } from '../../ui/theme'
 import { EmptyRow, SelectCell, TextCell } from '../../ui/primitives'
 import { daysUntil } from '../../lib/dates'
@@ -32,9 +32,6 @@ type Props = {
 
 export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd }: Props) {
   const [open, setOpen] = useState(true)
-  const [search, setSearch] = useState('')
-  const [horizonFilter, setHorizonFilter] = useState<Horizon | ''>('')
-  const [showDone, setShowDone] = useState(false)
 
   const COLS: Col[] = [
     {
@@ -144,14 +141,13 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Every follow-up, same as the blotter shows every transaction — done items
+  // stay on the sheet, just faded, rather than dropping out of view.
   const visible = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    return followUps
-      .filter((f) => (showDone ? true : !f.done))
-      .filter((f) => (horizonFilter === '' ? true : f.horizon === horizonFilter))
-      .filter((f) => (term ? f.title.toLowerCase().includes(term) || f.owner.toLowerCase().includes(term) : true))
-      .sort((a, b) => HORIZONS.indexOf(a.horizon) - HORIZONS.indexOf(b.horizon) || a.dueOn.localeCompare(b.dueOn))
-  }, [followUps, search, horizonFilter, showDone])
+    return [...followUps].sort(
+      (a, b) => HORIZONS.indexOf(a.horizon) - HORIZONS.indexOf(b.horizon) || a.dueOn.localeCompare(b.dueOn),
+    )
+  }, [followUps])
 
   const tableWidth = COLS.reduce((s, c) => s + c.w, 0) + 44
 
@@ -168,35 +164,6 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
-        <input
-          className="filter-input"
-          style={{ width: 220 }}
-          placeholder="Search tasks and owners…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search follow-ups"
-          {...NO_PASSWORD_MANAGER}
-        />
-        <select
-          className="filter-input"
-          value={horizonFilter}
-          onChange={(e) => setHorizonFilter(e.target.value as Horizon | '')}
-          aria-label="Filter by window"
-        >
-          <option value="">All windows</option>
-          {HORIZONS.map((h) => (
-            <option key={h} value={h}>
-              {HORIZON_LABELS[h]}
-            </option>
-          ))}
-        </select>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: MUTED }}>
-          <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
-          Show done
-        </label>
-      </div>
-
       <div
         style={{
           background: CARD,
@@ -266,12 +233,7 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
               </thead>
 
               <tbody>
-                {withDividers.length === 0 && (
-                  <EmptyRow
-                    colSpan={COLS.length + 1}
-                    message={followUps.length === 0 ? 'Nothing committed yet.' : 'Nothing matches these filters.'}
-                  />
-                )}
+                {withDividers.length === 0 && <EmptyRow colSpan={COLS.length + 1} message="Nothing committed yet." />}
 
                 {withDividers.map((entry) =>
                   entry.kind === 'divider' ? (
@@ -321,7 +283,7 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
 
                 <tr>
                   <td colSpan={COLS.length + 1} style={{ padding: 0, borderTop: `1px solid ${BORDER}` }}>
-                    <button className="b-add" onClick={() => onAdd(horizonFilter || 'today')}>
+                    <button className="b-add" onClick={() => onAdd('today')}>
                       + Add follow-up
                     </button>
                   </td>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { Asset, Prospect, Source, Stage } from '../../types'
+import type { Asset, Prospect, Stage } from '../../types'
 import {
   ASSET_KINDS,
   ASSET_KIND_LABELS,
@@ -12,7 +12,7 @@ import {
   STAGES,
   STAGE_LABELS,
 } from '../../types'
-import { BORDER, CARD, DANGER, FG, GRP_META, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SUCCESS, WARN } from '../../ui/theme'
+import { BORDER, CARD, DANGER, FG, GRP_META, MUTED, MUTED_BG, SUCCESS, WARN } from '../../ui/theme'
 import type { Group } from '../../ui/theme'
 import { EmptyRow, MoneyCell, SelectCell, TextCell } from '../../ui/primitives'
 import { daysUntil, fmtMoney } from '../../lib/dates'
@@ -75,9 +75,6 @@ export function PipelineTable({
   onAddProspect,
 }: Props) {
   const [open, setOpen] = useState(true)
-  const [search, setSearch] = useState('')
-  const [stageFilter, setStageFilter] = useState<Stage | 'open' | ''>('open')
-  const [sourceFilter, setSourceFilter] = useState<Source | ''>('')
 
   /** Editing an asset cell on a prospect that has none materialises the row. */
   const editAsset = (row: Row, patch: Partial<Asset>) =>
@@ -305,28 +302,16 @@ export function PipelineTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Every opportunity, every account row — no filter UI, same as the blotter:
+  // everything is on the sheet, and stage/status color-coding carries the
+  // "what needs attention" signal instead of hiding rows.
   const rows: Row[] = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    return prospects
-      .filter((p) => {
-        if (stageFilter === 'open') return p.stage !== 'lost' && p.stage !== 'stalled'
-        if (stageFilter === '') return true
-        return p.stage === stageFilter
-      })
-      .filter((p) => (sourceFilter === '' ? true : p.source === sourceFilter))
-      .filter((p) => {
-        if (!term) return true
-        const hay = [p.name, p.referredBy, p.nextStep, ...p.assets.flatMap((a) => [a.heldAt, a.movingTo])]
-          .join(' ')
-          .toLowerCase()
-        return hay.includes(term)
-      })
-      .flatMap((p): Row[] =>
-        p.assets.length
-          ? p.assets.map((a, i) => ({ prospect: p, asset: a, continues: i > 0 }))
-          : [{ prospect: p, asset: null, continues: false }],
-      )
-  }, [prospects, search, stageFilter, sourceFilter])
+    return prospects.flatMap((p): Row[] =>
+      p.assets.length
+        ? p.assets.map((a, i) => ({ prospect: p, asset: a, continues: i > 0 }))
+        : [{ prospect: p, asset: null, continues: false }],
+    )
+  }, [prospects])
 
   // The header count is opportunities (households), not account rows — a
   // household with three accounts is still one opportunity.
@@ -336,45 +321,6 @@ export function PipelineTable({
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-        <input
-          className="filter-input"
-          style={{ width: 220 }}
-          placeholder="Search name, custodian, next step…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          {...NO_PASSWORD_MANAGER}
-          aria-label="Search opportunities"
-        />
-        <select
-          className="filter-input"
-          value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.value as Stage | 'open' | '')}
-          aria-label="Filter by stage"
-        >
-          <option value="open">Open stages</option>
-          <option value="">All stages</option>
-          {STAGES.map((s) => (
-            <option key={s} value={s}>
-              {STAGE_LABELS[s]}
-            </option>
-          ))}
-        </select>
-        <select
-          className="filter-input"
-          value={sourceFilter}
-          onChange={(e) => setSourceFilter(e.target.value as Source | '')}
-          aria-label="Filter by source"
-        >
-          <option value="">All sources</option>
-          {SOURCES.map((s) => (
-            <option key={s} value={s}>
-              {SOURCE_LABELS[s]}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div
         style={{
           background: CARD,

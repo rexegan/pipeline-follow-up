@@ -123,46 +123,11 @@ export function Chip({ label, color, bg, border }: { label: string; color: strin
   )
 }
 
-export type SummaryItem = { label: string; value: string | number; color?: string }
-
-/**
- * Tight horizontal stat row, as in the blotter's own summary bar: each figure
- * sits in its own cell divided by a hairline, not a card of its own — the
- * point is a single dense strip, not a row of boxes.
- */
-export function SummaryStrip({ items }: { items: SummaryItem[] }) {
+export function StatCard({ label, value, color = FG }: { label: string; value: string | number; color?: string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 8,
-        overflow: 'hidden',
-        marginBottom: 12,
-        width: 'fit-content',
-      }}
-    >
-      {items.map((item, i) => (
-        <div
-          key={item.label}
-          style={{
-            padding: '8px 18px',
-            borderLeft: i === 0 ? undefined : `1px solid ${BORDER}`,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            minWidth: 108,
-          }}
-        >
-          <span style={{ fontSize: 10, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {item.label}
-          </span>
-          <span style={{ fontSize: 18, fontWeight: 700, color: item.color ?? FG, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
-            {item.value}
-          </span>
-        </div>
-      ))}
+    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 6 }}>
+      <div style={{ fontSize: 11, color: MUTED, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )
 }
