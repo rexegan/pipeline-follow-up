@@ -101,7 +101,7 @@ export default function App() {
 
   const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
   const blurb =
-    view === 'pipeline' ? 'Opportunities we have uncovered' : 'Today, this week, this month'
+    view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
   const stamp = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',

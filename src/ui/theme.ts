@@ -42,10 +42,10 @@ export const styles = `
   .b-row:hover td { background: #fafafa !important; }
 
   .b-del {
-    background: none; border: none; color: #a1a1aa; cursor: pointer;
-    font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1;
+    background: none; border: none; color: ${DANGER}; cursor: pointer;
+    font-size: 16px; font-weight: 700; padding: 2px 6px; border-radius: 4px; line-height: 1;
   }
-  .b-del:hover { color: ${DANGER}; background: #fef2f2; }
+  .b-del:hover { background: #fef2f2; }
 
   .b-plus {
     background: none; border: none; color: #a1a1aa; cursor: pointer;
