@@ -336,10 +336,10 @@ export function PipelineTable({
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
         <input
           className="filter-input"
-          style={{ width: 240 }}
+          style={{ width: 220 }}
           placeholder="Search name, custodian, next step…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -379,9 +379,13 @@ export function PipelineTable({
         style={{
           background: CARD,
           border: `1px solid ${BORDER}`,
-          borderRadius: 10,
+          borderRadius: 8,
           overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          // Hug the table's own width rather than stretching full-bleed — a
+          // narrower table inside a full-width card reads as empty and loose.
+          width: 'fit-content',
+          maxWidth: '100%',
         }}
       >
         <div

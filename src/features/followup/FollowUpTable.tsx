@@ -168,10 +168,10 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
         <input
           className="filter-input"
-          style={{ width: 240 }}
+          style={{ width: 220 }}
           placeholder="Search tasks and owners…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -201,9 +201,11 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
         style={{
           background: CARD,
           border: `1px solid ${BORDER}`,
-          borderRadius: 10,
+          borderRadius: 8,
           overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          width: 'fit-content',
+          maxWidth: '100%',
         }}
       >
         <div

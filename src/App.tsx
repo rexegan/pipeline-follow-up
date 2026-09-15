@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Asset, FollowUp, Horizon, Prospect } from './types'
 import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
-import { Chip, SideLabel, StatCard } from './ui/primitives'
+import { Chip, SideLabel, SummaryStrip } from './ui/primitives'
 import { localRepository } from './lib/repository'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineTable } from './features/pipeline/PipelineTable'
@@ -154,43 +154,48 @@ export default function App() {
           </button>
         ))}
 
-        <div style={{ margin: '14px 0', borderTop: `1px solid ${BORDER}` }} />
+        <div style={{ margin: '12px 0', borderTop: `1px solid ${BORDER}` }} />
 
-        <SideLabel>Summary</SideLabel>
         {view === 'pipeline' ? (
-          <>
-            <StatCard label="Total OPPS" value={fmtMoney(inPlay)} color={FG} />
-            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} />
-            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} />
-            <StatCard label="Open Opportunities" value={openProspects.length} />
-            <button className="btn-primary" onClick={() => setProspects((prev) => [...prev, blankProspect()])}>
-              + New Opportunity
-            </button>
-          </>
+          <button className="btn-primary" onClick={() => setProspects((prev) => [...prev, blankProspect()])}>
+            + New Opportunity
+          </button>
         ) : (
-          <>
-            <StatCard label="Due Today" value={dueToday} color={dueToday > 0 ? WARN : FG} />
-            <StatCard label="Overdue" value={overdue} color={overdue > 0 ? '#dc2626' : FG} />
-            <StatCard label="Open" value={openFollowUps.length} />
-            <StatCard label="Done" value={followUps.length - openFollowUps.length} color={SUCCESS} />
-            <button className="btn-primary" onClick={() => addFollowUp('today')}>
-              + New Follow-Up
-            </button>
-          </>
+          <button className="btn-primary" onClick={() => addFollowUp('today')}>
+            + New Follow-Up
+          </button>
         )}
       </aside>
 
       <div style={{ flex: 1, minWidth: 0, background: BG }}>
-        <div style={{ padding: '28px 28px 48px' }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: FG }}>
-                {heading}
-              </h1>
-              <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+        <div style={{ padding: '16px 20px 32px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+            <h1 style={{ margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em', color: FG }}>{heading}</h1>
+            <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
+            <span style={{ marginLeft: 'auto', fontSize: 12, color: MUTED }}>
+              Russell Wealth Group &mdash; {stamp}
+            </span>
           </div>
+
+          {view === 'pipeline' ? (
+            <SummaryStrip
+              items={[
+                { label: 'Total OPPS', value: fmtMoney(inPlay) },
+                { label: 'In Process', value: fmtMoney(moving), color: WARN },
+                { label: 'Completed', value: fmtMoney(funded), color: SUCCESS },
+                { label: 'Open Opportunities', value: openProspects.length },
+              ]}
+            />
+          ) : (
+            <SummaryStrip
+              items={[
+                { label: 'Due Today', value: dueToday, color: dueToday > 0 ? WARN : FG },
+                { label: 'Overdue', value: overdue, color: overdue > 0 ? '#dc2626' : FG },
+                { label: 'Open', value: openFollowUps.length },
+                { label: 'Done', value: followUps.length - openFollowUps.length, color: SUCCESS },
+              ]}
+            />
+          )}
 
           {view === 'pipeline' ? (
             <PipelineTable
