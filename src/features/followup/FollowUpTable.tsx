@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { FollowUp, Horizon, Prospect } from '../../types'
 import { HORIZONS, HORIZON_LABELS } from '../../types'
-import { BORDER, CARD, FG, FOLLOW_GRP_META, MUTED, MUTED_BG, SUCCESS, WARN } from '../../ui/theme'
+import { BORDER, CARD, FG, FOLLOW_GRP_META, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SUCCESS, WARN } from '../../ui/theme'
 import type { FollowGroup } from '../../ui/theme'
 import { EmptyRow, SelectCell, TextCell } from '../../ui/primitives'
 import { daysUntil } from '../../lib/dates'
@@ -176,6 +176,7 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Search follow-ups"
+          {...NO_PASSWORD_MANAGER}
         />
         <select
           className="filter-input"

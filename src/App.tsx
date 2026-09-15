@@ -115,7 +115,7 @@ export default function App() {
 
       <aside
         style={{
-          width: 220,
+          width: 180,
           flexShrink: 0,
           background: SIDEBAR,
           borderRight: `1px solid ${BORDER}`,
@@ -159,9 +159,9 @@ export default function App() {
         <SideLabel>Summary</SideLabel>
         {view === 'pipeline' ? (
           <>
-            <StatCard label="Assets in Play" value={fmtMoney(inPlay)} color={FG} />
-            <StatCard label="Actually Moving" value={fmtMoney(moving)} color={WARN} />
-            <StatCard label="Funded" value={fmtMoney(funded)} color={SUCCESS} />
+            <StatCard label="Total OPPS" value={fmtMoney(inPlay)} color={FG} />
+            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} />
+            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} />
             <StatCard label="Open Opportunities" value={openProspects.length} />
             <button className="btn-primary" onClick={() => setProspects((prev) => [...prev, blankProspect()])}>
               + New Opportunity

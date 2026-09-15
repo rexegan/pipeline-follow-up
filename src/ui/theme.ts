@@ -34,6 +34,20 @@ export const FOLLOW_GRP_META: Record<FollowGroup, { color: string; bg: string; l
   state: { color: '#15803d', bg: '#f0fdf4', label: 'Status', icon: '✅' },
 }
 
+/**
+ * Password-manager extensions (LastPass, 1Password, Dashlane…) inject an icon
+ * into any field they guess is a login field, which on a dense data grid means
+ * almost every cell. These are the attributes each vendor documents for
+ * opting a field out; autoComplete="off" alone doesn't stop LastPass.
+ */
+export const NO_PASSWORD_MANAGER = {
+  autoComplete: 'off',
+  'data-lpignore': 'true',
+  'data-1p-ignore': 'true',
+  'data-bwignore': 'true',
+  'data-form-type': 'other',
+} as const
+
 export const styles = `
   * { box-sizing: border-box; }
   body { margin: 0; background: ${BG}; color: ${FG}; font-family: ${SANS}; }

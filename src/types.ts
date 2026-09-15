@@ -46,7 +46,7 @@ export const SOURCES = [
 export type Source = (typeof SOURCES)[number]
 
 export const SOURCE_LABELS: Record<Source, string> = {
-  'dave-ramsey': 'Dave Ramsey referral',
+  'dave-ramsey': 'Dave Ramsey',
   'client-referral': 'Client referral',
   coi: 'Center of influence',
   'existing-client': 'Existing client',
@@ -61,8 +61,8 @@ export const REFERRAL_SOURCES: Source[] = ['dave-ramsey', 'client-referral', 'co
 export type ProspectKind = 'new-prospect' | 'existing-client'
 
 export const KIND_LABELS: Record<ProspectKind, string> = {
-  'new-prospect': 'New prospect',
-  'existing-client': 'Existing client',
+  'new-prospect': 'New',
+  'existing-client': 'Existing',
 }
 
 export const ASSET_KINDS = [

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
-import { BORDER, CARD, FG, MUTED, SANS } from './theme'
+import { BORDER, CARD, FG, MUTED, NO_PASSWORD_MANAGER, SANS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
 
 /** Borderless input that fills its table cell, as in the blotter. */
@@ -40,6 +40,7 @@ export function TextCell({
       onChange={(e) => onCommit(e.target.value)}
       className="b-input"
       style={CELL_INPUT}
+      {...NO_PASSWORD_MANAGER}
     />
   )
 }
@@ -64,6 +65,7 @@ export function SelectCell<T extends string>({
       onChange={(e) => onCommit(e.target.value as T)}
       className="b-input"
       style={{ ...CELL_INPUT, cursor: 'pointer', appearance: 'none', color: color ?? FG, fontWeight: color ? 500 : 400 }}
+      {...NO_PASSWORD_MANAGER}
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -108,6 +110,7 @@ export function MoneyCell({
       }}
       className="b-input"
       style={{ ...CELL_INPUT, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+      {...NO_PASSWORD_MANAGER}
     />
   )
 }

@@ -12,7 +12,7 @@ import {
   STAGES,
   STAGE_LABELS,
 } from '../../types'
-import { BORDER, CARD, DANGER, FG, GRP_META, MUTED, MUTED_BG, SUCCESS, WARN } from '../../ui/theme'
+import { BORDER, CARD, DANGER, FG, GRP_META, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SUCCESS, WARN } from '../../ui/theme'
 import type { Group } from '../../ui/theme'
 import { EmptyRow, MoneyCell, SelectCell, TextCell } from '../../ui/primitives'
 import { daysUntil, fmtMoney } from '../../lib/dates'
@@ -94,7 +94,7 @@ export function PipelineTable({
         <TextCell
           label="Name"
           value={prospect.name}
-          placeholder="Household name"
+          placeholder="Last, First"
           onCommit={(v) => onProspectChange(prospect.id, { name: v })}
         />
       ),
@@ -116,7 +116,7 @@ export function PipelineTable({
     },
     {
       key: 'source',
-      label: 'How We Got Them',
+      label: 'From',
       group: 'who',
       w: 165,
       scope: 'prospect',
@@ -328,6 +328,10 @@ export function PipelineTable({
       )
   }, [prospects, search, stageFilter, sourceFilter])
 
+  // The header count is opportunities (households), not account rows — a
+  // household with three accounts is still one opportunity.
+  const opportunityCount = rows.filter((r) => !r.continues).length
+
   const tableWidth = COLS.reduce((s, c) => s + c.w, 0) + 64
 
   return (
@@ -339,6 +343,7 @@ export function PipelineTable({
           placeholder="Search name, custodian, next step…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          {...NO_PASSWORD_MANAGER}
           aria-label="Search opportunities"
         />
         <select
@@ -395,7 +400,7 @@ export function PipelineTable({
           <span style={{ fontSize: 14, fontWeight: 600, color: FG, flex: 1 }}>
             All Opportunities
             <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 400, color: MUTED }}>
-              {rows.length} account row{rows.length === 1 ? '' : 's'}
+              {opportunityCount} opportunit{opportunityCount === 1 ? 'y' : 'ies'}
             </span>
           </span>
           <span style={{ color: MUTED, fontSize: 11 }}>{open ? '▲' : '▼'}</span>
