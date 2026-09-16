@@ -9,4 +9,8 @@ export default defineConfig({
   // otherwise the dev URL changes every session. Honour PORT when the
   // harness assigns one.
   server: { port: Number(process.env.PORT) || 5688, strictPort: false },
+  // Relative asset paths so the built dist/index.html also works opened
+  // directly as a file (double-clicked, no server) — with the default
+  // root-absolute paths that renders a permanently blank page.
+  base: './',
 })

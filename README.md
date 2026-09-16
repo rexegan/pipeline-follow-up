@@ -18,11 +18,17 @@ Vite + React 19 + TypeScript.
 The look and feel comes from the **Trade Blotter** (`~/advisortool/advisortool`
 at commit `f35c984`, "Redesign Trade Blotter with shadcn/ui white style"): a zinc
 palette on white, Inter, a 220px sticky sidebar carrying brand / views / summary
-cards / primary action, and a dense spreadsheet where every cell is editable in
-place. Column groups get a colored header band, the column labels sit in a second
-sticky row beneath, and money totals live in a `tfoot`.
+cards / primary action.
 
-Both screens are that same blotter: rows you type directly into, not forms.
+The blotter itself is one very wide table (28 columns) that always overflows
+the viewport and scrolls horizontally — fine when every column is packed edge
+to edge, but ours has far fewer fields, so the same shape just left a mostly
+empty table needing a horizontal scroll to see three more columns. Instead,
+each record (one opportunity, one follow-up) renders as a bordered card of
+2-3 stacked field rows — a line for who they are, a line per account they
+have, a line for stage and next step — so everything is visible without
+scrolling right, and a record that grows (another account, more fields later)
+gets taller, not wider.
 
 ## Run it
 
@@ -40,10 +46,10 @@ Also: `npm run build` (typecheck + production build), `npm run preview`, `npm ru
 | `src/types.ts` | Both domains: `Prospect`/`Asset` and `FollowUp`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting |
-| `src/ui/theme.ts` | Blotter tokens, column-group metadata, injected global styles |
-| `src/ui/primitives.tsx` | In-cell editors (`TextCell`, `SelectCell`, `MoneyCell`) plus `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineTable.tsx` | The pipeline blotter: column defs, group spans, filters, totals |
-| `src/features/followup/FollowUpTable.tsx` | The follow-up blotter, split by commitment window |
+| `src/ui/theme.ts` | Blotter tokens, group metadata, injected global styles |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`), `RecordCard` + `FieldRow` for the stacked layout, plus `Chip`, `StatCard` |
+| `src/features/pipeline/PipelineTable.tsx` | One card per opportunity: who-they-are row, one row per account, stage-and-next-step row |
+| `src/features/followup/FollowUpTable.tsx` | One card per follow-up, grouped under Today / This Week / This Month dividers |
 | `src/App.tsx` | Sidebar shell, summary figures, load/save wiring |
 
 ## Data model
@@ -62,10 +68,12 @@ and `lost` as off-track states that drop out of the open counts.
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), an optional
 `prospectId` linking it to an opportunity, an owner, a due date, and done state.
 
-The pipeline blotter shows **one row per account**, so a household with three
-pots of money is three rows. Household-level fields — name, type, source, stage,
-next step — render only on the first of those rows; the rest show `↳` and their
-own account columns, because one household has one stage, not one per account.
+A pipeline card shows **one row per account** within the household's card, so a
+household with three pots of money is three account rows inside one card, not
+three separate cards — the prospect fields (name, type, source, referrer,
+contact info) and the stage/next-step fields appear once per household, above
+and below the account rows, because one household has one stage, not one per
+account.
 
 No SSNs or account numbers are stored, deliberately — see below.
 

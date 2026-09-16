@@ -1,117 +1,200 @@
 import { useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { BORDER, CARD, FG, MUTED, NO_PASSWORD_MANAGER, SANS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
 
-/** Borderless input that fills its table cell, as in the blotter. */
-const CELL_INPUT: CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  outline: 'none',
+/**
+ * Boxed field variants for the stacked record-card layout: a bordered box
+ * with its own small label. Used so a record's fields wrap onto a fixed
+ * number of lines instead of one row extending arbitrarily wide.
+ */
+const BOX_INPUT: CSSProperties = {
   width: '100%',
-  height: '100%',
-  padding: '0 10px',
+  height: 30,
+  padding: '0 8px',
   fontSize: 13,
-  fontWeight: 400,
-  color: FG,
   fontFamily: SANS,
+  color: FG,
+  background: '#fff',
+  border: `1px solid ${BORDER}`,
+  borderRadius: 6,
+  outline: 'none',
   boxSizing: 'border-box',
 }
 
-export function TextCell({
+function FieldShell({ label, width, grow, children }: { label: string; width?: number; grow?: boolean; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        minWidth: width ? Math.min(width, 100) : 100,
+        flex: grow ? '1 1 200px' : width ? `0 1 ${width}px` : '1 1 120px',
+      }}
+    >
+      <span style={{ fontSize: 10, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {label}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+export function BoxText({
+  label,
   value,
   onCommit,
   type = 'text',
   placeholder,
-  label,
+  width,
+  grow,
 }: {
+  label: string
   value: string
   onCommit: (value: string) => void
   type?: 'text' | 'date' | 'email'
   placeholder?: string
-  label: string
+  width?: number
+  grow?: boolean
 }) {
   return (
-    <input
-      type={type}
-      aria-label={label}
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onCommit(e.target.value)}
-      className="b-input"
-      style={CELL_INPUT}
-      {...NO_PASSWORD_MANAGER}
-    />
+    <FieldShell label={label} width={width} grow={grow}>
+      <input
+        type={type}
+        aria-label={label}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onCommit(e.target.value)}
+        className="box-input"
+        style={BOX_INPUT}
+        {...NO_PASSWORD_MANAGER}
+      />
+    </FieldShell>
   )
 }
 
-export function SelectCell<T extends string>({
+export function BoxSelect<T extends string>({
+  label,
   value,
   options,
   onCommit,
-  label,
   color,
+  width,
 }: {
+  label: string
   value: T
   options: { value: T; label: string }[]
   onCommit: (value: T) => void
-  label: string
   color?: string
+  width?: number
 }) {
   return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onCommit(e.target.value as T)}
-      className="b-input"
-      style={{ ...CELL_INPUT, cursor: 'pointer', appearance: 'none', color: color ?? FG, fontWeight: color ? 500 : 400 }}
-      {...NO_PASSWORD_MANAGER}
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label || '—'}
-        </option>
-      ))}
-    </select>
+    <FieldShell label={label} width={width}>
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onCommit(e.target.value as T)}
+        className="box-input"
+        style={{ ...BOX_INPUT, cursor: 'pointer', color: color ?? FG, fontWeight: color ? 600 : 400 }}
+        {...NO_PASSWORD_MANAGER}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label || '—'}
+          </option>
+        ))}
+      </select>
+    </FieldShell>
   )
 }
 
-/**
- * Dollar cell: raw digits while focused so typing behaves, formatted when not.
- * Local state avoids fighting the caret on every keystroke.
- */
-export function MoneyCell({
+export function BoxMoney({
+  label,
   value,
   onCommit,
-  label,
+  width,
 }: {
+  label: string
   value: number | null
   onCommit: (value: number | null) => void
-  label: string
+  width?: number
 }) {
-  // `draft` only matters while focused — it is seeded on focus and read back on
-  // blur — so there is nothing to synchronise when the value changes elsewhere.
   const [focused, setFocused] = useState(false)
   const [draft, setDraft] = useState('')
 
   return (
-    <input
-      aria-label={label}
-      value={focused ? draft : value === null ? '' : fmtMoney(value)}
-      placeholder="—"
-      onFocus={() => {
-        setDraft(value === null ? '' : String(value))
-        setFocused(true)
+    <FieldShell label={label} width={width}>
+      <input
+        aria-label={label}
+        value={focused ? draft : value === null ? '' : fmtMoney(value)}
+        placeholder="—"
+        onFocus={() => {
+          setDraft(value === null ? '' : String(value))
+          setFocused(true)
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setFocused(false)
+          onCommit(parseMoney(draft))
+        }}
+        className="box-input"
+        style={{ ...BOX_INPUT, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+        {...NO_PASSWORD_MANAGER}
+      />
+    </FieldShell>
+  )
+}
+
+/** One line of fields within a record card. */
+export function FieldRow({ children, last }: { children: ReactNode; last?: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: last ? 0 : 8 }}>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * A record — one prospect, one follow-up — as a bordered card of stacked
+ * field rows instead of one very wide table row. Keeps everything visible
+ * without horizontal scrolling no matter how many fields a record grows to;
+ * more fields mean a taller card, not a wider table.
+ */
+export function RecordCard({
+  accent,
+  onDelete,
+  deleteTitle,
+  children,
+}: {
+  accent: string
+  onDelete: () => void
+  deleteTitle: string
+  children: ReactNode
+}) {
+  return (
+    <div
+      className="record-card"
+      style={{
+        position: 'relative',
+        background: CARD,
+        border: `1px solid ${BORDER}`,
+        borderLeft: `3px solid ${accent}`,
+        borderRadius: 8,
+        padding: '10px 34px 10px 12px',
+        marginBottom: 8,
       }}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => {
-        setFocused(false)
-        onCommit(parseMoney(draft))
-      }}
-      className="b-input"
-      style={{ ...CELL_INPUT, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
-      {...NO_PASSWORD_MANAGER}
-    />
+    >
+      {children}
+      <button
+        className="b-del"
+        title={deleteTitle}
+        onClick={onDelete}
+        style={{ position: 'absolute', top: 8, right: 8 }}
+      >
+        ×
+      </button>
+    </div>
   )
 }
 
@@ -147,15 +230,5 @@ export function SideLabel({ children }: { children: string }) {
     >
       {children}
     </div>
-  )
-}
-
-export function EmptyRow({ colSpan, message }: { colSpan: number; message: string }) {
-  return (
-    <tr>
-      <td colSpan={colSpan} style={{ padding: '40px 16px', textAlign: 'center', color: MUTED, fontSize: 13, background: CARD }}>
-        {message}
-      </td>
-    </tr>
   )
 }

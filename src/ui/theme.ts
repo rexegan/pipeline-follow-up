@@ -26,14 +26,6 @@ export const GRP_META: Record<Group, { color: string; bg: string; label: string;
   track: { color: '#15803d', bg: '#f0fdf4', label: 'Stage & Next Step', icon: '✅' },
 }
 
-export type FollowGroup = 'task' | 'when' | 'state'
-
-export const FOLLOW_GRP_META: Record<FollowGroup, { color: string; bg: string; label: string; icon: string }> = {
-  task: { color: '#3f3f46', bg: '#f4f4f5', label: 'What Has To Get Done', icon: '📋' },
-  when: { color: '#1d4ed8', bg: '#eff6ff', label: 'When', icon: '📅' },
-  state: { color: '#15803d', bg: '#f0fdf4', label: 'Status', icon: '✅' },
-}
-
 /**
  * Password-manager extensions (LastPass, 1Password, Dashlane…) inject an icon
  * into any field they guess is a login field, which on a dense data grid means
@@ -52,8 +44,8 @@ export const styles = `
   * { box-sizing: border-box; }
   body { margin: 0; background: ${BG}; color: ${FG}; font-family: ${SANS}; }
 
-  .b-input:focus { background: ${MUTED_BG} !important; }
-  .b-row:hover td { background: #fafafa !important; }
+  .box-input:focus { border-color: #a1a1aa !important; background: ${MUTED_BG}; }
+  .record-card:hover { border-color: #d4d4d8; }
 
   .b-del {
     background: none; border: none; color: ${DANGER}; cursor: pointer;
@@ -90,38 +82,11 @@ export const styles = `
   }
   .btn-primary:hover { background: #27272a; }
 
-  .b-th1 {
-    position: sticky; top: 0; z-index: 3;
-    padding: 7px 10px; text-align: left;
-    border-right: 1px solid ${BORDER}; border-bottom: 1px solid ${BORDER};
-    white-space: nowrap; user-select: none; height: 34px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
-  }
-  .b-th2 {
-    position: sticky; top: 34px; z-index: 2;
-    padding: 6px 10px; text-align: left;
-    border-right: 1px solid ${BORDER}; border-bottom: 1px solid ${BORDER};
-    white-space: nowrap; user-select: none;
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.06em; color: ${MUTED}; background: ${MUTED_BG};
-  }
-  .b-td {
-    padding: 0; border-right: 1px solid ${BORDER};
-    border-bottom: 1px solid ${BORDER};
-    height: 36px; vertical-align: middle;
-  }
-
   .chip {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 2px 7px; border-radius: 9999px;
     font-size: 11px; font-weight: 500; line-height: 1.4;
   }
-
-  .filter-input {
-    height: 32px; padding: 0 10px; border: 1px solid ${BORDER}; border-radius: 6px;
-    background: ${CARD}; color: ${FG}; font-size: 13px; font-family: ${SANS}; outline: none;
-  }
-  .filter-input:focus { border-color: #a1a1aa; }
 
   input:focus-visible, select:focus-visible, button:focus-visible {
     outline: 2px solid ${PRIMARY}; outline-offset: -1px;
