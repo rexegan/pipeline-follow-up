@@ -11,10 +11,15 @@ export interface Repository {
   saveProspects(prospects: Prospect[]): Promise<void>
   loadFollowUps(): Promise<FollowUp[]>
   saveFollowUps(followUps: FollowUp[]): Promise<void>
+  /** Whether this browser has ever had data written to it — gates the
+   *  one-time demo seed so deleting everything later doesn't bring it back. */
+  hasSeeded(): Promise<boolean>
+  markSeeded(): Promise<void>
 }
 
 const PROSPECTS_KEY = 'pipeline-follow-up:prospects:v1'
 const FOLLOWUPS_KEY = 'pipeline-follow-up:followups:v1'
+const SEEDED_KEY = 'pipeline-follow-up:seeded:v1'
 
 function isProspect(value: unknown): value is Prospect {
   if (typeof value !== 'object' || value === null) return false
@@ -59,5 +64,19 @@ export const localRepository: Repository = {
   },
   async saveFollowUps(followUps) {
     write(FOLLOWUPS_KEY, followUps)
+  },
+  async hasSeeded() {
+    try {
+      return localStorage.getItem(SEEDED_KEY) === 'true'
+    } catch {
+      return true // Can't persist a flag anyway; don't seed every load.
+    }
+  },
+  async markSeeded() {
+    try {
+      localStorage.setItem(SEEDED_KEY, 'true')
+    } catch {
+      // Storage can be unavailable (private mode, quota); worst case it re-seeds next load.
+    }
   },
 }

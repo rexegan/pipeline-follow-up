@@ -3,6 +3,7 @@ import type { Asset, FollowUp, Horizon, Prospect } from './types'
 import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
+import { seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineTable } from './features/pipeline/PipelineTable'
 import { FollowUpTable } from './features/followup/FollowUpTable'
@@ -24,12 +25,23 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    void Promise.all([localRepository.loadProspects(), localRepository.loadFollowUps()]).then(([p, f]) => {
+    void (async () => {
+      let [p, f] = await Promise.all([localRepository.loadProspects(), localRepository.loadFollowUps()])
+      // First time this browser has ever opened the app: seed a demo
+      // household so the page shows something instead of an empty state.
+      // Gated on hasSeeded, not just an empty list, so deleting everything
+      // later doesn't bring the demo back.
+      if (p.length === 0 && f.length === 0 && !(await localRepository.hasSeeded())) {
+        p = seedProspects()
+        f = seedFollowUps(p[0].id)
+        await Promise.all([localRepository.saveProspects(p), localRepository.saveFollowUps(f)])
+        await localRepository.markSeeded()
+      }
       if (cancelled) return
       setProspects(p)
       setFollowUps(f)
       setLoaded(true)
-    })
+    })()
     return () => {
       cancelled = true
     }
