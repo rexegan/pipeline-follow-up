@@ -46,6 +46,7 @@ export const styles = `
 
   .box-input:focus { border-color: #a1a1aa !important; background: ${MUTED_BG}; }
   .record-card:hover { border-color: #d4d4d8; }
+  .combo-option:hover { background: ${MUTED_BG}; }
 
   .b-del {
     background: none; border: none; color: ${DANGER}; cursor: pointer;

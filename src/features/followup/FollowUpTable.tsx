@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FollowUp, Horizon, Prospect } from '../../types'
 import { HORIZONS, HORIZON_LABELS } from '../../types'
 import { BORDER, CARD, FG, MUTED, MUTED_BG, SUCCESS, WARN } from '../../ui/theme'
-import { BoxSelect, BoxText, FieldRow, RecordCard } from '../../ui/primitives'
+import { BoxSelect, BoxText, Combobox, FieldRow, RecordCard } from '../../ui/primitives'
 import { daysUntil } from '../../lib/dates'
 import { defaultDue } from './horizons'
 
@@ -45,17 +45,28 @@ function FollowUpCard({
             label="What Has To Get Done"
             grow
             value={item.title}
-            placeholder="What has to get done"
+            placeholder="The specific task"
             onCommit={(v) => onChange(item.id, { title: v })}
           />
-          <BoxSelect
-            label="Tied To"
-            width={170}
+        </FieldRow>
+
+        <FieldRow>
+          <Combobox
+            label="Who It's About"
+            grow
             value={item.prospectId ?? ''}
-            options={[{ value: '', label: '—' }, ...prospects.map((p) => ({ value: p.id, label: p.name || 'Untitled' }))]}
+            options={prospects.map((p) => ({ value: p.id, label: p.name || 'Untitled' }))}
+            placeholder="Search a client or prospect…"
             onCommit={(v) => onChange(item.id, { prospectId: v || null })}
           />
-          <BoxText label="Owner" width={120} value={item.owner} onCommit={(v) => onChange(item.id, { owner: v })} />
+          <BoxText label="Assigned To" width={130} value={item.owner} onCommit={(v) => onChange(item.id, { owner: v })} />
+          <BoxText
+            label="Why"
+            grow
+            value={item.reason}
+            placeholder="Why this needs doing"
+            onCommit={(v) => onChange(item.id, { reason: v })}
+          />
         </FieldRow>
 
         <FieldRow last>

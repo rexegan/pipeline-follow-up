@@ -62,7 +62,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
 | `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — drag-and-drop between stages, a collapsed strip for stalled/lost |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
@@ -85,8 +85,11 @@ and `lost` as off-track states — they drop off the board's columns entirely
 (collapsed into a "stalled or lost" strip below it) rather than cluttering the
 active view, but stay reachable and reversible from there.
 
-A **FollowUp** carries a `horizon` (`today` / `week` / `month`), an optional
-`prospectId` linking it to an opportunity, an owner, a due date, and done state.
+A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
+task), a `reason` (why it needs doing — distinct from the task itself), an
+`owner` (who's doing it), an optional `prospectId` (who it's about — a
+prospect or an existing client, searched by name via the `Combobox` primitive
+rather than scrolled in a plain dropdown), a due date, and done state.
 
 No SSNs or account numbers are stored, deliberately — see below.
 

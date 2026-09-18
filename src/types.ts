@@ -187,9 +187,12 @@ export type FollowUp = {
   id: string
   title: string
   horizon: Horizon
-  /** Optional link back to the pipeline opportunity this serves. */
+  /** Who this concerns — a prospect or an existing client, searched by name. */
   prospectId: string | null
+  /** Who has to do it. */
   owner: string
+  /** Why — the reason this needs doing, distinct from the task itself. */
+  reason: string
   /** ISO date (yyyy-mm-dd), or '' when only the horizon matters. */
   dueOn: string
   done: boolean

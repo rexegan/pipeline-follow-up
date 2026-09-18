@@ -47,6 +47,11 @@ function isFollowUp(value: unknown): value is FollowUp {
   return typeof v.id === 'string' && typeof v.title === 'string' && HORIZONS.includes(v.horizon as never)
 }
 
+/** Backfills `reason`, added after some browsers may already have follow-ups saved. */
+function normalizeFollowUp(f: FollowUp): FollowUp {
+  return { ...f, reason: f.reason ?? '' }
+}
+
 function read<T>(key: string, guard: (value: unknown) => value is T): T[] {
   try {
     const raw = localStorage.getItem(key)
@@ -74,7 +79,7 @@ export const localRepository: Repository = {
     write(PROSPECTS_KEY, prospects)
   },
   async loadFollowUps() {
-    return read(FOLLOWUPS_KEY, isFollowUp)
+    return read(FOLLOWUPS_KEY, isFollowUp).map(normalizeFollowUp)
   },
   async saveFollowUps(followUps) {
     write(FOLLOWUPS_KEY, followUps)

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Asset, FollowUp, Horizon, Prospect, Stage } from './types'
+import { STAGE_LABELS } from './types'
 import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
@@ -19,7 +20,7 @@ const VIEWS = [
 
 type ViewId = (typeof VIEWS)[number]['id']
 
-type PendingSuggestion = { prospectId: string; prospectName: string; title: string; dueOn: string }
+type PendingSuggestion = { prospectId: string; prospectName: string; title: string; dueOn: string; reason: string }
 
 export default function App() {
   const [view, setView] = useState<ViewId>('pipeline')
@@ -80,7 +81,16 @@ export default function App() {
       prev.map((p) => (p.id === prospectId ? { ...p, stage, stageChangedAt: now, updatedAt: now } : p)),
     )
     const suggested = suggestFollowUpFor(stage)
-    setSuggestion(suggested ? { prospectId, prospectName: prospect.name || 'this opportunity', ...suggested } : null)
+    setSuggestion(
+      suggested
+        ? {
+            prospectId,
+            prospectName: prospect.name || 'this opportunity',
+            reason: `Moved to ${STAGE_LABELS[stage]}`,
+            ...suggested,
+          }
+        : null,
+    )
   }
 
   function acceptSuggestion() {
@@ -93,6 +103,7 @@ export default function App() {
         horizon: 'week',
         prospectId: suggestion.prospectId,
         owner: '',
+        reason: suggestion.reason,
         dueOn: suggestion.dueOn,
         done: false,
         completedAt: null,
@@ -142,6 +153,7 @@ export default function App() {
         horizon,
         prospectId: null,
         owner: '',
+        reason: '',
         dueOn: defaultDue(horizon),
         done: false,
         completedAt: null,
