@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import type { Asset, FollowUp, Horizon, Prospect } from './types'
-import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
-import { Chip, SideLabel, StatCard } from './ui/primitives'
+import type { Asset, FollowUp, Horizon, Prospect, Stage } from './types'
+import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
 import { seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
-import { PipelineTable } from './features/pipeline/PipelineTable'
+import { PipelineBoard } from './features/pipeline/PipelineBoard'
+import { ProspectDetail } from './features/pipeline/ProspectDetail'
+import { suggestFollowUpFor } from './features/pipeline/stageWorkflow'
 import { FollowUpTable } from './features/followup/FollowUpTable'
-import { daysUntil, fmtMoney, uid } from './lib/dates'
+import { daysUntil, fmtDate, fmtMoney, uid } from './lib/dates'
 import { defaultDue } from './features/followup/horizons'
 
 const VIEWS = [
@@ -17,11 +19,15 @@ const VIEWS = [
 
 type ViewId = (typeof VIEWS)[number]['id']
 
+type PendingSuggestion = { prospectId: string; prospectName: string; title: string; dueOn: string }
+
 export default function App() {
   const [view, setView] = useState<ViewId>('pipeline')
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [followUps, setFollowUps] = useState<FollowUp[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -62,6 +68,40 @@ export default function App() {
       prev.map((p) => (p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p)),
     )
 
+  // Routed through separately from patchProspect (rather than just another
+  // field) because a stage change is the one edit that means something on
+  // its own — it's what Redtail/Wealthbox trigger a task off, and it's what
+  // "days in stage" measures from.
+  function changeStage(prospectId: string, stage: Stage) {
+    const prospect = prospects.find((p) => p.id === prospectId)
+    if (!prospect || prospect.stage === stage) return
+    const now = new Date().toISOString()
+    setProspects((prev) =>
+      prev.map((p) => (p.id === prospectId ? { ...p, stage, stageChangedAt: now, updatedAt: now } : p)),
+    )
+    const suggested = suggestFollowUpFor(stage)
+    setSuggestion(suggested ? { prospectId, prospectName: prospect.name || 'this opportunity', ...suggested } : null)
+  }
+
+  function acceptSuggestion() {
+    if (!suggestion) return
+    setFollowUps((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        title: suggestion.title,
+        horizon: 'week',
+        prospectId: suggestion.prospectId,
+        owner: '',
+        dueOn: suggestion.dueOn,
+        done: false,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+      },
+    ])
+    setSuggestion(null)
+  }
+
   const patchAsset = (prospectId: string, assetId: string, patch: Partial<Asset>) =>
     setProspects((prev) =>
       prev.map((p) =>
@@ -80,6 +120,18 @@ export default function App() {
     setProspects((prev) =>
       prev.map((p) => (p.id === prospectId ? { ...p, assets: p.assets.filter((a) => a.id !== assetId) } : p)),
     )
+
+  function addProspect() {
+    const p = blankProspect()
+    setProspects((prev) => [...prev, p])
+    setSelectedId(p.id)
+  }
+
+  function deleteProspect(id: string) {
+    setProspects((prev) => prev.filter((p) => p.id !== id))
+    setSelectedId((sel) => (sel === id ? null : sel))
+    setSuggestion((s) => (s?.prospectId === id ? null : s))
+  }
 
   const addFollowUp = (horizon: Horizon) =>
     setFollowUps((prev) => [
@@ -109,17 +161,18 @@ export default function App() {
 
   const openFollowUps = followUps.filter((f) => !f.done)
   const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
-  const overdue = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
+  const overdueCount = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
 
   const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
-  const blurb =
-    view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
+  const blurb = view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
   const stamp = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   })
+
+  const selected = prospects.find((p) => p.id === selectedId) ?? null
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: SANS, color: FG }}>
@@ -175,14 +228,14 @@ export default function App() {
             <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} />
             <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} />
             <StatCard label="Open Opportunities" value={openProspects.length} />
-            <button className="btn-primary" onClick={() => setProspects((prev) => [...prev, blankProspect()])}>
+            <button className="btn-primary" onClick={addProspect}>
               + New Opportunity
             </button>
           </>
         ) : (
           <>
             <StatCard label="Due Today" value={dueToday} color={dueToday > 0 ? WARN : FG} />
-            <StatCard label="Overdue" value={overdue} color={overdue > 0 ? '#dc2626' : FG} />
+            <StatCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? DANGER : FG} />
             <StatCard label="Open" value={openFollowUps.length} />
             <StatCard label="Done" value={followUps.length - openFollowUps.length} color={SUCCESS} />
             <button className="btn-primary" onClick={() => addFollowUp('today')}>
@@ -204,15 +257,35 @@ export default function App() {
             <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
           </div>
 
+          {view === 'pipeline' && suggestion && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: 8,
+                padding: '10px 14px',
+                marginBottom: 16,
+                fontSize: 13,
+              }}
+            >
+              <span style={{ flex: 1 }}>
+                <strong>{suggestion.prospectName}</strong> moved stage — add "{suggestion.title}" as a follow-up due{' '}
+                {fmtDate(suggestion.dueOn)}?
+              </span>
+              <ActionBtn label="Add follow-up" onClick={acceptSuggestion} small />
+              <ActionBtn label="Skip" color={MUTED} onClick={() => setSuggestion(null)} small />
+            </div>
+          )}
+
           {view === 'pipeline' ? (
-            <PipelineTable
+            <PipelineBoard
               prospects={prospects}
-              onProspectChange={patchProspect}
-              onAssetChange={patchAsset}
-              onAddAsset={addAsset}
-              onDeleteAsset={deleteAsset}
-              onDeleteProspect={(id) => setProspects((prev) => prev.filter((p) => p.id !== id))}
-              onAddProspect={() => setProspects((prev) => [...prev, blankProspect()])}
+              onOpen={(p) => setSelectedId(p.id)}
+              onChangeStage={changeStage}
+              onAddProspect={addProspect}
             />
           ) : (
             <FollowUpTable
@@ -225,6 +298,19 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {selected && (
+        <ProspectDetail
+          prospect={selected}
+          onChange={(patch) => patchProspect(selected.id, patch)}
+          onChangeStage={(stage) => changeStage(selected.id, stage)}
+          onAssetChange={(assetId, patch) => patchAsset(selected.id, assetId, patch)}
+          onAddAsset={() => addAsset(selected.id)}
+          onDeleteAsset={(assetId) => deleteAsset(selected.id, assetId)}
+          onDelete={() => deleteProspect(selected.id)}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   )
 }

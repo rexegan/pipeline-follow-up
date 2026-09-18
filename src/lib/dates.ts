@@ -56,6 +56,24 @@ export function fmtDate(isoDate: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+/** Whole days since an ISO timestamp — how "days in stage" is measured. */
+export function daysSince(isoTimestamp: string): number {
+  const then = Date.parse(isoTimestamp)
+  if (Number.isNaN(then)) return 0
+  return Math.max(0, Math.floor((Date.now() - then) / 86_400_000))
+}
+
+/** Short relative stamp for an activity entry, e.g. "Today", "3d ago", "Sep 4". */
+export function fmtWhen(isoTimestamp: string): string {
+  const d = new Date(isoTimestamp)
+  if (Number.isNaN(d.getTime())) return ''
+  const days = daysSince(isoTimestamp)
+  if (toIso(d) === today()) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days}d ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 /** Whole dollars — pipeline figures don't need cents. */
 export function fmtMoney(amount: number | null): string {
   if (amount === null || Number.isNaN(amount)) return '—'

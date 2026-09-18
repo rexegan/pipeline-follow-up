@@ -118,6 +118,32 @@ export type Asset = {
   notes: string
 }
 
+/** One logged touch — what happened and when, not just what's true now. */
+export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const
+
+export type ActivityKind = (typeof ACTIVITY_KINDS)[number]
+
+export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
+  call: 'Call',
+  email: 'Email',
+  meeting: 'Meeting',
+  note: 'Note',
+}
+
+export const ACTIVITY_KIND_ICONS: Record<ActivityKind, string> = {
+  call: '📞',
+  email: '✉️',
+  meeting: '🤝',
+  note: '📝',
+}
+
+export type ActivityEntry = {
+  id: string
+  kind: ActivityKind
+  text: string
+  at: string
+}
+
 export type Prospect = {
   id: string
   name: string
@@ -128,11 +154,14 @@ export type Prospect = {
   phone: string
   email: string
   stage: Stage
+  /** When `stage` last changed — how "days in stage" is measured. */
+  stageChangedAt: string
   assets: Asset[]
   nextStep: string
   /** ISO date (yyyy-mm-dd) the next step is due, or '' if unscheduled. */
   nextStepOn: string
-  notes: string
+  /** Chronological log of calls, emails, meetings, and notes — newest last. */
+  activity: ActivityEntry[]
   createdAt: string
   updatedAt: string
 }

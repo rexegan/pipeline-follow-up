@@ -11,19 +11,23 @@ export const blankAsset = (): Asset => ({
   notes: '',
 })
 
-export const blankProspect = (): Prospect => ({
-  id: uid(),
-  name: '',
-  kind: 'new-prospect',
-  source: 'dave-ramsey',
-  referredBy: '',
-  phone: '',
-  email: '',
-  stage: 'identified',
-  assets: [blankAsset()],
-  nextStep: '',
-  nextStepOn: '',
-  notes: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-})
+export const blankProspect = (): Prospect => {
+  const now = new Date().toISOString()
+  return {
+    id: uid(),
+    name: '',
+    kind: 'new-prospect',
+    source: 'dave-ramsey',
+    referredBy: '',
+    phone: '',
+    email: '',
+    stage: 'identified',
+    stageChangedAt: now,
+    assets: [blankAsset()],
+    nextStep: '',
+    nextStepOn: '',
+    activity: [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}

@@ -168,8 +168,8 @@ export function RecordCard({
   children,
 }: {
   accent: string
-  onDelete: () => void
-  deleteTitle: string
+  onDelete?: () => void
+  deleteTitle?: string
   children: ReactNode
 }) {
   return (
@@ -181,20 +181,88 @@ export function RecordCard({
         border: `1px solid ${BORDER}`,
         borderLeft: `3px solid ${accent}`,
         borderRadius: 8,
-        padding: '10px 34px 10px 12px',
+        padding: onDelete ? '10px 34px 10px 12px' : '10px 12px',
         marginBottom: 8,
       }}
     >
       {children}
-      <button
-        className="b-del"
-        title={deleteTitle}
-        onClick={onDelete}
-        style={{ position: 'absolute', top: 8, right: 8 }}
-      >
-        ×
-      </button>
+      {onDelete && (
+        <button
+          className="b-del"
+          title={deleteTitle}
+          onClick={onDelete}
+          style={{ position: 'absolute', top: 8, right: 8 }}
+        >
+          ×
+        </button>
+      )}
     </div>
+  )
+}
+
+/** Full-screen overlay with a centered panel — the opportunity detail view. */
+export function Modal({ onClose, children, width = 720 }: { onClose: () => void; children: ReactNode; width?: number }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(9,9,11,0.4)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '40px 16px',
+        overflowY: 'auto',
+        zIndex: 100,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: CARD,
+          borderRadius: 10,
+          border: `1px solid ${BORDER}`,
+          width: '100%',
+          maxWidth: width,
+          boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export function ActionBtn({
+  label,
+  onClick,
+  color = FG,
+  small,
+}: {
+  label: string
+  onClick: () => void
+  color?: string
+  small?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'none',
+        border: `1px solid ${color}`,
+        color,
+        borderRadius: 6,
+        padding: small ? '4px 10px' : '7px 14px',
+        fontSize: small ? 12 : 13,
+        fontWeight: 600,
+        cursor: 'pointer',
+        fontFamily: SANS,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </button>
   )
 }
 

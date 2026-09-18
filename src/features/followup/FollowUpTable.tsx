@@ -12,6 +12,10 @@ const HORIZON_COLOR: Record<Horizon, string> = {
   month: '#6d28d9',
 }
 
+const OVERDUE_COLOR = '#b91c1c'
+
+const isOverdue = (item: FollowUp) => !item.done && (daysUntil(item.dueOn) ?? 1) < 0
+
 type Props = {
   followUps: FollowUp[]
   prospects: Prospect[]
@@ -125,23 +129,33 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
   const [open, setOpen] = useState(true)
 
   // Every follow-up, same as the blotter shows every transaction — done items
-  // stay on the sheet, just faded, rather than dropping out of view.
-  const visible = useMemo(() => {
-    return [...followUps].sort(
-      (a, b) => HORIZONS.indexOf(a.horizon) - HORIZONS.indexOf(b.horizon) || a.dueOn.localeCompare(b.dueOn),
-    )
+  // stay on the sheet, just faded, rather than dropping out of view. Overdue
+  // items are pulled out of their normal window and surfaced first — the
+  // "needs attention" pattern every one of these CRMs leads with, instead of
+  // making you notice a red date buried in Wednesday's list.
+  const { overdueItems, byWindow } = useMemo(() => {
+    const overdue = followUps.filter(isOverdue).sort((a, b) => a.dueOn.localeCompare(b.dueOn))
+    const rest = followUps
+      .filter((f) => !isOverdue(f))
+      .sort((a, b) => HORIZONS.indexOf(a.horizon) - HORIZONS.indexOf(b.horizon) || a.dueOn.localeCompare(b.dueOn))
+    return { overdueItems: overdue, byWindow: rest }
   }, [followUps])
 
-  /** Cards carry a window divider so the three commitment windows stay legible. */
-  const withDividers: ({ kind: 'divider'; horizon: Horizon } | { kind: 'item'; item: FollowUp })[] = []
-  let seen: Horizon | null = null
-  for (const item of visible) {
-    if (item.horizon !== seen) {
-      withDividers.push({ kind: 'divider', horizon: item.horizon })
-      seen = item.horizon
+  type Entry = { kind: 'divider'; label: string; color: string } | { kind: 'item'; item: FollowUp }
+  const withDividers: Entry[] = []
+  if (overdueItems.length > 0) {
+    withDividers.push({ kind: 'divider', label: `Overdue (${overdueItems.length})`, color: OVERDUE_COLOR })
+    for (const item of overdueItems) withDividers.push({ kind: 'item', item })
+  }
+  let seenHorizon: Horizon | null = null
+  for (const item of byWindow) {
+    if (item.horizon !== seenHorizon) {
+      withDividers.push({ kind: 'divider', label: HORIZON_LABELS[item.horizon], color: HORIZON_COLOR[item.horizon] })
+      seenHorizon = item.horizon
     }
     withDividers.push({ kind: 'item', item })
   }
+  const visible = [...overdueItems, ...byWindow]
 
   return (
     <div
@@ -181,20 +195,20 @@ export function FollowUpTable({ followUps, prospects, onChange, onDelete, onAdd 
             </div>
           )}
 
-          {withDividers.map((entry) =>
+          {withDividers.map((entry, i) =>
             entry.kind === 'divider' ? (
               <div
-                key={`div:${entry.horizon}`}
+                key={`div:${i}`}
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.07em',
-                  color: HORIZON_COLOR[entry.horizon],
+                  color: entry.color,
                   padding: '10px 2px 4px',
                 }}
               >
-                {HORIZON_LABELS[entry.horizon]}
+                {entry.label}
               </div>
             ) : (
               <FollowUpCard

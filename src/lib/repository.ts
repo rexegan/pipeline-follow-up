@@ -27,6 +27,20 @@ function isProspect(value: unknown): value is Prospect {
   return typeof v.id === 'string' && typeof v.name === 'string' && STAGES.includes(v.stage as never)
 }
 
+/**
+ * Backfills fields added after data may already be sitting in a browser's
+ * localStorage (activity log, stage-change timestamp) — without this, a
+ * prospect saved before those fields existed loads with them `undefined` and
+ * crashes the first time the UI reads `.activity.length`.
+ */
+function normalizeProspect(p: Prospect): Prospect {
+  return {
+    ...p,
+    activity: Array.isArray(p.activity) ? p.activity : [],
+    stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
+  }
+}
+
 function isFollowUp(value: unknown): value is FollowUp {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
@@ -54,7 +68,7 @@ function write(key: string, value: unknown): void {
 
 export const localRepository: Repository = {
   async loadProspects() {
-    return read(PROSPECTS_KEY, isProspect)
+    return read(PROSPECTS_KEY, isProspect).map(normalizeProspect)
   },
   async saveProspects(prospects) {
     write(PROSPECTS_KEY, prospects)
