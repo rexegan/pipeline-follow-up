@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { Asset, FollowUp, Horizon, Prospect, Stage } from './types'
-import { STAGE_LABELS } from './types'
+import type { Asset, FollowUp, Horizon, Prospect, Settings, Stage } from './types'
+import { DEFAULT_SETTINGS, findStage } from './types'
 import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
@@ -9,6 +9,7 @@ import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
 import { suggestFollowUpFor } from './features/pipeline/stageWorkflow'
+import { SettingsPanel } from './features/settings/SettingsPanel'
 import { FollowUpTable } from './features/followup/FollowUpTable'
 import { daysUntil, fmtDate, fmtMoney, uid } from './lib/dates'
 import { defaultDue } from './features/followup/horizons'
@@ -26,14 +27,17 @@ export default function App() {
   const [view, setView] = useState<ViewId>('pipeline')
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [followUps, setFollowUps] = useState<FollowUp[]>([])
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [loaded, setLoaded] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     void (async () => {
       let [p, f] = await Promise.all([localRepository.loadProspects(), localRepository.loadFollowUps()])
+      const s = await localRepository.loadSettings()
       // First time this browser has ever opened the app: seed a demo
       // household so the page shows something instead of an empty state.
       // Gated on hasSeeded, not just an empty list, so deleting everything
@@ -47,6 +51,7 @@ export default function App() {
       if (cancelled) return
       setProspects(p)
       setFollowUps(f)
+      setSettings(s)
       setLoaded(true)
     })()
     return () => {
@@ -63,6 +68,10 @@ export default function App() {
   useEffect(() => {
     if (loaded) void localRepository.saveFollowUps(followUps)
   }, [followUps, loaded])
+
+  useEffect(() => {
+    if (loaded) void localRepository.saveSettings(settings)
+  }, [settings, loaded])
 
   const patchProspect = (id: string, patch: Partial<Prospect>) =>
     setProspects((prev) =>
@@ -86,7 +95,7 @@ export default function App() {
         ? {
             prospectId,
             prospectName: prospect.name || 'this opportunity',
-            reason: `Moved to ${STAGE_LABELS[stage]}`,
+            reason: `Moved to ${findStage(settings.stages, stage).label}`,
             ...suggested,
           }
         : null,
@@ -124,7 +133,9 @@ export default function App() {
 
   const addAsset = (prospectId: string, patch: Partial<Asset> = {}) =>
     setProspects((prev) =>
-      prev.map((p) => (p.id === prospectId ? { ...p, assets: [...p.assets, { ...blankAsset(), ...patch }] } : p)),
+      prev.map((p) =>
+        p.id === prospectId ? { ...p, assets: [...p.assets, { ...blankAsset(settings.accountTypes[0] ?? ''), ...patch }] } : p,
+      ),
     )
 
   const deleteAsset = (prospectId: string, assetId: string) =>
@@ -133,7 +144,8 @@ export default function App() {
     )
 
   function addProspect() {
-    const p = blankProspect()
+    const defaultStage = settings.stages.find((s) => !s.offTrack)?.key ?? ''
+    const p = blankProspect(defaultStage, settings.accountTypes[0] ?? '')
     setProspects((prev) => [...prev, p])
     setSelectedId(p.id)
   }
@@ -161,7 +173,7 @@ export default function App() {
       },
     ])
 
-  const openProspects = prospects.filter((p) => p.stage !== 'lost' && p.stage !== 'stalled')
+  const openProspects = prospects.filter((p) => !findStage(settings.stages, p.stage).offTrack)
   const inPlay = openProspects.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
   const moving = openProspects
     .flatMap((p) => p.assets)
@@ -259,14 +271,17 @@ export default function App() {
 
       <div style={{ flex: 1, minWidth: 0, background: BG }}>
         <div style={{ padding: '28px 28px 48px' }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: FG }}>
-                {heading}
-              </h1>
-              <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: FG }}>
+                  {heading}
+                </h1>
+                <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+            {view === 'pipeline' && <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />}
           </div>
 
           {view === 'pipeline' && suggestion && (
@@ -295,6 +310,7 @@ export default function App() {
           {view === 'pipeline' ? (
             <PipelineBoard
               prospects={prospects}
+              stages={settings.stages}
               onOpen={(p) => setSelectedId(p.id)}
               onChangeStage={changeStage}
               onAddProspect={addProspect}
@@ -314,6 +330,7 @@ export default function App() {
       {selected && (
         <ProspectDetail
           prospect={selected}
+          settings={settings}
           onChange={(patch) => patchProspect(selected.id, patch)}
           onChangeStage={(stage) => changeStage(selected.id, stage)}
           onAssetChange={(assetId, patch) => patchAsset(selected.id, assetId, patch)}
@@ -323,6 +340,8 @@ export default function App() {
           onClose={() => setSelectedId(null)}
         />
       )}
+
+      {settingsOpen && <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

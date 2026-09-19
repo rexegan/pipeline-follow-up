@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { BORDER, CARD, FG, MUTED, NO_PASSWORD_MANAGER, SANS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
@@ -250,8 +250,8 @@ export function Combobox({
  * `Combobox`, but — unlike it — isn't backed by a fixed set of IDs: leaving
  * text that doesn't match any option commits that text as-is on blur/Enter.
  * Used where a list of good suggestions helps but shouldn't be the only
- * allowed answer (a custodian that isn't in `CUSTODIANS`, a next step that
- * isn't one of the canned suggestions).
+ * allowed answer (a custodian that isn't in Settings' list yet, a next step
+ * that isn't one of the canned suggestions).
  */
 export function TypeaheadSelect({
   label,
@@ -271,6 +271,7 @@ export function TypeaheadSelect({
   grow?: boolean
 }) {
   const [query, setQuery] = useState<string | null>(null)
+  const cancelledRef = useRef(false)
   const editing = query !== null
   const shown = editing ? query : (options.find((o) => o.value === value)?.label ?? value)
   const filtered = editing && query.trim()
@@ -279,10 +280,9 @@ export function TypeaheadSelect({
 
   function commit(raw: string) {
     const text = raw.trim()
-    if (!text) {
-      onCommit('')
-      return
-    }
+    // Leaving it blank on blur/Enter cancels rather than clears — opening the
+    // dropdown to look and clicking away shouldn't wipe an existing value.
+    if (!text) return
     const match = options.find((o) => o.label.toLowerCase() === text.toLowerCase())
     onCommit(match ? match.value : text)
   }
@@ -297,11 +297,15 @@ export function TypeaheadSelect({
           onFocus={() => setQuery('')}
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => {
-            commit(query ?? '')
+            if (!cancelledRef.current) commit(query ?? '')
+            cancelledRef.current = false
             setQuery(null)
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') e.currentTarget.blur()
+            if (e.key === 'Escape') {
+              cancelledRef.current = true
+              e.currentTarget.blur()
+            }
             if (e.key === 'Enter') e.currentTarget.blur()
           }}
           className="box-input"
@@ -454,7 +458,7 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
-        padding: '40px 16px',
+        padding: '24px 16px',
         overflowY: 'auto',
         zIndex: 100,
       }}

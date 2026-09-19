@@ -58,49 +58,39 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | Path | What it holds |
 | --- | --- |
 | `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry` and `FollowUp`, plus every enum and its display labels |
-| `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, plus the one-time demo seed gate |
+| `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, the one-time demo seed gate, and Settings load/save |
 | `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
+| `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — all six stages in one row, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for stalled/lost |
+| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
-| `src/features/pipeline/nextStepSuggestions.ts` | Stage-specific Next Step suggestions offered in the record form's typeahead |
+| `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
 | `src/features/followup/FollowUpTable.tsx` | One card per follow-up: an Overdue section first, then Today / This Week / This Month |
-| `src/App.tsx` | Sidebar shell, summary figures, the stage-change suggestion banner, load/save wiring |
+| `src/App.tsx` | Sidebar shell, summary figures, the stage-change suggestion banner, load/save wiring, the Settings button |
 
 ## Data model
 
-A **Prospect** carries `kind` (new prospect vs existing client), `source` (Dave
-Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact details
-(phone auto-formats to `(817) 555-0142` as you type — on every load, not just
-while typing, so a number entered before this shipped doesn't sit there
-unformatted forever), a `stage` plus `stageChangedAt` (how "days in stage" is
-measured), a list of **Assets**, and an `activity` timeline. Each asset is
-`{ kind, amount, heldAt, movingTo, status }` — `heldAt` ("Where It's At Now")
-picks from a fixed list of common custodians/carriers (Fidelity, Vanguard,
-Empower, Edward Jones, LPL, and twenty-odd more — `CUSTODIANS` in
-`types.ts`); `movingTo` ("Where It's Moving") suggests from that same list via
-a typeahead (`TypeaheadSelect` in `primitives.tsx`) but accepts any typed
-firm name, since a receiving firm isn't always one of the common ones.
-`status` mirrors the pipeline stage names:
-`identified → doc-prep → docs-signed → processed → follow-up → funded`.
+A **Prospect** carries `kind` (new prospect vs existing client), `source`
+(Dave Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact
+details (phone auto-formats to `(817) 555-0142` as you type — on every load,
+not just while typing, so a number entered before this shipped doesn't sit
+there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
+stage" is measured), a list of **Assets**, and an `activity` timeline. Each
+asset is `{ kind, amount, heldAt, movingTo, status }` — `heldAt` ("Where It's
+At Now") and `movingTo` ("Where It's Moving") both suggest from Settings'
+shared custodian list via a typeahead (`TypeaheadSelect` in `primitives.tsx`)
+but accept any typed firm name. `status` mirrors the pipeline stage names:
+`identified → doc-prep → docs-signed → processed → follow-up → funded` — this
+one's fixed, not a Settings category.
 
-The record form's Next Step field is the same typeahead pattern, seeded with
-stage-specific suggestions (`nextStepSuggestions.ts`) — e.g. an opportunity
-still at "Opportunity Uncovered" (shown as "OPP Uncovered" in the Stage
-dropdown, where the full name doesn't fit) suggests "Schedule the first
-meeting," while one at IGO/NIGO suggests "Call the receiving firm for
-IGO/NIGO status." Typing anything else is just as valid — the list is a
-starting point, not a closed set.
-
-Stages run `identified` ("Opportunity Uncovered") `→ doc-prep → docs-signed →
-igo-nigo → follow-up-check → funded`. "IGO / NIGO" is standard back-office
-shorthand — paperwork came back either In Good Order or Not In Good Order.
-`stalled` and `lost` are off-track states — they drop off the board's columns
-entirely (collapsed into a "stalled or lost" strip below it) rather than
-cluttering the active view, but stay reachable and reversible from there.
+The record form's `kind` (Account Type), `source` (From), and Next Step are
+the same typeahead pattern: a list of suggestions that don't have to be the
+only allowed answer. Next Step suggestions are per-stage — an opportunity
+still at "Opportunity Uncovered" suggests "Schedule the first meeting," while
+one at IGO/NIGO suggests "Call the receiving firm for IGO/NIGO status."
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an
@@ -109,6 +99,26 @@ prospect or an existing client, searched by name via the `Combobox` primitive
 rather than scrolled in a plain dropdown), a due date, and done state.
 
 No SSNs or account numbers are stored, deliberately — see below.
+
+## Settings
+
+Stage names, custodians, account types, sources, and Next Step suggestions
+used to be hardcoded enums; they're now data, edited from the ⚙ Settings
+button on the Pipeline page and persisted alongside everything else. A
+`StageDef` (`types.ts`) is `{ key, label, shortLabel, formLabel, color,
+offTrack }` — adding a stage from Settings slugifies its label into a `key`,
+assigns the next color off a fixed palette, and appends it to the board;
+checking "Off track" collapses it into the strip below the board instead of
+giving it a column. Deleting a stage (or any other Settings entry) that a
+record is still using doesn't corrupt anything — `findStage` falls back to a
+neutral gray stand-in for a stage key Settings no longer defines, rather than
+crashing. Custodians, account types, and sources are plainer: just an
+editable list of strings that populate the matching field's suggestions.
+
+The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `Opportunity Uncovered →
+Doc Prep → Docs Signed → IGO/NIGO → Follow Up → Funded`, plus `Stalled` and
+`Lost` marked off track. "IGO / NIGO" is standard back-office shorthand —
+paperwork came back either In Good Order or Not In Good Order.
 
 ## Where this is going
 

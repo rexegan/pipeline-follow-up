@@ -1,34 +1,28 @@
 import { useState } from 'react'
-import type { Asset, Prospect, Stage } from '../../types'
+import type { Asset, Prospect, Settings, Stage } from '../../types'
 import {
   ACTIVITY_KIND_ICONS,
   ACTIVITY_KIND_LABELS,
   ACTIVITY_KINDS,
-  ASSET_KINDS,
-  ASSET_KIND_LABELS,
   ASSET_STATUSES,
   ASSET_STATUS_LABELS,
-  CUSTODIANS,
-  CUSTODIAN_LABELS,
   KIND_LABELS,
-  SOURCES,
-  SOURCE_LABELS,
-  STAGES,
-  STAGE_FORM_LABELS,
-  STAGE_LABELS,
+  findStage,
 } from '../../types'
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
 import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
-import { ASSET_STATUS_COLOR, STAGE_COLOR } from './stageColors'
-import { NEXT_STEP_SUGGESTIONS } from './nextStepSuggestions'
+import { ASSET_STATUS_COLOR } from './stageColors'
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
   values.map((v) => ({ value: v, label: labels[v] }))
 
+const listOpts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
+
 type Props = {
   prospect: Prospect
+  settings: Settings
   onChange: (patch: Partial<Prospect>) => void
   onChangeStage: (stage: Stage) => void
   onAssetChange: (assetId: string, patch: Partial<Asset>) => void
@@ -40,6 +34,7 @@ type Props = {
 
 export function ProspectDetail({
   prospect,
+  settings,
   onChange,
   onChangeStage,
   onAssetChange,
@@ -52,7 +47,8 @@ export function ProspectDetail({
   const [activityText, setActivityText] = useState('')
 
   const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
-  const offTrack = prospect.stage === 'stalled' || prospect.stage === 'lost'
+  const stageDef = findStage(settings.stages, prospect.stage)
+  const offTrack = stageDef.offTrack
 
   function logActivity() {
     const text = activityText.trim()
@@ -66,7 +62,7 @@ export function ProspectDetail({
   const timeline = [...prospect.activity].reverse()
 
   return (
-    <Modal onClose={onClose} width={940}>
+    <Modal onClose={onClose} width={1180}>
       {/* Header */}
       <div
         style={{
@@ -76,14 +72,14 @@ export function ProspectDetail({
           gap: 12,
           padding: '14px 20px 8px',
           borderBottom: `1px solid ${BORDER}`,
-          borderLeft: `4px solid ${STAGE_COLOR[prospect.stage]}`,
+          borderLeft: `4px solid ${stageDef.color}`,
           borderTopLeftRadius: 10,
         }}
       >
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: FG }}>{prospect.name || 'Untitled opportunity'}</div>
           <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>
-            {STAGE_LABELS[prospect.stage]}
+            {stageDef.label}
             {offTrack && <span style={{ color: DANGER, fontWeight: 600 }}> · off track</span>}
           </div>
         </div>
@@ -99,11 +95,11 @@ export function ProspectDetail({
         </div>
       </div>
 
-      <div style={{ display: 'flex', maxHeight: '75vh' }}>
+      <div style={{ display: 'flex', maxHeight: '88vh' }}>
         {/* Left: editable fields */}
         <div style={{ flex: '1 1 68%', padding: '8px 20px 16px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-            Prospect Intake
+            Intake
           </div>
           <FieldRow>
             <BoxText label="Name" width={180} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
@@ -114,13 +110,13 @@ export function ProspectDetail({
               options={opts(['new-prospect', 'existing-client'] as const, KIND_LABELS)}
               onCommit={(v) => onChange({ kind: v })}
             />
-            <BoxSelect
+            <TypeaheadSelect
               label="From"
               width={140}
               value={prospect.source}
-              options={opts(SOURCES, SOURCE_LABELS)}
+              options={listOpts(settings.sources)}
               onCommit={(v) => onChange({ source: v })}
-              color={prospect.source === 'dave-ramsey' ? '#6d28d9' : undefined}
+              placeholder="Type a source…"
             />
           </FieldRow>
           <FieldRow>
@@ -134,26 +130,28 @@ export function ProspectDetail({
           </div>
           {prospect.assets.map((asset) => (
             <FieldRow key={asset.id}>
-              <BoxSelect
+              <TypeaheadSelect
                 label="Account Type"
                 width={120}
                 value={asset.kind}
-                options={opts(ASSET_KINDS, ASSET_KIND_LABELS)}
+                options={listOpts(settings.accountTypes)}
                 onCommit={(v) => onAssetChange(asset.id, { kind: v })}
+                placeholder="Type a kind…"
               />
               <BoxMoney label="Amount" width={95} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
-              <BoxSelect
+              <TypeaheadSelect
                 label="Where It's At Now"
                 grow
                 value={asset.heldAt}
-                options={[{ value: '', label: '—' }, ...opts(CUSTODIANS, CUSTODIAN_LABELS)]}
+                options={listOpts(settings.custodians)}
                 onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
+                placeholder="Type a firm…"
               />
               <TypeaheadSelect
                 label="Where It's Moving"
                 grow
                 value={asset.movingTo}
-                options={opts(CUSTODIANS, CUSTODIAN_LABELS)}
+                options={listOpts(settings.custodians)}
                 onCommit={(v) => onAssetChange(asset.id, { movingTo: v })}
                 placeholder="Type a firm…"
               />
@@ -191,15 +189,15 @@ export function ProspectDetail({
               label="Stage"
               width={130}
               value={prospect.stage}
-              options={opts(STAGES, STAGE_FORM_LABELS)}
+              options={settings.stages.map((s) => ({ value: s.key, label: s.formLabel }))}
               onCommit={onChangeStage}
-              color={STAGE_COLOR[prospect.stage]}
+              color={stageDef.color}
             />
             <TypeaheadSelect
               label="Next Step"
               grow
               value={prospect.nextStep}
-              options={NEXT_STEP_SUGGESTIONS[prospect.stage].map((s) => ({ value: s, label: s }))}
+              options={listOpts(settings.nextStepSuggestions[prospect.stage] ?? [])}
               onCommit={(v) => onChange({ nextStep: v })}
               placeholder="Choose a suggestion or type your own…"
             />

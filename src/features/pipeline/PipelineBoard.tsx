@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
-import type { Prospect, Stage } from '../../types'
-import { ACTIVE_STAGES, OFF_TRACK_STAGES, SOURCE_LABELS, STAGE_SHORT_LABELS } from '../../types'
+import type { Prospect, Stage, StageDef } from '../../types'
+import { findStage } from '../../types'
 import { BORDER, CARD, FG, MUTED, MUTED_BG } from '../../ui/theme'
 import { daysSince, daysUntil, fmtMoney } from '../../lib/dates'
-import { STAGE_COLOR } from './stageColors'
 
 type Props = {
   prospects: Prospect[]
+  stages: StageDef[]
   onOpen: (prospect: Prospect) => void
   onChangeStage: (prospectId: string, stage: Stage) => void
   onAddProspect: () => void
@@ -16,12 +16,14 @@ type Props = {
 /** A compact opportunity card — the glanceable state; click opens the full record. */
 function BoardCard({
   prospect,
+  color,
   onOpen,
   dragging,
   onDragStart,
   onDragEnd,
 }: {
   prospect: Prospect
+  color: string
   onOpen: () => void
   dragging: boolean
   onDragStart: (e: DragEvent) => void
@@ -40,7 +42,7 @@ function BoardCard({
       style={{
         background: CARD,
         border: `1px solid ${BORDER}`,
-        borderLeft: `3px solid ${STAGE_COLOR[prospect.stage]}`,
+        borderLeft: `3px solid ${color}`,
         borderRadius: 7,
         padding: '9px 10px',
         marginBottom: 8,
@@ -56,7 +58,7 @@ function BoardCard({
         </div>
       </div>
 
-      <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{SOURCE_LABELS[prospect.source]}</div>
+      <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{prospect.source}</div>
 
       {prospect.nextStep && (
         <div
@@ -88,13 +90,16 @@ function BoardCard({
   )
 }
 
-export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect }: Props) {
+export function PipelineBoard({ prospects, stages, onOpen, onChangeStage, onAddProspect }: Props) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<Stage | null>(null)
   const [showOffTrack, setShowOffTrack] = useState(false)
 
-  const byStage = (stage: Stage) => prospects.filter((p) => p.stage === stage)
-  const offTrack = prospects.filter((p) => OFF_TRACK_STAGES.includes(p.stage as never))
+  const activeStages = stages.filter((s) => !s.offTrack)
+  const offTrackStages = stages.filter((s) => s.offTrack)
+
+  const byStage = (key: string) => prospects.filter((p) => p.stage === key)
+  const offTrack = prospects.filter((p) => offTrackStages.some((s) => s.key === p.stage))
 
   const dragHandlers = (p: Prospect) => ({
     dragging: dragId === p.id,
@@ -107,23 +112,23 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
 
   const COLUMN_WIDTH = 165
 
-  function renderColumn(stage: Stage) {
-    const items = byStage(stage)
+  function renderColumn(stage: StageDef) {
+    const items = byStage(stage.key)
     const total = items.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
-    const isDropTarget = overStage === stage && dragId !== null
+    const isDropTarget = overStage === stage.key && dragId !== null
 
     return (
       <div
-        key={stage}
+        key={stage.key}
         onDragOver={(e) => {
           e.preventDefault()
-          if (overStage !== stage) setOverStage(stage)
+          if (overStage !== stage.key) setOverStage(stage.key)
         }}
-        onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
+        onDragLeave={() => setOverStage((s) => (s === stage.key ? null : s))}
         onDrop={(e) => {
           e.preventDefault()
           setOverStage(null)
-          if (dragId) onChangeStage(dragId, stage)
+          if (dragId) onChangeStage(dragId, stage.key)
           setDragId(null)
         }}
         style={{
@@ -136,7 +141,7 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
       >
         <div
           style={{
-            borderTop: `3px solid ${STAGE_COLOR[stage]}`,
+            borderTop: `3px solid ${stage.color}`,
             background: CARD,
             border: `1px solid ${BORDER}`,
             borderTopWidth: 3,
@@ -145,7 +150,7 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
             marginBottom: 8,
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 700, color: FG }}>{STAGE_SHORT_LABELS[stage]}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: FG }}>{stage.shortLabel}</div>
           <div style={{ fontSize: 14, fontWeight: 600, color: MUTED, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
             {items.length} · {total > 0 ? fmtMoney(total) : '—'}
           </div>
@@ -153,11 +158,11 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
 
         <div style={{ minHeight: 40 }}>
           {items.map((p) => (
-            <BoardCard key={p.id} prospect={p} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
+            <BoardCard key={p.id} prospect={p} color={stage.color} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
           ))}
         </div>
 
-        {stage === ACTIVE_STAGES[0] && (
+        {stage.key === activeStages[0]?.key && (
           <button className="b-add" style={{ borderRadius: 6, border: `1px dashed ${BORDER}`, fontSize: 12 }} onClick={onAddProspect}>
             + Add opportunity
           </button>
@@ -169,7 +174,7 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
   return (
     <div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 8 }}>
-        {ACTIVE_STAGES.map(renderColumn)}
+        {activeStages.map(renderColumn)}
       </div>
 
       {offTrack.length > 0 && (
@@ -193,7 +198,7 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
             >
               {offTrack.map((p) => (
                 <div key={p.id} style={{ width: 240 }}>
-                  <BoardCard prospect={p} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
+                  <BoardCard prospect={p} color={findStage(stages, p.stage).color} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
                 </div>
               ))}
             </div>
