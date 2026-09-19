@@ -1,4 +1,4 @@
-import type { FollowUp, Prospect, Settings } from '../types'
+import type { FollowUp, Prospect, Settings, StageDef } from '../types'
 import { DEFAULT_SETTINGS, HORIZONS } from '../types'
 import { formatPhone } from './phone'
 
@@ -86,6 +86,50 @@ const LEGACY_SOURCE_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
+/**
+ * IGO and NIGO used to be one combined stage ('igo-nigo'). A browser that
+ * saved its stage list before the split still has that single entry — since
+ * Settings only backfills a category when it's missing entirely (see
+ * `normalizeSettings`), a non-empty stale `stages` array never picks up new
+ * defaults on its own, so this stage split needs its own explicit migration
+ * rather than relying on that fallback.
+ */
+function splitLegacyIgoNigoStage(stages: StageDef[]): StageDef[] {
+  const i = stages.findIndex((s) => s.key === 'igo-nigo')
+  if (i === -1) return stages
+  const old = stages[i]
+  const igo: StageDef = { key: 'igo', label: 'IGO', shortLabel: 'IGO', formLabel: 'IGO', color: old.color, offTrack: old.offTrack }
+  const nigo: StageDef = { key: 'nigo', label: 'NIGO', shortLabel: 'NIGO', formLabel: 'NIGO', color: '#ea580c', offTrack: old.offTrack }
+  return [...stages.slice(0, i), igo, nigo, ...stages.slice(i + 1)]
+}
+
+/**
+ * Same problem as above, for the two stages added after that same non-empty
+ * `stages` arrays stopped picking up new defaults automatically: a browser
+ * whose settings froze before either shipped is missing them outright
+ * rather than showing a stale version of them.
+ */
+function ensureFirstMeetingStage(stages: StageDef[]): StageDef[] {
+  if (stages.some((s) => s.key === 'first-meeting')) return stages
+  const firstMeeting: StageDef = {
+    key: 'first-meeting',
+    label: 'First Meeting',
+    shortLabel: '1st MTG/Call',
+    formLabel: 'First Meeting',
+    color: '#be185d',
+    offTrack: false,
+  }
+  return [firstMeeting, ...stages]
+}
+
+function ensureIssuedStage(stages: StageDef[]): StageDef[] {
+  if (stages.some((s) => s.key === 'issued')) return stages
+  const issued: StageDef = { key: 'issued', label: 'Issued', shortLabel: 'Issued', formLabel: 'Issued', color: '#4d7c0f', offTrack: false }
+  const i = stages.findIndex((s) => s.offTrack)
+  if (i === -1) return [...stages, issued]
+  return [...stages.slice(0, i), issued, ...stages.slice(i)]
+}
+
 function isProspect(value: unknown): value is Prospect {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
@@ -104,6 +148,10 @@ function normalizeProspect(p: Prospect): Prospect {
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
+    // The old combined IGO/NIGO stage no longer exists as of the split —
+    // move anyone still on it to IGO rather than leaving them pointed at a
+    // stage key nothing defines.
+    stage: p.stage === 'igo-nigo' ? 'igo' : p.stage,
     // Formatting only ever ran on typing, so a number saved before that
     // shipped (or entered any other way) would sit there unformatted forever.
     phone: formatPhone(p.phone),
@@ -139,18 +187,28 @@ function normalizeSettings(raw: unknown): Settings {
   // one down, so falling back to the new default there instead of the old
   // shared list is what actually applies the narrowing.
   const legacyCustodians = Array.isArray(v.custodians) ? v.custodians : null
+  const rawStages = Array.isArray(v.stages) && v.stages.length > 0 ? v.stages : DEFAULT_SETTINGS.stages
+  const rawSuggestions: Record<string, string[]> =
+    v.nextStepSuggestions && typeof v.nextStepSuggestions === 'object'
+      ? (v.nextStepSuggestions as Record<string, string[]>)
+      : DEFAULT_SETTINGS.nextStepSuggestions
+  // The old combined stage's suggestions move to IGO's list — imperfect
+  // (some were really about NIGO) but better than dropping them, and NIGO
+  // still has its own default suggestions either way.
+  const { 'igo-nigo': legacyIgoNigoSuggestions, ...suggestionsRest } = rawSuggestions
+  const nextStepSuggestions = legacyIgoNigoSuggestions
+    ? { ...suggestionsRest, igo: [...new Set([...(suggestionsRest.igo ?? []), ...legacyIgoNigoSuggestions])] }
+    : suggestionsRest
+
   return {
-    stages: Array.isArray(v.stages) && v.stages.length > 0 ? v.stages : DEFAULT_SETTINGS.stages,
+    stages: ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages))),
     custodiansHeldAt: Array.isArray(v.custodiansHeldAt)
       ? v.custodiansHeldAt
       : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
     custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
-    nextStepSuggestions:
-      v.nextStepSuggestions && typeof v.nextStepSuggestions === 'object'
-        ? v.nextStepSuggestions
-        : DEFAULT_SETTINGS.nextStepSuggestions,
+    nextStepSuggestions,
   }
 }
 

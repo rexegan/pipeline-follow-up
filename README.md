@@ -170,6 +170,16 @@ later change to that default (this bit once — see the code comment above
 `updateSettings`). Once a category is actually edited via the panel, that
 edit is what persists.
 
+That "freeze on first load" bug predates the fix above, so a browser that
+had already loaded the app before it landed still has a `stages` array
+frozen at whatever shipped then — non-empty, so the missing-category
+fallback doesn't touch it. Adding a stage after that point (the IGO/NIGO
+split, `First Meeting`, `Issued`) needs its own explicit one-off migration
+in `repository.ts` (`splitLegacyIgoNigoStage`, `ensureFirstMeetingStage`,
+`ensureIssuedStage`) rather than relying on the general fallback — the same
+pattern as the `LEGACY_*` label tables below, just for stage keys instead of
+free-text field values.
+
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `First Meeting →
 Opportunity Uncovered → Doc Prep → Docs Signed → IGO → NIGO → Follow Up →
 Funded → Issued`, plus `Stalled` and `Lost` marked off track. `First
