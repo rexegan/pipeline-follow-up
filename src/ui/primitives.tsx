@@ -478,7 +478,10 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
         inset: 0,
         background: 'rgba(9,9,11,0.4)',
         display: 'flex',
-        alignItems: 'flex-start',
+        // Stretch (not flex-start) so the panel fills the full height between
+        // the top and bottom padding — the same gray margin on both edges,
+        // instead of shrink-to-fit leaving a lopsided gap at the bottom.
+        alignItems: 'stretch',
         justifyContent: 'center',
         padding: '24px 16px',
         overflowY: 'auto',
@@ -494,6 +497,8 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
           width: '100%',
           maxWidth: width,
           boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {children}

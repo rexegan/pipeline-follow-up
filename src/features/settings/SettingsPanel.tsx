@@ -154,7 +154,7 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
         </button>
       </div>
 
-      <div style={{ padding: '18px 20px', maxHeight: '88vh', overflowY: 'auto' }}>
+      <div style={{ padding: '18px 20px', flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
         <Section
           title="Stage"
           hint={'The board’s columns, left to right. Check "Stalled / lost" for a stage that means the opportunity fell through rather than moved forward — instead of its own column, it collapses into a strip below the board.'}

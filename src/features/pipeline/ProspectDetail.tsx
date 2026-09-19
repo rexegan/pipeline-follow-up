@@ -102,7 +102,7 @@ export function ProspectDetail({
         </div>
       </div>
 
-      <div style={{ display: 'flex', maxHeight: '88vh' }}>
+      <div style={{ display: 'flex', flex: '1 1 auto', minHeight: 0 }}>
         {/* Left: editable fields */}
         <div style={{ flex: '1 1 68%', padding: '8px 20px 16px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
