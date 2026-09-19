@@ -13,7 +13,8 @@ const STAGE_FOLLOWUP: Partial<Record<Stage, { task: string; days: number }>> = {
   igo: { task: 'Confirm the assets are in good order and proceed with funding', days: 2 },
   nigo: { task: 'Correct and resubmit the NIGO items', days: 2 },
   'follow-up-check': { task: 'Confirm the transfer has landed', days: 5 },
-  funded: { task: 'Schedule the 30-day onboarding check-in', days: 30 },
+  funded: { task: 'Confirm the account or policy has been issued', days: 10 },
+  issued: { task: 'Schedule the 30-day onboarding check-in', days: 30 },
 }
 
 export type StageSuggestion = { title: string; dueOn: string }

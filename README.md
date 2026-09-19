@@ -167,10 +167,12 @@ later change to that default (this bit once — see the code comment above
 edit is what persists.
 
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `Opportunity Uncovered →
-Doc Prep → Docs Signed → IGO → NIGO → Follow Up → Funded`, plus `Stalled` and
-`Lost` marked off track. IGO/NIGO is standard back-office shorthand for
-paperwork coming back either In Good Order or Not In Good Order — two
-different outcomes, so two separate stages rather than one combined one.
+Doc Prep → Docs Signed → IGO → NIGO → Follow Up → Funded → Issued`, plus
+`Stalled` and `Lost` marked off track. IGO/NIGO is standard back-office
+shorthand for paperwork coming back either In Good Order or Not In Good
+Order — two different outcomes, so two separate stages rather than one
+combined one. `Issued` is the step after `Funded` — the account or policy
+has actually been issued by the receiving firm, not just funded.
 
 ## Where this is going
 

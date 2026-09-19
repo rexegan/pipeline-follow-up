@@ -27,6 +27,7 @@ export const DEFAULT_STAGES: StageDef[] = [
   { key: 'nigo', label: 'NIGO', shortLabel: 'NIGO', formLabel: 'NIGO', color: '#ea580c', offTrack: false },
   { key: 'follow-up-check', label: 'Follow Up', shortLabel: 'Follow Up', formLabel: 'Follow Up', color: '#0f766e', offTrack: false },
   { key: 'funded', label: 'Funded', shortLabel: 'Funded', formLabel: 'Funded', color: '#16a34a', offTrack: false },
+  { key: 'issued', label: 'Issued', shortLabel: 'Issued', formLabel: 'Issued', color: '#4d7c0f', offTrack: false },
   { key: 'stalled', label: 'Stalled', shortLabel: 'Stalled', formLabel: 'Stalled', color: '#a16207', offTrack: true },
   { key: 'lost', label: 'Lost', shortLabel: 'Lost', formLabel: 'Lost', color: '#dc2626', offTrack: true },
 ]
@@ -308,6 +309,11 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
     'Review the new account allocation with the client',
     'Ask for a referral',
   ],
+  issued: [
+    'Confirm the account or policy has been issued',
+    'Send the issued documents to the client',
+    'Schedule a review once the account is active',
+  ],
   stalled: [
     'Call to re-engage and confirm interest',
     'Send a check-in email',
@@ -355,13 +361,14 @@ export const SORTS = [
   { id: 'all', label: 'All Opportunities' },
   { id: 'amount-desc', label: 'Highest dollar amount' },
   { id: 'newest', label: 'Newest Opportunity' },
-  { id: 'oldest', label: 'Oldest' },
+  { id: 'oldest', label: 'Oldest Opportunity' },
   { id: 'doc-prep', label: 'Doc Prep' },
   { id: 'docs-signed', label: 'Signed' },
   { id: 'igo', label: 'IGO' },
   { id: 'nigo', label: 'NIGO' },
   { id: 'follow-up-check', label: 'Follow Up' },
   { id: 'funded', label: 'Funded' },
+  { id: 'issued', label: 'Issued' },
   { id: 'stalled', label: 'Stalled' },
   { id: 'lost', label: 'Lost' },
 ] as const
