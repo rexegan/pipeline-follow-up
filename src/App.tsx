@@ -403,9 +403,7 @@ export default function App() {
               stages={settings.stages}
               sortBy={sortBy}
               onOpen={(p) => setSelectedId(p.id)}
-              onChangeStage={changeStage}
               onAddProspect={addProspect}
-              onSelectSort={setSortBy}
             />
           ) : (
             <FollowUpTable

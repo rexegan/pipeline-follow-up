@@ -23,11 +23,11 @@ The *structure* of Pipeline (a stage board, not a table) comes from looking at
 how actual financial-advisor CRMs handle this — Wealthbox, Redtail, Salesforce
 Financial Services Cloud:
 
-- **A stage board, not a list.** Wealthbox and Pipedrive lead with a
-  drag-and-drop kanban. A flat list of fully-expanded records has no
-  glanceable, collapsed state — you're always looking at a form, never a
-  shape. `PipelineBoard.tsx` is that board; click a card to open the full
-  record in `ProspectDetail.tsx`.
+- **Collapsed cards, not fully-expanded records.** A flat list of expanded
+  records has no glanceable, collapsed state — you're always looking at a
+  form, never a shape. `PipelineBoard.tsx` renders every opportunity as a
+  compact card in one grid (not stage columns — see below); click a card to
+  open the full record in `ProspectDetail.tsx`.
 - **Activity history, not a single notes field.** Redtail tracks
   "communication history" as a dated timeline per relationship. A `Prospect`
   carries `activity: ActivityEntry[]` (call / email / meeting / note, each
@@ -65,7 +65,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column board (the "All Opportunities" view) and the flat filtered/sorted view every other Sort option switches to — both a strict 7-per-row grid, wrapping to a new row rather than scrolling; stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
+| `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 7-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
@@ -114,18 +114,18 @@ through them in order and wraps back around, so you can work through every
 open Doc Prep (say) one after another without closing and re-picking a card
 each time.
 
-The Pipeline page's **Sort** dropdown (its own row under the date) is really
-a view switcher: "All Opportunities" is the normal stage-column board; three
-options (Highest dollar amount / Newest Opportunity / Oldest) flatten every
-active opportunity into one sorted, wrapping grid; and one option per stage
-(including the off-track ones — Stalled, Lost) shows only that stage's
-opportunities in the same flat grid, which is also how the off-track ones
-become visible outside the board's collapsed strip. Every board column
-header is a button that jumps straight to that stage's view; the first
-column doubles as "Total Opportunities" (the "All" view), matching the
-sidebar stat of the same name. All four sidebar stat cards (Total
-Opportunities, In Process, Completed, Open Opportunities) are clickable too
-and switch to the matching view.
+The Pipeline board is one grid of every opportunity, not a column per stage —
+stage is shown per card (the colored left border) rather than by grouping;
+change it from the record's own Stage field, not by dragging a card
+somewhere. The **Sort** dropdown (its own row under the date) picks what
+goes into that grid: "All Opportunities" is every active one in no
+particular order; three options (Highest dollar amount / Newest Opportunity
+/ Oldest) sort all of them; and one option per stage (including the
+off-track ones — Stalled, Lost) narrows the grid to just that stage, which
+is also how the off-track ones become visible outside the board's collapsed
+strip. All four sidebar stat cards (Total Opportunities, In Process,
+Completed, Open Opportunities) are clickable and switch the Sort dropdown to
+the matching view.
 
 The sidebar's Total Opportunities stat is also followed by a small
 per-stage count breakdown — clicking a stage with opportunities on it jumps
