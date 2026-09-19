@@ -14,13 +14,15 @@ import {
   SOURCES,
   SOURCE_LABELS,
   STAGES,
+  STAGE_FORM_LABELS,
   STAGE_LABELS,
 } from '../../types'
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
-import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal } from '../../ui/primitives'
+import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
 import { ASSET_STATUS_COLOR, STAGE_COLOR } from './stageColors'
+import { NEXT_STEP_SUGGESTIONS } from './nextStepSuggestions'
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
   values.map((v) => ({ value: v, label: labels[v] }))
@@ -147,12 +149,13 @@ export function ProspectDetail({
                 options={[{ value: '', label: '—' }, ...opts(CUSTODIANS, CUSTODIAN_LABELS)]}
                 onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
               />
-              <BoxSelect
-                label="Receiving Firm"
+              <TypeaheadSelect
+                label="Where It's Moving"
                 grow
                 value={asset.movingTo}
-                options={[{ value: '', label: '—' }, ...opts(CUSTODIANS, CUSTODIAN_LABELS)]}
+                options={opts(CUSTODIANS, CUSTODIAN_LABELS)}
                 onCommit={(v) => onAssetChange(asset.id, { movingTo: v })}
+                placeholder="Type a firm…"
               />
               <BoxSelect
                 label="Status"
@@ -186,13 +189,20 @@ export function ProspectDetail({
           <FieldRow last>
             <BoxSelect
               label="Stage"
-              width={160}
+              width={130}
               value={prospect.stage}
-              options={opts(STAGES, STAGE_LABELS)}
+              options={opts(STAGES, STAGE_FORM_LABELS)}
               onCommit={onChangeStage}
               color={STAGE_COLOR[prospect.stage]}
             />
-            <BoxText label="Next Step" grow value={prospect.nextStep} onCommit={(v) => onChange({ nextStep: v })} />
+            <TypeaheadSelect
+              label="Next Step"
+              grow
+              value={prospect.nextStep}
+              options={NEXT_STEP_SUGGESTIONS[prospect.stage].map((s) => ({ value: s, label: s }))}
+              onCommit={(v) => onChange({ nextStep: v })}
+              placeholder="Choose a suggestion or type your own…"
+            />
             <BoxText label="Next Step Due" type="date" width={140} value={prospect.nextStepOn} onCommit={(v) => onChange({ nextStepOn: v })} />
           </FieldRow>
         </div>

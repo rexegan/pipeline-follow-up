@@ -245,6 +245,112 @@ export function Combobox({
   )
 }
 
+/**
+ * A dropdown you can also type into. Filters the option list live like
+ * `Combobox`, but — unlike it — isn't backed by a fixed set of IDs: leaving
+ * text that doesn't match any option commits that text as-is on blur/Enter.
+ * Used where a list of good suggestions helps but shouldn't be the only
+ * allowed answer (a custodian that isn't in `CUSTODIANS`, a next step that
+ * isn't one of the canned suggestions).
+ */
+export function TypeaheadSelect({
+  label,
+  value,
+  options,
+  onCommit,
+  placeholder = 'Type or choose…',
+  width,
+  grow,
+}: {
+  label: string
+  value: string
+  options: { value: string; label: string }[]
+  onCommit: (value: string) => void
+  placeholder?: string
+  width?: number
+  grow?: boolean
+}) {
+  const [query, setQuery] = useState<string | null>(null)
+  const editing = query !== null
+  const shown = editing ? query : (options.find((o) => o.value === value)?.label ?? value)
+  const filtered = editing && query.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
+    : options
+
+  function commit(raw: string) {
+    const text = raw.trim()
+    if (!text) {
+      onCommit('')
+      return
+    }
+    const match = options.find((o) => o.label.toLowerCase() === text.toLowerCase())
+    onCommit(match ? match.value : text)
+  }
+
+  return (
+    <FieldShell label={label} width={width} grow={grow}>
+      <div style={{ position: 'relative' }}>
+        <input
+          aria-label={label}
+          value={shown}
+          placeholder={placeholder}
+          onFocus={() => setQuery('')}
+          onChange={(e) => setQuery(e.target.value)}
+          onBlur={() => {
+            commit(query ?? '')
+            setQuery(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') e.currentTarget.blur()
+            if (e.key === 'Enter') e.currentTarget.blur()
+          }}
+          className="box-input"
+          style={BOX_INPUT}
+          {...NO_PASSWORD_MANAGER}
+        />
+        {editing && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              zIndex: 20,
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 6,
+              marginTop: 2,
+              maxHeight: 190,
+              overflowY: 'auto',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            }}
+          >
+            {filtered.length === 0 && (
+              <div style={{ padding: '6px 10px', fontSize: 13, color: MUTED }}>
+                {'No matches — keep typing to use your own'}
+              </div>
+            )}
+            {filtered.map((o) => (
+              <div
+                key={o.value}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  onCommit(o.value)
+                  setQuery(null)
+                }}
+                className="combo-option"
+                style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer' }}
+              >
+                {o.label}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </FieldShell>
+  )
+}
+
 export function BoxMoney({
   label,
   value,

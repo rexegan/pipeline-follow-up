@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
 import type { Prospect, Stage } from '../../types'
-import { ACTIVE_STAGES, OFF_TRACK_STAGES, SOURCE_LABELS, STAGE_LABELS } from '../../types'
+import { ACTIVE_STAGES, OFF_TRACK_STAGES, SOURCE_LABELS, STAGE_SHORT_LABELS } from '../../types'
 import { BORDER, CARD, FG, MUTED, MUTED_BG } from '../../ui/theme'
 import { daysSince, daysUntil, fmtMoney } from '../../lib/dates'
 import { STAGE_COLOR } from './stageColors'
@@ -105,67 +105,81 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
     onDragEnd: () => setDragId(null),
   })
 
+  const COLUMN_WIDTH = 205
+
+  function renderColumn(stage: Stage) {
+    const items = byStage(stage)
+    const total = items.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+    const isDropTarget = overStage === stage && dragId !== null
+
+    return (
+      <div
+        key={stage}
+        onDragOver={(e) => {
+          e.preventDefault()
+          if (overStage !== stage) setOverStage(stage)
+        }}
+        onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
+        onDrop={(e) => {
+          e.preventDefault()
+          setOverStage(null)
+          if (dragId) onChangeStage(dragId, stage)
+          setDragId(null)
+        }}
+        style={{
+          flex: `0 0 ${COLUMN_WIDTH}px`,
+          width: COLUMN_WIDTH,
+          background: isDropTarget ? MUTED_BG : 'transparent',
+          borderRadius: 8,
+          transition: 'background 0.1s',
+        }}
+      >
+        <div
+          style={{
+            borderTop: `3px solid ${STAGE_COLOR[stage]}`,
+            background: CARD,
+            border: `1px solid ${BORDER}`,
+            borderTopWidth: 3,
+            borderRadius: 7,
+            padding: '8px 10px',
+            marginBottom: 8,
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 700, color: FG }}>{STAGE_SHORT_LABELS[stage]}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: MUTED, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+            {items.length} · {total > 0 ? fmtMoney(total) : '—'}
+          </div>
+        </div>
+
+        <div style={{ minHeight: 40 }}>
+          {items.map((p) => (
+            <BoardCard key={p.id} prospect={p} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
+          ))}
+        </div>
+
+        {stage === ACTIVE_STAGES[0] && (
+          <button className="b-add" style={{ borderRadius: 6, border: `1px dashed ${BORDER}`, fontSize: 12 }} onClick={onAddProspect}>
+            + Add opportunity
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  // Uncovered / Doc Prep / Docs Signed / IGO-NIGO across the top; Follow Up
+  // and Funded stack underneath the first two columns rather than extending
+  // the row to six across — six stages rarely all have live volume at once,
+  // and this keeps the whole board in view without a horizontal scroll.
+  const topRow = ACTIVE_STAGES.slice(0, 4)
+  const bottomRow = ACTIVE_STAGES.slice(4)
+
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 8 }}>
-      {ACTIVE_STAGES.map((stage) => {
-        const items = byStage(stage)
-        const total = items.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
-        const isDropTarget = overStage === stage && dragId !== null
-
-        return (
-          <div
-            key={stage}
-            onDragOver={(e) => {
-              e.preventDefault()
-              if (overStage !== stage) setOverStage(stage)
-            }}
-            onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
-            onDrop={(e) => {
-              e.preventDefault()
-              setOverStage(null)
-              if (dragId) onChangeStage(dragId, stage)
-              setDragId(null)
-            }}
-            style={{
-              flex: '0 0 240px',
-              width: 240,
-              background: isDropTarget ? MUTED_BG : 'transparent',
-              borderRadius: 8,
-              transition: 'background 0.1s',
-            }}
-          >
-            <div
-              style={{
-                borderTop: `3px solid ${STAGE_COLOR[stage]}`,
-                background: CARD,
-                border: `1px solid ${BORDER}`,
-                borderTopWidth: 3,
-                borderRadius: 7,
-                padding: '8px 10px',
-                marginBottom: 8,
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 700, color: FG }}>{STAGE_LABELS[stage]}</div>
-              <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>
-                {items.length} · {total > 0 ? fmtMoney(total) : '—'}
-              </div>
-            </div>
-
-            <div style={{ minHeight: 40 }}>
-              {items.map((p) => (
-                <BoardCard key={p.id} prospect={p} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
-              ))}
-            </div>
-
-            {stage === ACTIVE_STAGES[0] && (
-              <button className="b-add" style={{ borderRadius: 6, border: `1px dashed ${BORDER}`, fontSize: 12 }} onClick={onAddProspect}>
-                + Add opportunity
-              </button>
-            )}
-          </div>
-        )
-      })}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: 8 }}>
+        {topRow.map(renderColumn)}
+      </div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: 8 }}>
+        {bottomRow.map(renderColumn)}
       </div>
 
       {offTrack.length > 0 && (

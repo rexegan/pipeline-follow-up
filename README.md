@@ -62,10 +62,11 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — drag-and-drop between stages, a collapsed strip for stalled/lost |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
+| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — two rows (four stages, then Follow Up/Funded stacked underneath), drag-and-drop between stages, a collapsed strip for stalled/lost |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
+| `src/features/pipeline/nextStepSuggestions.ts` | Stage-specific Next Step suggestions offered in the record form's typeahead |
 | `src/features/followup/FollowUpTable.tsx` | One card per follow-up: an Overdue section first, then Today / This Week / This Month |
 | `src/App.tsx` | Sidebar shell, summary figures, the stage-change suggestion banner, load/save wiring |
 
@@ -78,11 +79,21 @@ while typing, so a number entered before this shipped doesn't sit there
 unformatted forever), a `stage` plus `stageChangedAt` (how "days in stage" is
 measured), a list of **Assets**, and an `activity` timeline. Each asset is
 `{ kind, amount, heldAt, movingTo, status }` — `heldAt` ("Where It's At Now")
-and `movingTo` ("Receiving Firm") both pick from the same fixed list of common
-custodians/carriers (Fidelity, Vanguard, Empower, Edward Jones, LPL, and
-twenty-odd more — `CUSTODIANS` in `types.ts`) rather than free text, and
+picks from a fixed list of common custodians/carriers (Fidelity, Vanguard,
+Empower, Edward Jones, LPL, and twenty-odd more — `CUSTODIANS` in
+`types.ts`); `movingTo` ("Where It's Moving") suggests from that same list via
+a typeahead (`TypeaheadSelect` in `primitives.tsx`) but accepts any typed
+firm name, since a receiving firm isn't always one of the common ones.
 `status` mirrors the pipeline stage names:
 `identified → doc-prep → docs-signed → processed → follow-up → funded`.
+
+The record form's Next Step field is the same typeahead pattern, seeded with
+stage-specific suggestions (`nextStepSuggestions.ts`) — e.g. an opportunity
+still at "Opportunity Uncovered" (shown as "OPP Uncovered" in the Stage
+dropdown, where the full name doesn't fit) suggests "Schedule the first
+meeting," while one at IGO/NIGO suggests "Call the receiving firm for
+IGO/NIGO status." Typing anything else is just as valid — the list is a
+starting point, not a closed set.
 
 Stages run `identified` ("Opportunity Uncovered") `→ doc-prep → docs-signed →
 igo-nigo → follow-up-check → funded`. "IGO / NIGO" is standard back-office

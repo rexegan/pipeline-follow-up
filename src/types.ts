@@ -30,6 +30,24 @@ export const STAGE_LABELS: Record<Stage, string> = {
   lost: 'Lost',
 }
 
+/** Tight labels for the board's column headers, where space is at a premium. */
+export const STAGE_SHORT_LABELS: Record<Stage, string> = {
+  identified: 'Uncovered',
+  'doc-prep': 'Doc Prep',
+  'docs-signed': 'Signed',
+  'igo-nigo': 'IGO/NIGO',
+  'follow-up-check': 'Follow Up',
+  funded: 'Funded',
+  stalled: 'Stalled',
+  lost: 'Lost',
+}
+
+/** Labels for the Stage select in the record form — "Opportunity Uncovered" is too wide there. */
+export const STAGE_FORM_LABELS: Record<Stage, string> = {
+  ...STAGE_LABELS,
+  identified: 'OPP Uncovered',
+}
+
 /** Where the opportunity came from. */
 export const SOURCES = [
   'dave-ramsey',
