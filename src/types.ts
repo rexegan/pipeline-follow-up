@@ -17,6 +17,7 @@ export type StageDef = {
 export type Stage = string
 
 export const DEFAULT_STAGES: StageDef[] = [
+  { key: 'first-meeting', label: 'First Meeting', shortLabel: '1st MTG/Call', formLabel: 'First Meeting', color: '#be185d', offTrack: false },
   { key: 'identified', label: 'Opportunity Uncovered', shortLabel: 'Uncovered', formLabel: 'OPP Uncovered', color: '#71717a', offTrack: false },
   { key: 'doc-prep', label: 'Doc Prep', shortLabel: 'Doc Prep', formLabel: 'Doc Prep', color: '#1d4ed8', offTrack: false },
   { key: 'docs-signed', label: 'Docs Signed', shortLabel: 'Signed', formLabel: 'Docs Signed', color: '#6d28d9', offTrack: false },
@@ -271,6 +272,11 @@ export type FollowUp = {
  * since no two households are identical.
  */
 export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
+  'first-meeting': [
+    'Schedule the first meeting or call',
+    'Confirm the meeting time and location',
+    'Send a calendar invite',
+  ],
   identified: [
     'Schedule the first meeting',
     'Send the fact-finder to complete before the meeting',

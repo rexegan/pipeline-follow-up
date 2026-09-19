@@ -8,6 +8,7 @@ import { addDays, today } from '../../lib/dates'
  * usually follows one, or it's an end state).
  */
 const STAGE_FOLLOWUP: Partial<Record<Stage, { task: string; days: number }>> = {
+  'first-meeting': { task: 'Schedule the first meeting or call', days: 2 },
   'doc-prep': { task: 'Send the paperwork for signature', days: 3 },
   'docs-signed': { task: 'Submit the signed paperwork to the receiving firm', days: 2 },
   igo: { task: 'Confirm the assets are in good order and proceed with funding', days: 2 },

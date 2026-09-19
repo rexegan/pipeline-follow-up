@@ -175,6 +175,37 @@ export default function App() {
     setProspects((prev) => [...prev, ...sampleProspects()])
   }
 
+  // Same person, a new deal: keeps the contact info (name, type, from,
+  // referred by, phone, email) but starts everything deal-specific — stage,
+  // assets, next step, activity — fresh, for when the same household turns
+  // up with a second, unrelated opportunity.
+  function duplicateProspect(id: string) {
+    const p = prospects.find((x) => x.id === id)
+    if (!p) return
+    const defaultStage = settings.stages.find((s) => !s.offTrack)?.key ?? ''
+    const now = new Date().toISOString()
+    const copy: Prospect = {
+      id: uid(),
+      name: p.name,
+      kind: p.kind,
+      source: p.source,
+      referredBy: p.referredBy,
+      phone: p.phone,
+      email: p.email,
+      stage: defaultStage,
+      stageChangedAt: now,
+      assets: [blankAsset(settings.accountTypes[0] ?? '')],
+      nextStep: '',
+      nextStepStatus: 'in-process',
+      nextStepOn: '',
+      activity: [],
+      createdAt: now,
+      updatedAt: now,
+    }
+    setProspects((prev) => [...prev, copy])
+    setSelectedId(copy.id)
+  }
+
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
@@ -453,6 +484,7 @@ export default function App() {
           onDelete={() => deleteProspect(selected.id)}
           onClose={() => setSelectedId(null)}
           onNext={goToNext}
+          onDuplicate={() => duplicateProspect(selected.id)}
         />
       )}
 

@@ -36,6 +36,8 @@ type Props = {
   onClose: () => void
   /** Cycles to the next opportunity in the same stage — only offered when there is one. */
   onNext?: () => void
+  /** Opens a new record for the same person/contact info, with a blank deal. */
+  onDuplicate: () => void
 }
 
 export function ProspectDetail({
@@ -50,6 +52,7 @@ export function ProspectDetail({
   onDelete,
   onClose,
   onNext,
+  onDuplicate,
 }: Props) {
   const [activityKind, setActivityKind] = useState<ActivityKind>('call')
   const [activityText, setActivityText] = useState('')
@@ -289,6 +292,7 @@ export function ProspectDetail({
         />
         <div style={{ display: 'flex', gap: 8 }}>
           {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
+          <ActionBtn label="Duplicate" color={FG} onClick={onDuplicate} />
           <ActionBtn label="Close" color={MUTED} onClick={onClose} />
         </div>
       </div>

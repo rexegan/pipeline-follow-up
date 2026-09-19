@@ -108,11 +108,15 @@ account has actually settled) — freezing at whatever it read at that moment
 rather than resetting or continuing. Next to Referred By and Time Open, a
 read-only "Total" field mirrors the header's dollar total.
 
-The record modal's footer offers a **Next** button, just left of Close, when
-more than one opportunity shares the currently open one's stage — it cycles
-through them in order and wraps back around, so you can work through every
-open Doc Prep (say) one after another without closing and re-picking a card
-each time.
+The record modal's footer offers a **Next** button, when more than one
+opportunity shares the currently open one's stage — it cycles through them
+in order and wraps back around, so you can work through every open Doc Prep
+(say) one after another without closing and re-picking a card each time.
+Between Next and Close sits **Duplicate** — for the same household turning
+up with a second, unrelated opportunity: it opens a new record carrying over
+the contact info (name, Type, From, Referred By, phone, email) but starting
+the deal itself fresh (stage back to the first active one, a blank asset,
+no Next Step, no activity log).
 
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
@@ -166,12 +170,15 @@ later change to that default (this bit once — see the code comment above
 `updateSettings`). Once a category is actually edited via the panel, that
 edit is what persists.
 
-The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `Opportunity Uncovered →
-Doc Prep → Docs Signed → IGO → NIGO → Follow Up → Funded → Issued`, plus
-`Stalled` and `Lost` marked off track. IGO/NIGO is standard back-office
-shorthand for paperwork coming back either In Good Order or Not In Good
-Order — two different outcomes, so two separate stages rather than one
-combined one. `Issued` is the step after `Funded` — the account or policy
+The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `First Meeting →
+Opportunity Uncovered → Doc Prep → Docs Signed → IGO → NIGO → Follow Up →
+Funded → Issued`, plus `Stalled` and `Lost` marked off track. `First
+Meeting` is the very first touchpoint — before the opportunity itself is
+confirmed — and is the default stage a brand-new opportunity starts on.
+IGO/NIGO is standard back-office shorthand for paperwork coming back either
+In Good Order or Not In Good Order — two different outcomes, so two
+separate stages rather than one combined one. `Issued` is the step after
+`Funded` — the account or policy
 has actually been issued by the receiving firm, not just funded.
 
 ## Where this is going
