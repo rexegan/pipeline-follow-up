@@ -105,7 +105,7 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
     onDragEnd: () => setDragId(null),
   })
 
-  const COLUMN_WIDTH = 205
+  const COLUMN_WIDTH = 165
 
   function renderColumn(stage: Stage) {
     const items = byStage(stage)
@@ -166,20 +166,10 @@ export function PipelineBoard({ prospects, onOpen, onChangeStage, onAddProspect 
     )
   }
 
-  // Uncovered / Doc Prep / Docs Signed / IGO-NIGO across the top; Follow Up
-  // and Funded stack underneath the first two columns rather than extending
-  // the row to six across — six stages rarely all have live volume at once,
-  // and this keeps the whole board in view without a horizontal scroll.
-  const topRow = ACTIVE_STAGES.slice(0, 4)
-  const bottomRow = ACTIVE_STAGES.slice(4)
-
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: 8 }}>
-        {topRow.map(renderColumn)}
-      </div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: 8 }}>
-        {bottomRow.map(renderColumn)}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 8 }}>
+        {ACTIVE_STAGES.map(renderColumn)}
       </div>
 
       {offTrack.length > 0 && (

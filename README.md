@@ -63,7 +63,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — two rows (four stages, then Follow Up/Funded stacked underneath), drag-and-drop between stages, a collapsed strip for stalled/lost |
+| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — all six stages in one row, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for stalled/lost |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
 | `src/features/pipeline/nextStepSuggestions.ts` | Stage-specific Next Step suggestions offered in the record form's typeahead |
