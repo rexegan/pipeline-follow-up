@@ -73,14 +73,16 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 
 A **Prospect** carries `kind` (new prospect vs existing client), `source` (Dave
 Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact details
-(phone auto-formats to `(817) 555-0142` as you type), a `stage` plus
-`stageChangedAt` (how "days in stage" is measured), a list of **Assets**, and
-an `activity` timeline. Each asset is `{ kind, amount, heldAt, movingTo,
-status }` — `heldAt` ("Where It's At Now") is a fixed list of common
+(phone auto-formats to `(817) 555-0142` as you type — on every load, not just
+while typing, so a number entered before this shipped doesn't sit there
+unformatted forever), a `stage` plus `stageChangedAt` (how "days in stage" is
+measured), a list of **Assets**, and an `activity` timeline. Each asset is
+`{ kind, amount, heldAt, movingTo, status }` — `heldAt` ("Where It's At Now")
+and `movingTo` ("Receiving Firm") both pick from the same fixed list of common
 custodians/carriers (Fidelity, Vanguard, Empower, Edward Jones, LPL, and
-twenty-odd more — `CUSTODIANS` in `types.ts`) rather than free text, `movingTo`
-("Receiving Firm") is the destination, and `status` tracks
-`identified → paperwork → in transit → landed`.
+twenty-odd more — `CUSTODIANS` in `types.ts`) rather than free text, and
+`status` mirrors the pipeline stage names:
+`identified → doc-prep → docs-signed → processed → follow-up → funded`.
 
 Stages run `identified` ("Opportunity Uncovered") `→ doc-prep → docs-signed →
 igo-nigo → follow-up-check → funded`. "IGO / NIGO" is standard back-office

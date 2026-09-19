@@ -1,5 +1,6 @@
 import type { FollowUp, Prospect } from '../types'
 import { STAGES, HORIZONS } from '../types'
+import { formatPhone } from './phone'
 
 /**
  * Every read and write is async so the localStorage implementation can be
@@ -38,6 +39,9 @@ function normalizeProspect(p: Prospect): Prospect {
     ...p,
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
+    // Formatting only ever ran on typing, so a number saved before that
+    // shipped (or entered any other way) would sit there unformatted forever.
+    phone: formatPhone(p.phone),
   }
 }
 

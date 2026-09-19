@@ -14,7 +14,9 @@ export const STAGE_COLOR: Record<Stage, string> = {
 
 export const ASSET_STATUS_COLOR: Record<Asset['status'], string> = {
   identified: MUTED,
-  paperwork: WARN,
-  'in-transit': WARN,
-  landed: SUCCESS,
+  'doc-prep': '#1d4ed8',
+  'docs-signed': '#6d28d9',
+  processed: WARN,
+  'follow-up': '#0f766e',
+  funded: SUCCESS,
 }

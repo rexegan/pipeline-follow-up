@@ -19,7 +19,7 @@ import {
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
 import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal } from '../../ui/primitives'
-import { daysSince, fmtMoney, fmtWhen, uid } from '../../lib/dates'
+import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
 import { ASSET_STATUS_COLOR, STAGE_COLOR } from './stageColors'
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
@@ -50,7 +50,6 @@ export function ProspectDetail({
   const [activityText, setActivityText] = useState('')
 
   const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
-  const inStage = daysSince(prospect.stageChangedAt)
   const offTrack = prospect.stage === 'stalled' || prospect.stage === 'lost'
 
   function logActivity() {
@@ -65,7 +64,7 @@ export function ProspectDetail({
   const timeline = [...prospect.activity].reverse()
 
   return (
-    <Modal onClose={onClose} width={760}>
+    <Modal onClose={onClose} width={940}>
       {/* Header */}
       <div
         style={{
@@ -82,7 +81,7 @@ export function ProspectDetail({
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: FG }}>{prospect.name || 'Untitled opportunity'}</div>
           <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>
-            {STAGE_LABELS[prospect.stage]} · {inStage === 0 ? 'entered today' : `${inStage} day${inStage === 1 ? '' : 's'} in stage`}
+            {STAGE_LABELS[prospect.stage]}
             {offTrack && <span style={{ color: DANGER, fontWeight: 600 }}> · off track</span>}
           </div>
         </div>
@@ -125,7 +124,7 @@ export function ProspectDetail({
           <FieldRow>
             <BoxText label="Referred By" width={160} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
             <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
-            <BoxText label="Email" width={170} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
+            <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>
 
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 0 8px' }}>
@@ -144,13 +143,17 @@ export function ProspectDetail({
               <BoxSelect
                 label="Where It's At Now"
                 grow
-                // heldAt is stored as a plain string so older free-typed values
-                // (before this became a fixed list) don't get silently dropped.
-                value={asset.heldAt as (typeof CUSTODIANS)[number]}
-                options={opts(CUSTODIANS, CUSTODIAN_LABELS)}
+                value={asset.heldAt}
+                options={[{ value: '', label: '—' }, ...opts(CUSTODIANS, CUSTODIAN_LABELS)]}
                 onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
               />
-              <BoxText label="Receiving Firm" grow value={asset.movingTo} placeholder="Where it needs to go" onCommit={(v) => onAssetChange(asset.id, { movingTo: v })} />
+              <BoxSelect
+                label="Receiving Firm"
+                grow
+                value={asset.movingTo}
+                options={[{ value: '', label: '—' }, ...opts(CUSTODIANS, CUSTODIAN_LABELS)]}
+                onCommit={(v) => onAssetChange(asset.id, { movingTo: v })}
+              />
               <BoxSelect
                 label="Status"
                 width={110}

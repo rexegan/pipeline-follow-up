@@ -154,16 +154,18 @@ export const CUSTODIAN_LABELS: Record<Custodian, string> = {
   other: 'Other',
 }
 
-/** How far along one pot of money is in actually moving. */
-export const ASSET_STATUSES = ['identified', 'paperwork', 'in-transit', 'landed'] as const
+/** How far along one pot of money is — mirrors the pipeline stage names. */
+export const ASSET_STATUSES = ['identified', 'doc-prep', 'docs-signed', 'processed', 'follow-up', 'funded'] as const
 
 export type AssetStatus = (typeof ASSET_STATUSES)[number]
 
 export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
   identified: 'Identified',
-  paperwork: 'Paperwork',
-  'in-transit': 'In transit',
-  landed: 'Landed',
+  'doc-prep': 'Doc Prep',
+  'docs-signed': 'Docs Signed',
+  processed: 'Processed',
+  'follow-up': 'Follow Up',
+  funded: 'Funded',
 }
 
 export type Asset = {

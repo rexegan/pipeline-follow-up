@@ -165,7 +165,7 @@ export default function App() {
   const inPlay = openProspects.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
   const moving = openProspects
     .flatMap((p) => p.assets)
-    .filter((a) => a.status === 'paperwork' || a.status === 'in-transit')
+    .filter((a) => a.status !== 'identified' && a.status !== 'funded')
     .reduce((s, a) => s + (a.amount ?? 0), 0)
   const funded = prospects
     .filter((p) => p.stage === 'funded')
