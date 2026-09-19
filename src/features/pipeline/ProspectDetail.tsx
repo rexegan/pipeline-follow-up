@@ -74,7 +74,7 @@ export function ProspectDetail({
           alignItems: 'flex-start',
           justifyContent: 'space-between',
           gap: 12,
-          padding: '18px 20px',
+          padding: '14px 20px 8px',
           borderBottom: `1px solid ${BORDER}`,
           borderLeft: `4px solid ${STAGE_COLOR[prospect.stage]}`,
           borderTopLeftRadius: 10,
@@ -92,7 +92,7 @@ export function ProspectDetail({
           <button
             onClick={onClose}
             aria-label="Close"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 20, padding: '2px 6px', marginTop: 2 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 20, padding: '2px 6px', marginTop: 0, lineHeight: 1 }}
           >
             ×
           </button>
@@ -101,8 +101,8 @@ export function ProspectDetail({
 
       <div style={{ display: 'flex', maxHeight: '75vh' }}>
         {/* Left: editable fields */}
-        <div style={{ flex: '1 1 60%', padding: '16px 20px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+        <div style={{ flex: '1 1 68%', padding: '8px 20px 16px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
             Prospect Intake
           </div>
           <FieldRow>
@@ -208,7 +208,7 @@ export function ProspectDetail({
         </div>
 
         {/* Right: activity timeline */}
-        <div style={{ flex: '1 1 40%', padding: '16px 20px', overflowY: 'auto', background: MUTED_BG }}>
+        <div style={{ flex: '1 1 32%', padding: '8px 20px 16px', overflowY: 'auto', background: MUTED_BG }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
             Activity
           </div>
