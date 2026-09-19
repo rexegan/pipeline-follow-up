@@ -21,8 +21,10 @@ export const DEFAULT_STAGES: StageDef[] = [
   { key: 'doc-prep', label: 'Doc Prep', shortLabel: 'Doc Prep', formLabel: 'Doc Prep', color: '#1d4ed8', offTrack: false },
   { key: 'docs-signed', label: 'Docs Signed', shortLabel: 'Signed', formLabel: 'Docs Signed', color: '#6d28d9', offTrack: false },
   // Standard back-office shorthand: paperwork came back either In Good Order
-  // or Not In Good Order (missing signatures, wrong date, etc.).
-  { key: 'igo-nigo', label: 'IGO / NIGO', shortLabel: 'IGO/NIGO', formLabel: 'IGO / NIGO', color: '#d97706', offTrack: false },
+  // or Not In Good Order (missing signatures, wrong date, etc.) — two
+  // different outcomes, so two separate stages rather than one combined one.
+  { key: 'igo', label: 'IGO', shortLabel: 'IGO', formLabel: 'IGO', color: '#0891b2', offTrack: false },
+  { key: 'nigo', label: 'NIGO', shortLabel: 'NIGO', formLabel: 'NIGO', color: '#ea580c', offTrack: false },
   { key: 'follow-up-check', label: 'Follow Up', shortLabel: 'Follow Up', formLabel: 'Follow Up', color: '#0f766e', offTrack: false },
   { key: 'funded', label: 'Funded', shortLabel: 'Funded', formLabel: 'Funded', color: '#16a34a', offTrack: false },
   { key: 'stalled', label: 'Stalled', shortLabel: 'Stalled', formLabel: 'Stalled', color: '#a16207', offTrack: true },
@@ -285,10 +287,15 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
     'Confirm all signatures and dates are complete',
     'Provide a copy of the signed paperwork to the client',
   ],
-  'igo-nigo': [
-    'Call the receiving firm for IGO/NIGO status',
-    'Correct and resubmit any NIGO items',
+  igo: [
+    'Call the receiving firm to confirm IGO status',
     'Confirm the assets are now in good order',
+    'Proceed with funding now that it’s IGO',
+  ],
+  nigo: [
+    'Correct and resubmit any NIGO items',
+    'Call the receiving firm for NIGO details',
+    'Follow up once corrections are resubmitted',
   ],
   'follow-up-check': [
     'Confirm the transfer has landed with the receiving firm',
@@ -351,7 +358,8 @@ export const SORTS = [
   { id: 'oldest', label: 'Oldest' },
   { id: 'doc-prep', label: 'Doc Prep' },
   { id: 'docs-signed', label: 'Signed' },
-  { id: 'igo-nigo', label: 'IGO/NIGO' },
+  { id: 'igo', label: 'IGO' },
+  { id: 'nigo', label: 'NIGO' },
   { id: 'follow-up-check', label: 'Follow Up' },
   { id: 'funded', label: 'Funded' },
   { id: 'stalled', label: 'Stalled' },
