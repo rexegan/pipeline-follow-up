@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Asset, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
-import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { seedFollowUps, seedProspects } from './lib/seedData'
+import { sampleProspects, seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
@@ -151,6 +151,10 @@ export default function App() {
     setSelectedId(p.id)
   }
 
+  function loadSampleData() {
+    setProspects((prev) => [...prev, ...sampleProspects()])
+  }
+
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
@@ -249,12 +253,66 @@ export default function App() {
         <SideLabel>Summary</SideLabel>
         {view === 'pipeline' ? (
           <>
-            <StatCard label="Total OPPS" value={fmtMoney(inPlay)} color={FG} />
+            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+              {settings.stages
+                .filter((s) => !s.offTrack)
+                .map((s) => {
+                  const first = prospects.find((p) => p.stage === s.key)
+                  const count = prospects.filter((p) => p.stage === s.key).length
+                  return (
+                    <button
+                      key={s.key}
+                      onClick={() => first && setSelectedId(first.id)}
+                      disabled={!first}
+                      title={first ? `Open ${first.name || 'this opportunity'}` : `No opportunities at ${s.label}`}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        gap: 1,
+                        border: `1px solid ${BORDER}`,
+                        borderRadius: 6,
+                        padding: '4px 7px',
+                        background: CARD,
+                        cursor: first ? 'pointer' : 'default',
+                        opacity: first ? 1 : 0.5,
+                        fontFamily: SANS,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span style={{ fontSize: 9, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        {s.shortLabel}
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: FG }}>{count}</span>
+                    </button>
+                  )
+                })}
+            </div>
             <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} />
             <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} />
             <StatCard label="Open Opportunities" value={openProspects.length} />
             <button className="btn-primary" onClick={addProspect}>
               + New Opportunity
+            </button>
+            <button
+              onClick={loadSampleData}
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'none',
+                color: MUTED,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 6,
+                padding: '7px 14px',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: SANS,
+                marginTop: 6,
+              }}
+            >
+              + Load sample opportunities
             </button>
           </>
         ) : (
