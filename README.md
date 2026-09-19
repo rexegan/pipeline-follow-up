@@ -100,8 +100,8 @@ account has actually settled) — freezing at whatever it read at that moment
 rather than resetting or continuing.
 
 The Pipeline page's Sort dropdown (next to the date, top left) reorders each
-column's cards by highest dollar amount, newest uncovered, or account type —
-purely a view setting, not saved with the record.
+column's cards by highest dollar amount, newest uncovered, oldest, or account
+type — purely a view setting, not saved with the record.
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an

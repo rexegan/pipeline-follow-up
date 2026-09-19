@@ -20,6 +20,7 @@ function sortProspects(items: Prospect[], sortBy: SortBy): Prospect[] {
   const sorted = [...items]
   if (sortBy === 'amount-desc') sorted.sort((a, b) => total(b) - total(a))
   if (sortBy === 'newest') sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  if (sortBy === 'oldest') sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   if (sortBy === 'account-type') sorted.sort((a, b) => (a.assets[0]?.kind ?? '').localeCompare(b.assets[0]?.kind ?? ''))
   return sorted
 }

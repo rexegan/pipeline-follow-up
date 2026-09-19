@@ -302,6 +302,7 @@ export const SORTS = [
   { id: 'default', label: 'Sort: Default' },
   { id: 'amount-desc', label: 'Sort: Highest dollar amount' },
   { id: 'newest', label: 'Sort: Newest uncovered' },
+  { id: 'oldest', label: 'Sort: Oldest' },
   { id: 'account-type', label: 'Sort: Account type' },
 ] as const
 
