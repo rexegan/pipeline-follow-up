@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
 import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { seedFollowUps, seedProspects } from './lib/seedData'
+import { sampleProspects, seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
@@ -171,6 +171,10 @@ export default function App() {
     setSelectedId(p.id)
   }
 
+  function loadSampleData() {
+    setProspects((prev) => [...prev, ...sampleProspects()])
+  }
+
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
@@ -320,6 +324,25 @@ export default function App() {
             <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => setSortBy('all')} />
             <button className="btn-primary" onClick={addProspect}>
               + New Opportunity
+            </button>
+            <button
+              onClick={loadSampleData}
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'none',
+                color: MUTED,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 6,
+                padding: '7px 14px',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: SANS,
+                marginTop: 6,
+              }}
+            >
+              + Load sample opportunities
             </button>
           </>
         ) : (

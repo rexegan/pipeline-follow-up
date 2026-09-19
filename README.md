@@ -59,7 +59,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | --- | --- |
 | `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry` and `FollowUp`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, the one-time demo seed gate, and Settings load/save |
-| `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it |
+| `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it, plus `sampleProspects()` — twenty opportunities scattered across every stage, loadable anytime from the sidebar |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
