@@ -16,6 +16,11 @@ type Props = {
 }
 
 const COLUMN_WIDTH = 165
+// Both the stage-column board and every flat sorted/filtered view lay out in
+// a strict grid of this many per row — left to right, then wrapping to a new
+// row — rather than a width-dependent flex-wrap or a horizontal scroll.
+const GRID_COLUMNS = 7
+const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLUMNS}, ${COLUMN_WIDTH}px)`, gap: 12 } as const
 
 /** A compact opportunity card — the glanceable state; click opens the full
  *  record. Every card is the same fixed height (not just a minimum) so a
@@ -148,9 +153,9 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
     }
 
     return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+      <div style={gridStyle}>
         {flat.length === 0 ? (
-          <div style={{ fontSize: 13, color: MUTED, padding: '20px 0' }}>Nothing here yet.</div>
+          <div style={{ fontSize: 13, color: MUTED, padding: '20px 0', gridColumn: `span ${GRID_COLUMNS}` }}>Nothing here yet.</div>
         ) : (
           flat.map((p) => (
             <div key={p.id} style={{ width: COLUMN_WIDTH }}>
@@ -235,7 +240,7 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 8 }}>
+      <div style={{ ...gridStyle, alignItems: 'start', paddingBottom: 8 }}>
         {activeStages.map(renderColumn)}
       </div>
 
@@ -256,7 +261,7 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
                 // just cancels the drag rather than guessing where it goes.
                 setDragId(null)
               }}
-              style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}
+              style={{ ...gridStyle, marginTop: 8 }}
             >
               {offTrack.map((p) => (
                 <div key={p.id} style={{ width: COLUMN_WIDTH }}>

@@ -65,7 +65,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column board (the "All Opportunities" view) and the flat filtered/sorted view every other Sort option switches to — stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
+| `src/features/pipeline/PipelineBoard.tsx` | The stage-column board (the "All Opportunities" view) and the flat filtered/sorted view every other Sort option switches to — both a strict 7-per-row grid, wrapping to a new row rather than scrolling; stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
