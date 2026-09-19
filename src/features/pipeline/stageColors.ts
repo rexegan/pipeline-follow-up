@@ -3,12 +3,10 @@ import { DANGER, MUTED, SUCCESS, WARN } from '../../ui/theme'
 
 export const STAGE_COLOR: Record<Stage, string> = {
   identified: MUTED,
-  contacted: '#3f3f46',
-  'appointment-set': '#1d4ed8',
-  'first-meeting-held': '#1d4ed8',
-  'plan-presented': '#6d28d9',
-  'paperwork-out': WARN,
-  'transfer-in-progress': WARN,
+  'doc-prep': '#1d4ed8',
+  'docs-signed': '#6d28d9',
+  'igo-nigo': WARN,
+  'follow-up-check': '#0f766e',
   funded: SUCCESS,
   stalled: '#a16207',
   lost: DANGER,

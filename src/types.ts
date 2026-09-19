@@ -3,12 +3,10 @@
 /** Stages an opportunity moves through, in order. */
 export const ACTIVE_STAGES = [
   'identified',
-  'contacted',
-  'appointment-set',
-  'first-meeting-held',
-  'plan-presented',
-  'paperwork-out',
-  'transfer-in-progress',
+  'doc-prep',
+  'docs-signed',
+  'igo-nigo',
+  'follow-up-check',
   'funded',
 ] as const
 
@@ -20,13 +18,13 @@ export const STAGES = [...ACTIVE_STAGES, ...OFF_TRACK_STAGES] as const
 export type Stage = (typeof STAGES)[number]
 
 export const STAGE_LABELS: Record<Stage, string> = {
-  identified: 'Identified',
-  contacted: 'Contacted',
-  'appointment-set': 'Appointment set',
-  'first-meeting-held': 'First meeting held',
-  'plan-presented': 'Plan presented',
-  'paperwork-out': 'Paperwork out',
-  'transfer-in-progress': 'Transfer in progress',
+  identified: 'Opportunity Uncovered',
+  'doc-prep': 'Doc Prep',
+  'docs-signed': 'Docs Signed',
+  // Standard back-office shorthand: paperwork came back either In Good Order
+  // or Not In Good Order (missing signatures, wrong date, etc.).
+  'igo-nigo': 'IGO / NIGO',
+  'follow-up-check': 'Follow Up',
   funded: 'Funded',
   stalled: 'Stalled',
   lost: 'Lost',
@@ -90,6 +88,69 @@ export const ASSET_KIND_LABELS: Record<AssetKind, string> = {
   pension: 'Pension',
   cash: 'Cash / CD',
   'life-insurance': 'Life insurance',
+  other: 'Other',
+}
+
+/** Where an account currently sits — common custodians, recordkeepers, and carriers. */
+export const CUSTODIANS = [
+  'fidelity',
+  'vanguard',
+  'charles-schwab',
+  'empower',
+  'edward-jones',
+  'lpl-financial',
+  'merrill-lynch',
+  'morgan-stanley',
+  'ameriprise',
+  'raymond-james',
+  'wells-fargo-advisors',
+  't-rowe-price',
+  'tiaa',
+  'voya',
+  'principal',
+  'john-hancock',
+  'nationwide',
+  'prudential',
+  'mass-mutual',
+  'new-york-life',
+  'american-funds',
+  'lincoln-financial',
+  'pacific-life',
+  'allianz',
+  'ubs',
+  'td-ameritrade',
+  'other',
+] as const
+
+export type Custodian = (typeof CUSTODIANS)[number]
+
+export const CUSTODIAN_LABELS: Record<Custodian, string> = {
+  fidelity: 'Fidelity',
+  vanguard: 'Vanguard',
+  'charles-schwab': 'Charles Schwab',
+  empower: 'Empower',
+  'edward-jones': 'Edward Jones',
+  'lpl-financial': 'LPL Financial',
+  'merrill-lynch': 'Merrill Lynch',
+  'morgan-stanley': 'Morgan Stanley',
+  ameriprise: 'Ameriprise',
+  'raymond-james': 'Raymond James',
+  'wells-fargo-advisors': 'Wells Fargo Advisors',
+  't-rowe-price': 'T. Rowe Price',
+  tiaa: 'TIAA',
+  voya: 'Voya',
+  principal: 'Principal',
+  'john-hancock': 'John Hancock',
+  nationwide: 'Nationwide',
+  prudential: 'Prudential',
+  'mass-mutual': 'MassMutual',
+  'new-york-life': 'New York Life',
+  'american-funds': 'American Funds',
+  'lincoln-financial': 'Lincoln Financial',
+  'pacific-life': 'Pacific Life',
+  allianz: 'Allianz',
+  ubs: 'UBS',
+  'td-ameritrade': 'TD Ameritrade',
   other: 'Other',
 }
 

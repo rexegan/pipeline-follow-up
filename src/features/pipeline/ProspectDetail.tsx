@@ -8,6 +8,8 @@ import {
   ASSET_KIND_LABELS,
   ASSET_STATUSES,
   ASSET_STATUS_LABELS,
+  CUSTODIANS,
+  CUSTODIAN_LABELS,
   KIND_LABELS,
   SOURCES,
   SOURCE_LABELS,
@@ -16,7 +18,7 @@ import {
 } from '../../types'
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
-import { ActionBtn, BoxMoney, BoxSelect, BoxText, FieldRow, Modal } from '../../ui/primitives'
+import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal } from '../../ui/primitives'
 import { daysSince, fmtMoney, fmtWhen, uid } from '../../lib/dates'
 import { ASSET_STATUS_COLOR, STAGE_COLOR } from './stageColors'
 
@@ -99,6 +101,9 @@ export function ProspectDetail({
       <div style={{ display: 'flex', maxHeight: '75vh' }}>
         {/* Left: editable fields */}
         <div style={{ flex: '1 1 60%', padding: '16px 20px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            Prospect Intake
+          </div>
           <FieldRow>
             <BoxText label="Name" width={180} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
             <BoxSelect
@@ -119,8 +124,8 @@ export function ProspectDetail({
           </FieldRow>
           <FieldRow>
             <BoxText label="Referred By" width={160} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
-            <BoxText label="Phone" width={130} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
-            <BoxText label="Email" grow type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
+            <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
+            <BoxText label="Email" width={170} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>
 
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 0 8px' }}>
@@ -136,8 +141,16 @@ export function ProspectDetail({
                 onCommit={(v) => onAssetChange(asset.id, { kind: v })}
               />
               <BoxMoney label="Amount" width={95} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
-              <BoxText label="Where It's At" grow value={asset.heldAt} placeholder="Custodian or plan" onCommit={(v) => onAssetChange(asset.id, { heldAt: v })} />
-              <BoxText label="Destination" grow value={asset.movingTo} placeholder="Receiving firm" onCommit={(v) => onAssetChange(asset.id, { movingTo: v })} />
+              <BoxSelect
+                label="Where It's At Now"
+                grow
+                // heldAt is stored as a plain string so older free-typed values
+                // (before this became a fixed list) don't get silently dropped.
+                value={asset.heldAt as (typeof CUSTODIANS)[number]}
+                options={opts(CUSTODIANS, CUSTODIAN_LABELS)}
+                onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
+              />
+              <BoxText label="Receiving Firm" grow value={asset.movingTo} placeholder="Where it needs to go" onCommit={(v) => onAssetChange(asset.id, { movingTo: v })} />
               <BoxSelect
                 label="Status"
                 width={110}

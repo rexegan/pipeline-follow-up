@@ -72,18 +72,22 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 ## Data model
 
 A **Prospect** carries `kind` (new prospect vs existing client), `source` (Dave
-Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact details,
-a `stage` plus `stageChangedAt` (how "days in stage" is measured), a list of
-**Assets**, and an `activity` timeline. Each asset is
-`{ kind, amount, heldAt, movingTo, status }` — `heldAt` is where the money is
-now, `movingTo` is the destination, and `status` tracks
+Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact details
+(phone auto-formats to `(817) 555-0142` as you type), a `stage` plus
+`stageChangedAt` (how "days in stage" is measured), a list of **Assets**, and
+an `activity` timeline. Each asset is `{ kind, amount, heldAt, movingTo,
+status }` — `heldAt` ("Where It's At Now") is a fixed list of common
+custodians/carriers (Fidelity, Vanguard, Empower, Edward Jones, LPL, and
+twenty-odd more — `CUSTODIANS` in `types.ts`) rather than free text, `movingTo`
+("Receiving Firm") is the destination, and `status` tracks
 `identified → paperwork → in transit → landed`.
 
-Stages run `identified → contacted → appointment set → first meeting held →
-plan presented → paperwork out → transfer in progress → funded`, with `stalled`
-and `lost` as off-track states — they drop off the board's columns entirely
-(collapsed into a "stalled or lost" strip below it) rather than cluttering the
-active view, but stay reachable and reversible from there.
+Stages run `identified` ("Opportunity Uncovered") `→ doc-prep → docs-signed →
+igo-nigo → follow-up-check → funded`. "IGO / NIGO" is standard back-office
+shorthand — paperwork came back either In Good Order or Not In Good Order.
+`stalled` and `lost` are off-track states — they drop off the board's columns
+entirely (collapsed into a "stalled or lost" strip below it) rather than
+cluttering the active view, but stay reachable and reversible from there.
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an

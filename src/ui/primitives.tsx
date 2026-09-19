@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { BORDER, CARD, FG, MUTED, NO_PASSWORD_MANAGER, SANS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
+import { formatPhone } from '../lib/phone'
 
 /**
  * Boxed field variants for the stacked record-card layout: a bordered box
@@ -74,6 +75,34 @@ export function BoxText({
   )
 }
 
+/** A phone field that formats itself as (817) 555-0142 while you type. */
+export function BoxPhone({
+  label,
+  value,
+  onCommit,
+  width,
+}: {
+  label: string
+  value: string
+  onCommit: (value: string) => void
+  width?: number
+}) {
+  return (
+    <FieldShell label={label} width={width}>
+      <input
+        type="tel"
+        aria-label={label}
+        value={value}
+        placeholder="(555) 555-0100"
+        onChange={(e) => onCommit(formatPhone(e.target.value))}
+        className="box-input"
+        style={BOX_INPUT}
+        {...NO_PASSWORD_MANAGER}
+      />
+    </FieldShell>
+  )
+}
+
 export function BoxSelect<T extends string>({
   label,
   value,
@@ -81,6 +110,7 @@ export function BoxSelect<T extends string>({
   onCommit,
   color,
   width,
+  grow,
 }: {
   label: string
   value: T
@@ -88,9 +118,10 @@ export function BoxSelect<T extends string>({
   onCommit: (value: T) => void
   color?: string
   width?: number
+  grow?: boolean
 }) {
   return (
-    <FieldShell label={label} width={width}>
+    <FieldShell label={label} width={width} grow={grow}>
       <select
         aria-label={label}
         value={value}
