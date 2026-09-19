@@ -194,10 +194,18 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
         </Section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '0 28px' }}>
-          <Section title="Where It's At Now / Where It's Moving" hint="One shared list of custodians and carriers — both fields pick from it.">
+          <Section title="Where It's At Now" hint="Where an incoming prospect's money can currently be sitting — broad on purpose.">
             <EditableList
-              values={settings.custodians}
-              onChange={(custodians) => onChange({ ...settings, custodians })}
+              values={settings.custodiansHeldAt}
+              onChange={(custodiansHeldAt) => onChange({ ...settings, custodiansHeldAt })}
+              placeholder="Add a custodian or firm…"
+            />
+          </Section>
+
+          <Section title="Where It's Moving" hint="Where an account can actually move to — usually a much shorter list.">
+            <EditableList
+              values={settings.custodiansMovingTo}
+              onChange={(custodiansMovingTo) => onChange({ ...settings, custodiansMovingTo })}
               placeholder="Add a custodian or firm…"
             />
           </Section>

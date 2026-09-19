@@ -103,6 +103,7 @@ function normalizeProspect(p: Prospect): Prospect {
     ...p,
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
+    nextStepStatus: p.nextStepStatus ?? 'in-process',
     // Formatting only ever ran on typing, so a number saved before that
     // shipped (or entered any other way) would sit there unformatted forever.
     phone: formatPhone(p.phone),
@@ -130,10 +131,20 @@ function normalizeFollowUp(f: FollowUp): FollowUp {
 /** Backfills any settings category missing from a browser's saved settings
  *  (added after that browser last saved, or never saved at all) with its default. */
 function normalizeSettings(raw: unknown): Settings {
-  const v = (raw && typeof raw === 'object' ? raw : {}) as Partial<Settings>
+  const v = (raw && typeof raw === 'object' ? raw : {}) as Partial<Settings> & { custodians?: string[] }
+  // Where It's At Now and Where It's Moving used to share one "custodians"
+  // list. A browser that saved settings before the split still has it under
+  // that old key — safe to reuse for "held at" (same broad list either way),
+  // but not for "moving to": the whole point of the split was narrowing that
+  // one down, so falling back to the new default there instead of the old
+  // shared list is what actually applies the narrowing.
+  const legacyCustodians = Array.isArray(v.custodians) ? v.custodians : null
   return {
     stages: Array.isArray(v.stages) && v.stages.length > 0 ? v.stages : DEFAULT_SETTINGS.stages,
-    custodians: Array.isArray(v.custodians) ? v.custodians : DEFAULT_SETTINGS.custodians,
+    custodiansHeldAt: Array.isArray(v.custodiansHeldAt)
+      ? v.custodiansHeldAt
+      : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
+    custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
     nextStepSuggestions:

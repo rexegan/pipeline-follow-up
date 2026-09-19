@@ -355,9 +355,9 @@ export function TypeaheadSelect({
   )
 }
 
-/** A read-only running stopwatch — same boxed-field look as everything else,
- *  but non-editable and green once `done` freezes it. */
-export function TimeClock({ label, value, width, done }: { label: string; value: string; width?: number; done?: boolean }) {
+/** A read-only value — same boxed-field look as everything else, but
+ *  non-editable and highlighted green when `done` (e.g. a frozen clock). */
+export function ReadOnlyBox({ label, value, width, done }: { label: string; value: string; width?: number; done?: boolean }) {
   return (
     <FieldShell label={label} width={width}>
       <div
@@ -547,12 +547,37 @@ export function Chip({ label, color, bg, border }: { label: string; color: strin
   )
 }
 
-export function StatCard({ label, value, color = FG }: { label: string; value: string | number; color?: string }) {
+export function StatCard({
+  label,
+  value,
+  color = FG,
+  onClick,
+}: {
+  label: string
+  value: string | number
+  color?: string
+  onClick?: () => void
+}) {
+  const Tag = onClick ? 'button' : 'div'
   return (
-    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 6 }}>
+    <Tag
+      onClick={onClick}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        fontFamily: 'inherit',
+        cursor: onClick ? 'pointer' : 'default',
+        background: CARD,
+        border: `1px solid ${BORDER}`,
+        borderRadius: 8,
+        padding: '10px 12px',
+        marginBottom: 6,
+      }}
+    >
       <div style={{ fontSize: 11, color: MUTED, marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-    </div>
+    </Tag>
   )
 }
 

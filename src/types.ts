@@ -59,9 +59,10 @@ export const KIND_LABELS: Record<ProspectKind, string> = {
 /** What kind of account it is — a free, user-editable list (see Settings). */
 export const DEFAULT_ACCOUNT_TYPES = [
   '401(k)',
-  '403(b)',
+  '401(k) Roth',
   'Traditional IRA',
   'Roth IRA',
+  '403(b)',
   'Brokerage',
   'Annuity',
   'Pension',
@@ -71,11 +72,11 @@ export const DEFAULT_ACCOUNT_TYPES = [
 ]
 
 /**
- * Custodians/carriers/recordkeepers an account can be held at or move to — a
- * free, user-editable list (see Settings), shared by both fields since it's
- * the same universe of firms either way.
+ * Custodians/carriers/recordkeepers an account can currently be held at — a
+ * free, user-editable list (see Settings). Broad on purpose: an incoming
+ * prospect's money can plausibly be sitting almost anywhere.
  */
-export const DEFAULT_CUSTODIANS = [
+export const DEFAULT_CUSTODIANS_HELD_AT = [
   'Fidelity',
   'Vanguard',
   'Charles Schwab',
@@ -102,6 +103,32 @@ export const DEFAULT_CUSTODIANS = [
   'Allianz',
   'UBS',
   'TD Ameritrade',
+  'Other',
+]
+
+/**
+ * Custodians/carriers an account can move to — a separate, free,
+ * user-editable list (see Settings) from where it's held now, since in
+ * practice only a handful of firms are ever actually the destination.
+ */
+export const DEFAULT_CUSTODIANS_MOVING_TO = [
+  'Fidelity',
+  'Vanguard',
+  'Charles Schwab',
+  'Empower',
+  'Ameriprise',
+  'T. Rowe Price',
+  'TIAA',
+  'Voya',
+  'Principal',
+  'John Hancock',
+  'Nationwide',
+  'Prudential',
+  'MassMutual',
+  'American Funds',
+  'Lincoln Financial',
+  'Pacific Life',
+  'Allianz',
   'Other',
 ]
 
@@ -163,6 +190,16 @@ export type ActivityEntry = {
   at: string
 }
 
+/** Where the next step itself stands — separate from the account Status fields. */
+export const NEXT_STEP_STATUSES = ['in-process', 'completed'] as const
+
+export type NextStepStatus = (typeof NEXT_STEP_STATUSES)[number]
+
+export const NEXT_STEP_STATUS_LABELS: Record<NextStepStatus, string> = {
+  'in-process': 'In Process',
+  completed: 'Completed',
+}
+
 export type Prospect = {
   id: string
   name: string
@@ -179,6 +216,7 @@ export type Prospect = {
   stageChangedAt: string
   assets: Asset[]
   nextStep: string
+  nextStepStatus: NextStepStatus
   /** ISO date (yyyy-mm-dd) the next step is due, or '' if unscheduled. */
   nextStepOn: string
   /** Chronological log of calls, emails, meetings, and notes — newest last. */
@@ -237,7 +275,7 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
     'Request the most recent statements',
   ],
   'doc-prep': [
-    'Send transfer paperwork for signature',
+    'Complete transfer paperwork signatures',
     'Confirm account numbers and statement copies are in hand',
     'Verify the receiving firm’s paperwork requirements',
     'Schedule a signing appointment',
@@ -282,7 +320,8 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
  */
 export type Settings = {
   stages: StageDef[]
-  custodians: string[]
+  custodiansHeldAt: string[]
+  custodiansMovingTo: string[]
   accountTypes: string[]
   sources: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
@@ -291,19 +330,32 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   stages: DEFAULT_STAGES,
-  custodians: DEFAULT_CUSTODIANS,
+  custodiansHeldAt: DEFAULT_CUSTODIANS_HELD_AT,
+  custodiansMovingTo: DEFAULT_CUSTODIANS_MOVING_TO,
   accountTypes: DEFAULT_ACCOUNT_TYPES,
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }
 
-/** How the Pipeline board orders cards within each column. */
+/**
+ * What the Pipeline page shows: the normal stage-column board, a flat list
+ * of every active opportunity in one order, or every opportunity in one
+ * specific stage (including the off-track ones, which the board itself
+ * otherwise tucks into a collapsed strip). The last six ids below are stage
+ * keys, matched directly against `Prospect.stage` — see `PipelineBoard.tsx`.
+ */
 export const SORTS = [
-  { id: 'default', label: 'Sort: Default' },
-  { id: 'amount-desc', label: 'Sort: Highest dollar amount' },
-  { id: 'newest', label: 'Sort: Newest uncovered' },
-  { id: 'oldest', label: 'Sort: Oldest' },
-  { id: 'account-type', label: 'Sort: Account type' },
+  { id: 'all', label: 'All Opportunities' },
+  { id: 'amount-desc', label: 'Highest dollar amount' },
+  { id: 'newest', label: 'Newest Opportunity' },
+  { id: 'oldest', label: 'Oldest' },
+  { id: 'doc-prep', label: 'Doc Prep' },
+  { id: 'docs-signed', label: 'Signed' },
+  { id: 'igo-nigo', label: 'IGO/NIGO' },
+  { id: 'follow-up-check', label: 'Follow Up' },
+  { id: 'funded', label: 'Funded' },
+  { id: 'stalled', label: 'Stalled' },
+  { id: 'lost', label: 'Lost' },
 ] as const
 
 export type SortBy = (typeof SORTS)[number]['id']

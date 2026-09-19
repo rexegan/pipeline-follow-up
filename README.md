@@ -59,13 +59,13 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | --- | --- |
 | `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry` and `FollowUp`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, the one-time demo seed gate, and Settings load/save |
-| `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it, plus `sampleProspects()` — ten opportunities scattered across every stage, loadable anytime from the sidebar |
+| `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
-| `src/features/pipeline/PipelineBoard.tsx` | The stage-column kanban board — stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
+| `src/features/pipeline/PipelineBoard.tsx` | The stage-column board (the "All Opportunities" view) and the flat filtered/sorted view every other Sort option switches to — stages read from Settings, columns sized to fit up to $1,000,000, drag-and-drop between stages, a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
@@ -81,9 +81,12 @@ not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), a list of **Assets**, and an `activity` timeline. Each
 asset is `{ kind, amount, heldAt, movingTo, status }` — `heldAt` ("Where It's
-At Now") and `movingTo` ("Where It's Moving") both suggest from Settings'
-shared custodian list via a typeahead (`TypeaheadSelect` in `primitives.tsx`)
-but accept any typed firm name. `status` mirrors the pipeline stage names:
+At Now") and `movingTo` ("Where It's Moving") are two *separate* Settings
+lists, not one shared one: an incoming prospect's money can plausibly be
+sitting almost anywhere, but only a handful of firms are ever the actual
+destination, so "moving to" starts out much shorter. Both are typeaheads
+(`TypeaheadSelect` in `primitives.tsx`) that accept any typed firm name
+regardless. `status` mirrors the pipeline stage names:
 `identified → doc-prep → docs-signed → processed → follow-up → funded` — this
 one's fixed, not a Settings category.
 
@@ -91,24 +94,43 @@ The record form's `kind` (Account Type), `source` (From), and Next Step are
 the same typeahead pattern: a list of suggestions that don't have to be the
 only allowed answer. Next Step suggestions are per-stage — an opportunity
 still at "Opportunity Uncovered" suggests "Schedule the first meeting," while
-one at IGO/NIGO suggests "Call the receiving firm for IGO/NIGO status."
+one at Doc Prep suggests "Complete transfer paperwork signatures." Typing a
+Next Step that isn't already a suggestion quietly adds it to that stage's
+list (`addNextStepSuggestion` in `App.tsx`), so the list grows from what
+advisors actually type. A `nextStepStatus` (In Process / Completed) sits
+between Next Step and Next Step Due.
 
 "Time Open" is a running stopwatch (`useElapsedMs` in `lib/useElapsed.ts`) —
 days/hours/minutes/seconds since `createdAt`, ticking every second like the
 Trade Blotter's clock on an open position. It only stops once every asset's
 `status` is Funded (not the Stage, which can say "Funded" before the last
 account has actually settled) — freezing at whatever it read at that moment
-rather than resetting or continuing.
+rather than resetting or continuing. Next to Referred By and Time Open, a
+read-only "Total" field mirrors the header's dollar total.
 
-The Pipeline page's Sort dropdown (next to the date, top left) reorders each
-column's cards by highest dollar amount, newest uncovered, oldest, or account
-type — purely a view setting, not saved with the record.
+The record modal's footer offers a **Next** button, just left of Close, when
+more than one opportunity shares the currently open one's stage — it cycles
+through them in order and wraps back around, so you can work through every
+open Doc Prep (say) one after another without closing and re-picking a card
+each time.
 
-The sidebar's Total Opportunities stat is followed by a small clickable
-breakdown, one chip per active stage with its count — clicking a stage with
-opportunities on it jumps straight into the first one's record, the same
-board-to-record shortcut the click-a-column-header pattern elsewhere in this
-app follows.
+The Pipeline page's **Sort** dropdown (its own row under the date) is really
+a view switcher: "All Opportunities" is the normal stage-column board; three
+options (Highest dollar amount / Newest Opportunity / Oldest) flatten every
+active opportunity into one sorted, wrapping grid; and one option per stage
+(including the off-track ones — Stalled, Lost) shows only that stage's
+opportunities in the same flat grid, which is also how the off-track ones
+become visible outside the board's collapsed strip. Every board column
+header is a button that jumps straight to that stage's view; the first
+column doubles as "Total Opportunities" (the "All" view), matching the
+sidebar stat of the same name. All four sidebar stat cards (Total
+Opportunities, In Process, Completed, Open Opportunities) are clickable too
+and switch to the matching view.
+
+The sidebar's Total Opportunities stat is also followed by a small
+per-stage count breakdown — clicking a stage with opportunities on it jumps
+straight into the first one's record (not the filtered view; see `App.tsx`'s
+stage-breakdown chips vs. the Sort dropdown for the difference).
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an
@@ -122,16 +144,27 @@ No SSNs or account numbers are stored, deliberately — see below.
 
 Stage names, custodians, account types, sources, and Next Step suggestions
 used to be hardcoded enums; they're now data, edited from the ⚙ Settings
-button on the Pipeline page and persisted alongside everything else. A
-`StageDef` (`types.ts`) is `{ key, label, shortLabel, formLabel, color,
-offTrack }` — adding a stage from Settings slugifies its label into a `key`,
-assigns the next color off a fixed palette, and appends it to the board;
-checking "Off track" collapses it into the strip below the board instead of
-giving it a column. Deleting a stage (or any other Settings entry) that a
-record is still using doesn't corrupt anything — `findStage` falls back to a
-neutral gray stand-in for a stage key Settings no longer defines, rather than
-crashing. Custodians, account types, and sources are plainer: just an
-editable list of strings that populate the matching field's suggestions.
+button on the Pipeline page. A `StageDef` (`types.ts`) is `{ key, label,
+shortLabel, formLabel, color, offTrack }` — adding a stage from Settings
+slugifies its label into a `key`, assigns the next color off a fixed palette,
+and appends it to the board; checking "Stalled / lost" collapses it into the
+strip below the board instead of giving it a column. Deleting a stage (or any
+other Settings entry) that a record is still using doesn't corrupt anything —
+`findStage` falls back to a neutral gray stand-in for a stage key Settings no
+longer defines, rather than crashing. Where It's At Now / Where It's Moving,
+account types, sources, and Next Step suggestions are plainer: each just an
+editable list of strings that populates the matching field's suggestions.
+
+Settings persistence is deliberately *not* a write-through-on-load like
+prospects/follow-ups: `App.tsx` only calls `saveSettings` from inside the
+Settings panel's own `onChange`, never from an effect tied to the loaded
+state. `loadSettings` fills in the current code default for any category a
+browser hasn't saved — if it eagerly wrote that merged result back on every
+load, a category the user never customized would freeze at whatever the
+default happened to be the first time the app loaded, silently shadowing any
+later change to that default (this bit once — see the code comment above
+`updateSettings`). Once a category is actually edited via the panel, that
+edit is what persists.
 
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `Opportunity Uncovered →
 Doc Prep → Docs Signed → IGO/NIGO → Follow Up → Funded`, plus `Stalled` and

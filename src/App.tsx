@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
 import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { sampleProspects, seedFollowUps, seedProspects } from './lib/seedData'
+import { seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
@@ -32,7 +32,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<SortBy>('default')
+  const [sortBy, setSortBy] = useState<SortBy>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -70,9 +70,29 @@ export default function App() {
     if (loaded) void localRepository.saveFollowUps(followUps)
   }, [followUps, loaded])
 
-  useEffect(() => {
-    if (loaded) void localRepository.saveSettings(settings)
-  }, [settings, loaded])
+  // Deliberately not a write-through-on-load effect like prospects/follow-ups:
+  // Settings merges in code defaults for anything a browser hasn't saved
+  // (see loadSettings), and eagerly saving that merged result back would
+  // freeze every category at whatever the defaults were on first load —
+  // permanently shadowing any later change to those defaults for a browser
+  // that never actually customized that category. Only persist when the
+  // Settings panel itself reports an edit.
+  function updateSettings(next: Settings) {
+    setSettings(next)
+    void localRepository.saveSettings(next)
+  }
+
+  // Typing a Next Step that isn't one of the current suggestions quietly adds
+  // it to that stage's list, so it's there as a suggestion the next time
+  // around — the list grows from what advisors actually type instead of only
+  // what's configured up front.
+  function addNextStepSuggestion(stage: string, text: string) {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const existing = settings.nextStepSuggestions[stage] ?? []
+    if (existing.includes(trimmed)) return
+    updateSettings({ ...settings, nextStepSuggestions: { ...settings.nextStepSuggestions, [stage]: [...existing, trimmed] } })
+  }
 
   const patchProspect = (id: string, patch: Partial<Prospect>) =>
     setProspects((prev) =>
@@ -151,10 +171,6 @@ export default function App() {
     setSelectedId(p.id)
   }
 
-  function loadSampleData() {
-    setProspects((prev) => [...prev, ...sampleProspects()])
-  }
-
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
@@ -202,6 +218,16 @@ export default function App() {
   })
 
   const selected = prospects.find((p) => p.id === selectedId) ?? null
+  // "Next" cycles through every other opportunity currently on the same
+  // stage as the one that's open — only offered when there's another one.
+  const sameStage = selected ? prospects.filter((p) => p.stage === selected.stage) : []
+  const goToNext =
+    selected && sameStage.length > 1
+      ? () => {
+          const i = sameStage.findIndex((p) => p.id === selected.id)
+          setSelectedId(sameStage[(i + 1) % sameStage.length].id)
+        }
+      : undefined
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: SANS, color: FG }}>
@@ -253,7 +279,7 @@ export default function App() {
         <SideLabel>Summary</SideLabel>
         {view === 'pipeline' ? (
           <>
-            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} />
+            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => setSortBy('all')} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
               {settings.stages
                 .filter((s) => !s.offTrack)
@@ -289,30 +315,11 @@ export default function App() {
                   )
                 })}
             </div>
-            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} />
-            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} />
-            <StatCard label="Open Opportunities" value={openProspects.length} />
+            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => setSortBy('all')} />
+            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => setSortBy('funded')} />
+            <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => setSortBy('all')} />
             <button className="btn-primary" onClick={addProspect}>
               + New Opportunity
-            </button>
-            <button
-              onClick={loadSampleData}
-              style={{
-                display: 'block',
-                width: '100%',
-                background: 'none',
-                color: MUTED,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 6,
-                padding: '7px 14px',
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontFamily: SANS,
-                marginTop: 6,
-              }}
-            >
-              + Load sample opportunities
             </button>
           </>
         ) : (
@@ -338,32 +345,31 @@ export default function App() {
                 </h1>
                 <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
-                {view === 'pipeline' && (
-                  <select
-                    aria-label="Sort opportunities"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortBy)}
-                    style={{
-                      border: `1px solid ${BORDER}`,
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontFamily: SANS,
-                      color: MUTED,
-                      background: '#fff',
-                      padding: '3px 6px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {SORTS.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+              <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+              {view === 'pipeline' && (
+                <select
+                  aria-label="Sort opportunities"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortBy)}
+                  style={{
+                    marginTop: 8,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontFamily: SANS,
+                    color: MUTED,
+                    background: '#fff',
+                    padding: '3px 6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {SORTS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             {view === 'pipeline' && <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />}
           </div>
@@ -399,6 +405,7 @@ export default function App() {
               onOpen={(p) => setSelectedId(p.id)}
               onChangeStage={changeStage}
               onAddProspect={addProspect}
+              onSelectSort={setSortBy}
             />
           ) : (
             <FollowUpTable
@@ -421,12 +428,14 @@ export default function App() {
           onAssetChange={(assetId, patch) => patchAsset(selected.id, assetId, patch)}
           onAddAsset={() => addAsset(selected.id)}
           onDeleteAsset={(assetId) => deleteAsset(selected.id, assetId)}
+          onAddNextStepSuggestion={addNextStepSuggestion}
           onDelete={() => deleteProspect(selected.id)}
           onClose={() => setSelectedId(null)}
+          onNext={goToNext}
         />
       )}
 
-      {settingsOpen && <SettingsPanel settings={settings} onChange={setSettings} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

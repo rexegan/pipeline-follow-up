@@ -25,6 +25,7 @@ export const blankProspect = (defaultStage: string, defaultAccountType = ''): Pr
     stageChangedAt: now,
     assets: [blankAsset(defaultAccountType)],
     nextStep: '',
+    nextStepStatus: 'in-process',
     nextStepOn: '',
     activity: [],
     createdAt: now,

@@ -12,20 +12,15 @@ type Props = {
   onOpen: (prospect: Prospect) => void
   onChangeStage: (prospectId: string, stage: Stage) => void
   onAddProspect: () => void
+  onSelectSort: (id: SortBy) => void
 }
 
-function sortProspects(items: Prospect[], sortBy: SortBy): Prospect[] {
-  if (sortBy === 'default') return items
-  const total = (p: Prospect) => p.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
-  const sorted = [...items]
-  if (sortBy === 'amount-desc') sorted.sort((a, b) => total(b) - total(a))
-  if (sortBy === 'newest') sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  if (sortBy === 'oldest') sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-  if (sortBy === 'account-type') sorted.sort((a, b) => (a.assets[0]?.kind ?? '').localeCompare(b.assets[0]?.kind ?? ''))
-  return sorted
-}
+const COLUMN_WIDTH = 165
 
-/** A compact opportunity card — the glanceable state; click opens the full record. */
+/** A compact opportunity card — the glanceable state; click opens the full
+ *  record. Every card is the same fixed height (not just a minimum) so a
+ *  column of them lines up regardless of name length or whether a next step
+ *  is set — needed to drag-and-stack them predictably. */
 function BoardCard({
   prospect,
   color,
@@ -61,56 +56,71 @@ function BoardCard({
         cursor: 'grab',
         opacity: dragging ? 0.4 : 1,
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+        height: 122,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, alignItems: 'flex-start' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: FG, lineHeight: 1.3 }}>{prospect.name || 'Untitled'}</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: FG, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, alignItems: 'flex-start', height: 36 }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: FG,
+            lineHeight: 1.3,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {prospect.name || 'Untitled'}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: FG, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
           {fmtMoney(total)}
         </div>
       </div>
 
-      <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{prospect.source}</div>
+      <div style={{ fontSize: 11, color: MUTED, marginTop: 3, height: 14, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+        {prospect.source || ' '}
+      </div>
 
-      {prospect.nextStep && (
-        <div
-          style={{
-            fontSize: 12,
-            color: overdue ? '#b91c1c' : MUTED,
-            fontWeight: overdue ? 600 : 400,
-            marginTop: 6,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-          title={prospect.nextStep}
-        >
-          {overdue ? '⚠ ' : '→ '}
-          {prospect.nextStep}
-        </div>
-      )}
+      <div
+        style={{
+          fontSize: 12,
+          color: overdue ? '#b91c1c' : MUTED,
+          fontWeight: overdue ? 600 : 400,
+          marginTop: 6,
+          height: 16,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+        title={prospect.nextStep}
+      >
+        {prospect.nextStep ? `${overdue ? '⚠ ' : '→ '}${prospect.nextStep}` : ' '}
+      </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-        <span style={{ fontSize: 10, color: '#a1a1aa' }}>
-          {inStage === 0 ? 'New today' : `${inStage}d in stage`}
-        </span>
-        {prospect.activity.length > 0 && (
-          <span style={{ fontSize: 10, color: '#a1a1aa' }}>{prospect.activity.length} logged</span>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
+        <span style={{ fontSize: 10, color: '#a1a1aa' }}>{inStage === 0 ? 'New today' : `${inStage}d in stage`}</span>
+        {prospect.activity.length > 0 && <span style={{ fontSize: 10, color: '#a1a1aa' }}>{prospect.activity.length} logged</span>}
       </div>
     </div>
   )
 }
 
-export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage, onAddProspect }: Props) {
+function totalOf(p: Prospect): number {
+  return p.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
+}
+
+export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage, onAddProspect, onSelectSort }: Props) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<Stage | null>(null)
   const [showOffTrack, setShowOffTrack] = useState(false)
 
   const activeStages = stages.filter((s) => !s.offTrack)
   const offTrackStages = stages.filter((s) => s.offTrack)
-
-  const byStage = (key: string) => sortProspects(prospects.filter((p) => p.stage === key), sortBy)
   const offTrack = prospects.filter((p) => offTrackStages.some((s) => s.key === p.stage))
 
   const dragHandlers = (p: Prospect) => ({
@@ -122,12 +132,46 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
     onDragEnd: () => setDragId(null),
   })
 
-  const COLUMN_WIDTH = 165
+  // Every id besides the three cross-stage sorts and 'all' is a stage key —
+  // "view just this one stage" (including an off-track one the board itself
+  // otherwise hides in the collapsed strip).
+  if (sortBy !== 'all') {
+    let flat: Prospect[]
+    if (sortBy === 'amount-desc' || sortBy === 'newest' || sortBy === 'oldest') {
+      const activeKeys = new Set(activeStages.map((s) => s.key))
+      flat = prospects.filter((p) => activeKeys.has(p.stage))
+      if (sortBy === 'amount-desc') flat = [...flat].sort((a, b) => totalOf(b) - totalOf(a))
+      if (sortBy === 'newest') flat = [...flat].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      if (sortBy === 'oldest') flat = [...flat].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    } else {
+      flat = prospects.filter((p) => p.stage === sortBy)
+    }
 
-  function renderColumn(stage: StageDef) {
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+        {flat.length === 0 ? (
+          <div style={{ fontSize: 13, color: MUTED, padding: '20px 0' }}>Nothing here yet.</div>
+        ) : (
+          flat.map((p) => (
+            <div key={p.id} style={{ width: COLUMN_WIDTH }}>
+              <BoardCard prospect={p} color={findStage(stages, p.stage).color} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
+            </div>
+          ))
+        )}
+      </div>
+    )
+  }
+
+  const byStage = (key: string) => prospects.filter((p) => p.stage === key)
+
+  function renderColumn(stage: StageDef, index: number) {
     const items = byStage(stage.key)
-    const total = items.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+    const total = items.reduce((s, p) => s + totalOf(p), 0)
     const isDropTarget = overStage === stage.key && dragId !== null
+    // The first column doubles as a shortcut back to the full board — same
+    // destination, same label, as the sidebar's Total Opportunities stat.
+    const isFirst = index === 0
+    const headerLabel = isFirst ? 'Total Opportunities' : stage.shortLabel
 
     return (
       <div
@@ -151,10 +195,17 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
           transition: 'background 0.1s',
         }}
       >
-        <div
+        <button
+          onClick={() => onSelectSort(isFirst ? 'all' : (stage.key as SortBy))}
+          title={`View ${headerLabel}`}
           style={{
-            borderTop: `3px solid ${stage.color}`,
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            cursor: 'pointer',
             background: CARD,
+            fontFamily: 'inherit',
+            borderTop: `3px solid ${stage.color}`,
             border: `1px solid ${BORDER}`,
             borderTopWidth: 3,
             borderRadius: 7,
@@ -162,11 +213,11 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
             marginBottom: 8,
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 700, color: FG }}>{stage.shortLabel}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: FG }}>{headerLabel}</div>
           <div style={{ fontSize: 14, fontWeight: 600, color: MUTED, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
             {items.length} · {total > 0 ? fmtMoney(total) : '—'}
           </div>
-        </div>
+        </button>
 
         <div style={{ minHeight: 40 }}>
           {items.map((p) => (
@@ -174,7 +225,7 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
           ))}
         </div>
 
-        {stage.key === activeStages[0]?.key && (
+        {isFirst && (
           <button className="b-add" style={{ borderRadius: 6, border: `1px dashed ${BORDER}`, fontSize: 12 }} onClick={onAddProspect}>
             + Add opportunity
           </button>
@@ -209,7 +260,7 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage
               style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}
             >
               {offTrack.map((p) => (
-                <div key={p.id} style={{ width: 240 }}>
+                <div key={p.id} style={{ width: COLUMN_WIDTH }}>
                   <BoardCard prospect={p} color={findStage(stages, p.stage).color} onOpen={() => onOpen(p)} {...dragHandlers(p)} />
                 </div>
               ))}

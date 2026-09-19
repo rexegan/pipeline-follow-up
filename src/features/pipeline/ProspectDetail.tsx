@@ -7,11 +7,13 @@ import {
   ASSET_STATUSES,
   ASSET_STATUS_LABELS,
   KIND_LABELS,
+  NEXT_STEP_STATUSES,
+  NEXT_STEP_STATUS_LABELS,
   findStage,
 } from '../../types'
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
-import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, TimeClock, TypeaheadSelect } from '../../ui/primitives'
+import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, ReadOnlyBox, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
 import { formatElapsed, useElapsedMs } from '../../lib/useElapsed'
 import { ASSET_STATUS_COLOR } from './stageColors'
@@ -29,8 +31,11 @@ type Props = {
   onAssetChange: (assetId: string, patch: Partial<Asset>) => void
   onAddAsset: () => void
   onDeleteAsset: (assetId: string) => void
+  onAddNextStepSuggestion: (stage: string, text: string) => void
   onDelete: () => void
   onClose: () => void
+  /** Cycles to the next opportunity in the same stage — only offered when there is one. */
+  onNext?: () => void
 }
 
 export function ProspectDetail({
@@ -41,8 +46,10 @@ export function ProspectDetail({
   onAssetChange,
   onAddAsset,
   onDeleteAsset,
+  onAddNextStepSuggestion,
   onDelete,
   onClose,
+  onNext,
 }: Props) {
   const [activityKind, setActivityKind] = useState<ActivityKind>('call')
   const [activityText, setActivityText] = useState('')
@@ -104,7 +111,7 @@ export function ProspectDetail({
 
       <div style={{ display: 'flex', flex: '1 1 auto', minHeight: 0 }}>
         {/* Left: editable fields */}
-        <div style={{ flex: '1 1 68%', padding: '8px 20px 16px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
+        <div style={{ flex: '1 1 76%', padding: '8px 20px 16px', overflowY: 'auto', borderRight: `1px solid ${BORDER}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
             Intake
           </div>
@@ -126,9 +133,10 @@ export function ProspectDetail({
               placeholder="Type a source…"
             />
             <BoxText label="Referred By" width={150} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
-            <TimeClock label="Time Open" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
+            <ReadOnlyBox label="Time Open" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
           </FieldRow>
           <FieldRow>
+            <ReadOnlyBox label="Total" width={110} value={fmtMoney(total)} />
             <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>
@@ -151,7 +159,7 @@ export function ProspectDetail({
                 label="Where It's At Now"
                 grow
                 value={asset.heldAt}
-                options={listOpts(settings.custodians)}
+                options={listOpts(settings.custodiansHeldAt)}
                 onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
                 placeholder="Type a firm…"
               />
@@ -159,7 +167,7 @@ export function ProspectDetail({
                 label="Where It's Moving"
                 grow
                 value={asset.movingTo}
-                options={listOpts(settings.custodians)}
+                options={listOpts(settings.custodiansMovingTo)}
                 onCommit={(v) => onAssetChange(asset.id, { movingTo: v })}
                 placeholder="Type a firm…"
               />
@@ -206,15 +214,25 @@ export function ProspectDetail({
               grow
               value={prospect.nextStep}
               options={listOpts(settings.nextStepSuggestions[prospect.stage] ?? [])}
-              onCommit={(v) => onChange({ nextStep: v })}
+              onCommit={(v) => {
+                onChange({ nextStep: v })
+                onAddNextStepSuggestion(prospect.stage, v)
+              }}
               placeholder="Choose a suggestion or type your own…"
+            />
+            <BoxSelect
+              label="Next Step Status"
+              width={130}
+              value={prospect.nextStepStatus}
+              options={opts(NEXT_STEP_STATUSES, NEXT_STEP_STATUS_LABELS)}
+              onCommit={(v) => onChange({ nextStepStatus: v })}
             />
             <BoxText label="Next Step Due" type="date" width={140} value={prospect.nextStepOn} onCommit={(v) => onChange({ nextStepOn: v })} />
           </FieldRow>
         </div>
 
         {/* Right: activity timeline */}
-        <div style={{ flex: '1 1 32%', padding: '8px 20px 16px', overflowY: 'auto', background: MUTED_BG }}>
+        <div style={{ flex: '1 1 24%', padding: '8px 20px 16px', overflowY: 'auto', background: MUTED_BG }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
             Activity
           </div>
@@ -269,7 +287,10 @@ export function ProspectDetail({
             if (confirm(`Delete ${prospect.name || 'this opportunity'} and everything on it?`)) onDelete()
           }}
         />
-        <ActionBtn label="Close" color={MUTED} onClick={onClose} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
+          <ActionBtn label="Close" color={MUTED} onClick={onClose} />
+        </div>
       </div>
     </Modal>
   )
