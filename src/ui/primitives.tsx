@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-import { BORDER, CARD, FG, MUTED, NO_PASSWORD_MANAGER, SANS } from './theme'
+import { BORDER, CARD, FG, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SANS, SUCCESS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
 import { formatPhone } from '../lib/phone'
 
@@ -350,6 +350,28 @@ export function TypeaheadSelect({
             ))}
           </div>
         )}
+      </div>
+    </FieldShell>
+  )
+}
+
+/** A read-only running stopwatch — same boxed-field look as everything else,
+ *  but non-editable and green once `done` freezes it. */
+export function TimeClock({ label, value, width, done }: { label: string; value: string; width?: number; done?: boolean }) {
+  return (
+    <FieldShell label={label} width={width}>
+      <div
+        style={{
+          ...BOX_INPUT,
+          display: 'flex',
+          alignItems: 'center',
+          background: MUTED_BG,
+          color: done ? SUCCESS : FG,
+          fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {value}
       </div>
     </FieldShell>
   )

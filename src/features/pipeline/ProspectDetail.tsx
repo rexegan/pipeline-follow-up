@@ -11,8 +11,9 @@ import {
 } from '../../types'
 import type { ActivityKind } from '../../types'
 import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
-import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, TypeaheadSelect } from '../../ui/primitives'
+import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, TimeClock, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
+import { formatElapsed, useElapsedMs } from '../../lib/useElapsed'
 import { ASSET_STATUS_COLOR } from './stageColors'
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
@@ -49,6 +50,12 @@ export function ProspectDetail({
   const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
   const stageDef = findStage(settings.stages, prospect.stage)
   const offTrack = stageDef.offTrack
+
+  // The clock runs from the moment the opportunity was opened until every
+  // account has landed — not the Stage (which can say "Funded" before the
+  // last account actually settles), the per-asset Status.
+  const isFunded = prospect.assets.length > 0 && prospect.assets.every((a) => a.status === 'funded')
+  const elapsedMs = useElapsedMs(prospect.createdAt, isFunded)
 
   function logActivity() {
     const text = activityText.trim()
@@ -102,25 +109,26 @@ export function ProspectDetail({
             Intake
           </div>
           <FieldRow>
-            <BoxText label="Name" width={180} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
+            <BoxText label="Name" width={170} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
             <BoxSelect
               label="Type"
-              width={110}
+              width={100}
               value={prospect.kind}
               options={opts(['new-prospect', 'existing-client'] as const, KIND_LABELS)}
               onCommit={(v) => onChange({ kind: v })}
             />
             <TypeaheadSelect
               label="From"
-              width={140}
+              width={130}
               value={prospect.source}
               options={listOpts(settings.sources)}
               onCommit={(v) => onChange({ source: v })}
               placeholder="Type a source…"
             />
+            <BoxText label="Referred By" width={150} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
+            <TimeClock label="Time Open" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
           </FieldRow>
           <FieldRow>
-            <BoxText label="Referred By" width={160} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
             <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>

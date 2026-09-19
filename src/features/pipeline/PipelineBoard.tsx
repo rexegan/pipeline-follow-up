@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
-import type { Prospect, Stage, StageDef } from '../../types'
+import type { Prospect, SortBy, Stage, StageDef } from '../../types'
 import { findStage } from '../../types'
 import { BORDER, CARD, FG, MUTED, MUTED_BG } from '../../ui/theme'
 import { daysSince, daysUntil, fmtMoney } from '../../lib/dates'
@@ -8,9 +8,20 @@ import { daysSince, daysUntil, fmtMoney } from '../../lib/dates'
 type Props = {
   prospects: Prospect[]
   stages: StageDef[]
+  sortBy: SortBy
   onOpen: (prospect: Prospect) => void
   onChangeStage: (prospectId: string, stage: Stage) => void
   onAddProspect: () => void
+}
+
+function sortProspects(items: Prospect[], sortBy: SortBy): Prospect[] {
+  if (sortBy === 'default') return items
+  const total = (p: Prospect) => p.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
+  const sorted = [...items]
+  if (sortBy === 'amount-desc') sorted.sort((a, b) => total(b) - total(a))
+  if (sortBy === 'newest') sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  if (sortBy === 'account-type') sorted.sort((a, b) => (a.assets[0]?.kind ?? '').localeCompare(b.assets[0]?.kind ?? ''))
+  return sorted
 }
 
 /** A compact opportunity card — the glanceable state; click opens the full record. */
@@ -90,7 +101,7 @@ function BoardCard({
   )
 }
 
-export function PipelineBoard({ prospects, stages, onOpen, onChangeStage, onAddProspect }: Props) {
+export function PipelineBoard({ prospects, stages, sortBy, onOpen, onChangeStage, onAddProspect }: Props) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<Stage | null>(null)
   const [showOffTrack, setShowOffTrack] = useState(false)
@@ -98,7 +109,7 @@ export function PipelineBoard({ prospects, stages, onOpen, onChangeStage, onAddP
   const activeStages = stages.filter((s) => !s.offTrack)
   const offTrackStages = stages.filter((s) => s.offTrack)
 
-  const byStage = (key: string) => prospects.filter((p) => p.stage === key)
+  const byStage = (key: string) => sortProspects(prospects.filter((p) => p.stage === key), sortBy)
   const offTrack = prospects.filter((p) => offTrackStages.some((s) => s.key === p.stage))
 
   const dragHandlers = (p: Prospect) => ({

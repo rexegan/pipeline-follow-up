@@ -92,6 +92,17 @@ only allowed answer. Next Step suggestions are per-stage — an opportunity
 still at "Opportunity Uncovered" suggests "Schedule the first meeting," while
 one at IGO/NIGO suggests "Call the receiving firm for IGO/NIGO status."
 
+"Time Open" is a running stopwatch (`useElapsedMs` in `lib/useElapsed.ts`) —
+days/hours/minutes/seconds since `createdAt`, ticking every second like the
+Trade Blotter's clock on an open position. It only stops once every asset's
+`status` is Funded (not the Stage, which can say "Funded" before the last
+account has actually settled) — freezing at whatever it read at that moment
+rather than resetting or continuing.
+
+The Pipeline page's Sort dropdown (next to the date, top left) reorders each
+column's cards by highest dollar amount, newest uncovered, or account type —
+purely a view setting, not saved with the record.
+
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an
 `owner` (who's doing it), an optional `prospectId` (who it's about — a

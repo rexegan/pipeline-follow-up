@@ -142,7 +142,7 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
   const suggestions = settings.nextStepSuggestions[suggestionStageKey] ?? []
 
   return (
-    <Modal onClose={onClose} width={640}>
+    <Modal onClose={onClose} width={1180}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ fontSize: 17, fontWeight: 700, color: FG }}>Settings</div>
         <button
@@ -154,16 +154,22 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
         </button>
       </div>
 
-      <div style={{ padding: '18px 20px', maxHeight: '75vh', overflowY: 'auto' }}>
-        <Section title="Stage" hint="The board's columns, in order. Off track stages collapse into the strip below the board instead.">
+      <div style={{ padding: '18px 20px', maxHeight: '88vh', overflowY: 'auto' }}>
+        <Section
+          title="Stage"
+          hint={'The board’s columns, left to right. Check "Stalled / lost" for a stage that means the opportunity fell through rather than moved forward — instead of its own column, it collapses into a strip below the board.'}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
             {settings.stages.map((s) => (
               <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '6px 8px' }}>
                 <span style={{ width: 9, height: 9, borderRadius: 999, background: s.color, flexShrink: 0 }} />
                 <span style={{ fontSize: 13, color: FG, flex: 1 }}>{s.label}</span>
-                <label style={{ fontSize: 11, color: MUTED, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                <label
+                  title="Checked: this stage means the opportunity stalled or fell through, and collapses into a strip below the board instead of getting a column. Unchecked: it's a normal step toward funding."
+                  style={{ fontSize: 11, color: MUTED, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                >
                   <input type="checkbox" checked={s.offTrack} onChange={() => toggleOffTrack(s.key)} />
-                  Off track
+                  Stalled / lost
                 </label>
                 <button
                   onClick={() => removeStage(s.key)}
@@ -187,46 +193,48 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
           </div>
         </Section>
 
-        <Section title="Where It's At Now / Where It's Moving" hint="One shared list of custodians and carriers — both fields pick from it.">
-          <EditableList
-            values={settings.custodians}
-            onChange={(custodians) => onChange({ ...settings, custodians })}
-            placeholder="Add a custodian or firm…"
-          />
-        </Section>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '0 28px' }}>
+          <Section title="Where It's At Now / Where It's Moving" hint="One shared list of custodians and carriers — both fields pick from it.">
+            <EditableList
+              values={settings.custodians}
+              onChange={(custodians) => onChange({ ...settings, custodians })}
+              placeholder="Add a custodian or firm…"
+            />
+          </Section>
 
-        <Section title="Account Type">
-          <EditableList
-            values={settings.accountTypes}
-            onChange={(accountTypes) => onChange({ ...settings, accountTypes })}
-            placeholder="Add an account type…"
-          />
-        </Section>
+          <Section title="Account Type">
+            <EditableList
+              values={settings.accountTypes}
+              onChange={(accountTypes) => onChange({ ...settings, accountTypes })}
+              placeholder="Add an account type…"
+            />
+          </Section>
 
-        <Section title="From">
-          <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
-        </Section>
+          <Section title="From">
+            <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
+          </Section>
 
-        <Section title="Next Step" hint="Suggestions offered in the Next Step field — different per stage.">
-          <select
-            value={suggestionStageKey}
-            onChange={(e) => setSuggestionStageKey(e.target.value)}
-            style={{ ...inputStyle, background: CARD, marginBottom: 8 }}
-          >
-            {settings.stages.map((s) => (
-              <option key={s.key} value={s.key}>
-                Suggestions for {s.label}
-              </option>
-            ))}
-          </select>
-          <EditableList
-            values={suggestions}
-            onChange={(list) =>
-              onChange({ ...settings, nextStepSuggestions: { ...settings.nextStepSuggestions, [suggestionStageKey]: list } })
-            }
-            placeholder="Add a suggested next step…"
-          />
-        </Section>
+          <Section title="Next Step" hint="Suggestions offered in the Next Step field — different per stage.">
+            <select
+              value={suggestionStageKey}
+              onChange={(e) => setSuggestionStageKey(e.target.value)}
+              style={{ ...inputStyle, background: CARD, marginBottom: 8 }}
+            >
+              {settings.stages.map((s) => (
+                <option key={s.key} value={s.key}>
+                  Suggestions for {s.label}
+                </option>
+              ))}
+            </select>
+            <EditableList
+              values={suggestions}
+              onChange={(list) =>
+                onChange({ ...settings, nextStepSuggestions: { ...settings.nextStepSuggestions, [suggestionStageKey]: list } })
+              }
+              placeholder="Add a suggested next step…"
+            />
+          </Section>
+        </div>
       </div>
     </Modal>
   )

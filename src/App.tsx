@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { Asset, FollowUp, Horizon, Prospect, Settings, Stage } from './types'
-import { DEFAULT_SETTINGS, findStage } from './types'
+import type { Asset, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
+import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
 import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
@@ -32,6 +32,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [sortBy, setSortBy] = useState<SortBy>('default')
 
   useEffect(() => {
     let cancelled = false
@@ -279,7 +280,32 @@ export default function App() {
                 </h1>
                 <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
               </div>
-              <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+                {view === 'pipeline' && (
+                  <select
+                    aria-label="Sort opportunities"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortBy)}
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontFamily: SANS,
+                      color: MUTED,
+                      background: '#fff',
+                      padding: '3px 6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {SORTS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
             {view === 'pipeline' && <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />}
           </div>
@@ -311,6 +337,7 @@ export default function App() {
             <PipelineBoard
               prospects={prospects}
               stages={settings.stages}
+              sortBy={sortBy}
               onOpen={(p) => setSelectedId(p.id)}
               onChangeStage={changeStage}
               onAddProspect={addProspect}

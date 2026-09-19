@@ -296,3 +296,13 @@ export const DEFAULT_SETTINGS: Settings = {
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }
+
+/** How the Pipeline board orders cards within each column. */
+export const SORTS = [
+  { id: 'default', label: 'Sort: Default' },
+  { id: 'amount-desc', label: 'Sort: Highest dollar amount' },
+  { id: 'newest', label: 'Sort: Newest uncovered' },
+  { id: 'account-type', label: 'Sort: Account type' },
+] as const
+
+export type SortBy = (typeof SORTS)[number]['id']
