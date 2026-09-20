@@ -61,9 +61,9 @@ export const DEFAULT_SOURCES = [
  * by it.
  */
 export const DEFAULT_OPPORTUNITY_TYPES = [
-  '401(k) Rollover',
-  'IRA Rollover',
-  'Bank CD Maturing',
+  '401k',
+  'IRA',
+  'CD',
   'Sale of Land',
   'Sale of Real Estate',
   'Sale of Personal Residence',
