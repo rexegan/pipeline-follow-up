@@ -131,13 +131,13 @@ strip. All four sidebar stat cards (Total Opportunities, In Process,
 Completed, Open Opportunities) are clickable and switch the Sort dropdown to
 the matching view.
 
-Next to Sort sits **Quick View**, a second, independent filter by
-`opportunityType` — what kind of event created the opportunity (401k, IRA,
-CD, Sale of Land/Real Estate/Personal Residence, Inheritance, Other — an
-editable Settings list, same pattern as Account Type or From). The two
-compose: Sort "Doc Prep" plus Quick View "IRA" shows only opportunities that
-are both. Quick View only narrows the board grid, not the sidebar's totals
-or breakdown.
+Next to Sort sits **Quick View**, a second, independent filter — by account
+type, the same list Settings' Account Type category and the record form's
+Account Type field already use (401(k), 403(b), Traditional IRA, Roth IRA,
+Brokerage, Annuity…). Matches if *any* of a household's assets are the
+selected type, not just the first. The two compose: Sort "Doc Prep" plus
+Quick View "401(k)" shows only opportunities that are both. Quick View only
+narrows the board grid, not the sidebar's totals or breakdown.
 
 The sidebar's Total Opportunities stat is also followed by a small
 per-stage count breakdown — clicking a stage with opportunities on it jumps

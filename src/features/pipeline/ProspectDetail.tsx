@@ -142,14 +142,6 @@ export function ProspectDetail({
             <ReadOnlyBox label="Total" width={110} value={fmtMoney(total)} />
             <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
-            <TypeaheadSelect
-              label="Opportunity Type"
-              width={180}
-              value={prospect.opportunityType}
-              options={listOpts(settings.opportunityTypes)}
-              onCommit={(v) => onChange({ opportunityType: v })}
-              placeholder="401(k) rollover, inheritance…"
-            />
           </FieldRow>
 
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 0 8px' }}>

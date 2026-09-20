@@ -193,7 +193,6 @@ export default function App() {
       referredBy: p.referredBy,
       phone: p.phone,
       email: p.email,
-      opportunityType: '',
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],
@@ -245,9 +244,13 @@ export default function App() {
   const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
   const overdueCount = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
 
-  // Quick View narrows the board to one opportunity type, on top of whatever
-  // the Sort dropdown is already doing — a second, independent filter.
-  const boardProspects = quickView === 'all' ? prospects : prospects.filter((p) => p.opportunityType === quickView)
+  // Quick View narrows the board to opportunities holding a given account
+  // type (same list as the record form's Account Type field), on top of
+  // whatever the Sort dropdown is already doing — a second, independent
+  // filter. A household can hold more than one account, so this matches if
+  // any of them are the selected type, not just the first.
+  const boardProspects =
+    quickView === 'all' ? prospects : prospects.filter((p) => p.assets.some((a) => a.kind === quickView))
 
   const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
   const blurb = view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
@@ -433,7 +436,7 @@ export default function App() {
                     Quick View
                   </span>
                   <select
-                    aria-label="Quick view by opportunity type"
+                    aria-label="Quick view by account type"
                     value={quickView}
                     onChange={(e) => setQuickView(e.target.value)}
                     style={{
@@ -448,7 +451,7 @@ export default function App() {
                     }}
                   >
                     <option value="all">All Types</option>
-                    {settings.opportunityTypes.map((t) => (
+                    {settings.accountTypes.map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>

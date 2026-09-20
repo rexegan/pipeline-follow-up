@@ -222,14 +222,6 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
             <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
           </Section>
 
-          <Section title="Opportunity Type" hint="What kind of event created the opportunity — the Pipeline page's Quick View filters by this.">
-            <EditableList
-              values={settings.opportunityTypes}
-              onChange={(opportunityTypes) => onChange({ ...settings, opportunityTypes })}
-              placeholder="Add an opportunity type…"
-            />
-          </Section>
-
           <Section title="Next Step" hint="Suggestions offered in the Next Step field — different per stage.">
             <select
               value={suggestionStageKey}
