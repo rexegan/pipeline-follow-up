@@ -33,6 +33,7 @@ export default function App() {
   const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [sortBy, setSortBy] = useState<SortBy>('all')
+  const [quickView, setQuickView] = useState<string>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -192,6 +193,7 @@ export default function App() {
       referredBy: p.referredBy,
       phone: p.phone,
       email: p.email,
+      opportunityType: '',
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],
@@ -242,6 +244,10 @@ export default function App() {
   const openFollowUps = followUps.filter((f) => !f.done)
   const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
   const overdueCount = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
+
+  // Quick View narrows the board to one opportunity type, on top of whatever
+  // the Sort dropdown is already doing — a second, independent filter.
+  const boardProspects = quickView === 'all' ? prospects : prospects.filter((p) => p.opportunityType === quickView)
 
   const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
   const blurb = view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
@@ -401,28 +407,54 @@ export default function App() {
               </div>
               <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
               {view === 'pipeline' && (
-                <select
-                  aria-label="Sort opportunities"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  style={{
-                    marginTop: 8,
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontFamily: SANS,
-                    color: MUTED,
-                    background: '#fff',
-                    padding: '3px 6px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {SORTS.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <select
+                    aria-label="Sort opportunities"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortBy)}
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontFamily: SANS,
+                      color: MUTED,
+                      background: '#fff',
+                      padding: '3px 6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {SORTS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Quick View
+                  </span>
+                  <select
+                    aria-label="Quick view by opportunity type"
+                    value={quickView}
+                    onChange={(e) => setQuickView(e.target.value)}
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontFamily: SANS,
+                      color: MUTED,
+                      background: '#fff',
+                      padding: '3px 6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="all">All Types</option>
+                    {settings.opportunityTypes.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
             </div>
             {view === 'pipeline' && <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />}
@@ -453,7 +485,7 @@ export default function App() {
 
           {view === 'pipeline' ? (
             <PipelineBoard
-              prospects={prospects}
+              prospects={boardProspects}
               stages={settings.stages}
               sortBy={sortBy}
               onOpen={(p) => setSelectedId(p.id)}

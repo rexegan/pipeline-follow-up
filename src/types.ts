@@ -53,6 +53,24 @@ export const DEFAULT_SOURCES = [
   'Other',
 ]
 
+/**
+ * What kind of event created the opportunity — distinct from the account
+ * type itself (a 401(k) rollover and an IRA rollover can both be "IRA"
+ * accounts by the time they land, but got here very differently). A free,
+ * user-editable list (see Settings); the Pipeline page's Quick View filters
+ * by it.
+ */
+export const DEFAULT_OPPORTUNITY_TYPES = [
+  '401(k) Rollover',
+  'IRA Rollover',
+  'Bank CD Maturing',
+  'Sale of Land',
+  'Sale of Real Estate',
+  'Sale of Personal Residence',
+  'Inheritance',
+  'Other',
+]
+
 export type ProspectKind = 'new-prospect' | 'existing-client'
 
 export const KIND_LABELS: Record<ProspectKind, string> = {
@@ -214,6 +232,8 @@ export type Prospect = {
   referredBy: string
   phone: string
   email: string
+  /** What kind of event created it — one of Settings' opportunity types, or free text. */
+  opportunityType: string
   /** One of Settings' stage keys — resolve with `findStage`. */
   stage: Stage
   /** When `stage` last changed — how "days in stage" is measured. */
@@ -343,6 +363,7 @@ export type Settings = {
   custodiansMovingTo: string[]
   accountTypes: string[]
   sources: string[]
+  opportunityTypes: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
   nextStepSuggestions: Record<string, string[]>
 }
@@ -353,6 +374,7 @@ export const DEFAULT_SETTINGS: Settings = {
   custodiansMovingTo: DEFAULT_CUSTODIANS_MOVING_TO,
   accountTypes: DEFAULT_ACCOUNT_TYPES,
   sources: DEFAULT_SOURCES,
+  opportunityTypes: DEFAULT_OPPORTUNITY_TYPES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }
 

@@ -21,6 +21,7 @@ export const blankProspect = (defaultStage: string, defaultAccountType = ''): Pr
     referredBy: '',
     phone: '',
     email: '',
+    opportunityType: '',
     stage: defaultStage,
     stageChangedAt: now,
     assets: [blankAsset(defaultAccountType)],

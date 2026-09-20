@@ -148,6 +148,7 @@ function normalizeProspect(p: Prospect): Prospect {
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
+    opportunityType: p.opportunityType ?? '',
     // The old combined IGO/NIGO stage no longer exists as of the split —
     // move anyone still on it to IGO rather than leaving them pointed at a
     // stage key nothing defines.
@@ -208,6 +209,7 @@ function normalizeSettings(raw: unknown): Settings {
     custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
+    opportunityTypes: Array.isArray(v.opportunityTypes) ? v.opportunityTypes : DEFAULT_SETTINGS.opportunityTypes,
     nextStepSuggestions,
   }
 }

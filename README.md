@@ -131,6 +131,14 @@ strip. All four sidebar stat cards (Total Opportunities, In Process,
 Completed, Open Opportunities) are clickable and switch the Sort dropdown to
 the matching view.
 
+Next to Sort sits **Quick View**, a second, independent filter by
+`opportunityType` — what kind of event created the opportunity (401(k)
+Rollover, IRA Rollover, Bank CD Maturing, Sale of Land/Real
+Estate/Personal Residence, Inheritance, Other — an editable Settings list,
+same pattern as Account Type or From). The two compose: Sort "Doc Prep" plus
+Quick View "IRA Rollover" shows only opportunities that are both. Quick View
+only narrows the board grid, not the sidebar's totals or breakdown.
+
 The sidebar's Total Opportunities stat is also followed by a small
 per-stage count breakdown — clicking a stage with opportunities on it jumps
 straight into the first one's record (not the filtered view; see `App.tsx`'s
