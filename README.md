@@ -64,7 +64,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard` |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 7-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
@@ -121,28 +121,34 @@ no Next Step, no activity log).
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
 change it from the record's own Stage field, not by dragging a card
-somewhere. The **Sort** dropdown (its own row under the date) picks what
-goes into that grid: "All Opportunities" is every active one in no
-particular order; three options (Highest dollar amount / Newest Opportunity
-/ Oldest) sort all of them; and one option per stage (including the
-off-track ones — Stalled, Lost) narrows the grid to just that stage, which
-is also how the off-track ones become visible outside the board's collapsed
-strip. All four sidebar stat cards (Total Opportunities, In Process,
-Completed, Open Opportunities) are clickable and switch the Sort dropdown to
-the matching view.
+somewhere. Under **Quick View** (its own row under the date) sit two
+checklist dropdowns (`CheckboxDropdown` in `primitives.tsx`) rather than
+plain single-choice selects — each option gets its own checkbox, so any
+combination can be checked at once instead of picking just one:
 
-Next to Sort sits **Quick View**, a second, independent filter — by account
-type, the same list Settings' Account Type category and the record form's
-Account Type field already use (401(k), 403(b), Traditional IRA, Roth IRA,
-Brokerage, Annuity…). Matches if *any* of a household's assets are the
-selected type, not just the first. The two compose: Sort "Doc Prep" plus
-Quick View "401(k)" shows only opportunities that are both. Quick View only
-narrows the board grid, not the sidebar's totals or breakdown.
+- The first is Sort: "All Opportunities" (nothing checked) is every active
+  opportunity in no particular order; Highest dollar amount / Newest
+  Opportunity / Oldest Opportunity are *orders* — checking more than one
+  applies by priority (amount, then newest, then oldest) rather than
+  compounding, since sorting by more than one key at once isn't a single
+  well-defined order; the rest are stage filters (including the off-track
+  ones — Stalled, Lost) that *union* together — checking Doc Prep and Signed
+  shows both, and this is also how the off-track ones become visible outside
+  the board's collapsed strip.
+- The second filters by account type (same list as Settings' Account Type
+  and the record form's Account Type field), unioning the same way —
+  checking 401(k) and Roth IRA shows a household with either.
+
+The two dropdowns compose with each other by intersection: Sort "Doc Prep"
+plus account type "401(k)" shows only opportunities that are both. Quick
+View only narrows the board grid, not the sidebar's totals or breakdown. All
+four sidebar stat cards (Total Opportunities, In Process, Completed, Open
+Opportunities) are clickable and reset both dropdowns to the matching view.
 
 The sidebar's Total Opportunities stat is also followed by a small
 per-stage count breakdown — clicking a stage with opportunities on it jumps
 straight into the first one's record (not the filtered view; see `App.tsx`'s
-stage-breakdown chips vs. the Sort dropdown for the difference).
+stage-breakdown chips vs. Quick View for the difference).
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an

@@ -7,10 +7,13 @@ import { useState } from 'react'
 type Props = {
   prospects: Prospect[]
   stages: StageDef[]
-  sortBy: SortBy
+  /** Every checked box in the Sort dropdown — never empty; ['all'] is the default. */
+  sortBy: SortBy[]
   onOpen: (prospect: Prospect) => void
   onAddProspect: () => void
 }
+
+const ORDER_IDS = new Set<SortBy>(['amount-desc', 'newest', 'oldest'])
 
 const COLUMN_WIDTH = 165
 // Every view — "All Opportunities" and every Sort/filter option — lays out
@@ -111,18 +114,24 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onAddProspect
   const offTrack = prospects.filter((p) => offTrackStages.some((s) => s.key === p.stage))
   const activeKeys = new Set(activeStages.map((s) => s.key))
 
-  // 'all' and the three cross-stage sorts all draw from every active
-  // opportunity; anything else is a specific stage key (including an
-  // off-track one, surfacing it outside the collapsed strip on request).
-  let flat: Prospect[]
-  if (sortBy === 'all' || sortBy === 'amount-desc' || sortBy === 'newest' || sortBy === 'oldest') {
-    flat = prospects.filter((p) => activeKeys.has(p.stage))
-    if (sortBy === 'amount-desc') flat = [...flat].sort((a, b) => totalOf(b) - totalOf(a))
-    if (sortBy === 'newest') flat = [...flat].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    if (sortBy === 'oldest') flat = [...flat].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-  } else {
-    flat = prospects.filter((p) => p.stage === sortBy)
-  }
+  // Each checked box is either an order (sort the whole set one way) or a
+  // stage filter (narrow to just that stage, including an off-track one,
+  // surfacing it outside the collapsed strip on request). Multiple stage
+  // filters union together; multiple orders apply by priority — highest
+  // dollar amount first, then newest, then oldest — rather than compounding,
+  // since sorting by more than one key at once isn't a single well-defined
+  // order.
+  const checkedOrders = sortBy.filter((id) => ORDER_IDS.has(id))
+  const checkedStageFilters = new Set<string>(sortBy.filter((id) => id !== 'all' && !ORDER_IDS.has(id)))
+
+  let flat: Prospect[] =
+    checkedStageFilters.size > 0
+      ? prospects.filter((p) => checkedStageFilters.has(p.stage))
+      : prospects.filter((p) => activeKeys.has(p.stage))
+
+  if (checkedOrders.includes('amount-desc')) flat = [...flat].sort((a, b) => totalOf(b) - totalOf(a))
+  else if (checkedOrders.includes('newest')) flat = [...flat].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  else if (checkedOrders.includes('oldest')) flat = [...flat].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
   return (
     <div>

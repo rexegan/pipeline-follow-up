@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Asset, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
 import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
-import { ActionBtn, Chip, SideLabel, StatCard } from './ui/primitives'
+import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
 import { sampleProspects, seedFollowUps, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
@@ -32,8 +32,29 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<SortBy>('all')
-  const [quickView, setQuickView] = useState<string>('all')
+  // Both start as "no filter": sortSelection empty means "All Opportunities";
+  // quickViewSelection empty means every account type. Checking any box adds
+  // to the set rather than replacing it — see toggleSort/toggleQuickView.
+  const [sortSelection, setSortSelection] = useState<Set<SortBy>>(new Set())
+  const [quickViewSelection, setQuickViewSelection] = useState<Set<string>>(new Set())
+
+  function toggleSort(id: SortBy) {
+    setSortSelection((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleQuickView(id: string) {
+    setQuickViewSelection((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -244,13 +265,31 @@ export default function App() {
   const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
   const overdueCount = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
 
-  // Quick View narrows the board to opportunities holding a given account
-  // type (same list as the record form's Account Type field), on top of
-  // whatever the Sort dropdown is already doing — a second, independent
-  // filter. A household can hold more than one account, so this matches if
-  // any of them are the selected type, not just the first.
+  // Quick View narrows the board to opportunities holding any of the checked
+  // account types (same list as the record form's Account Type field), on
+  // top of whatever the Sort checklist is already doing — a second,
+  // independent filter. A household can hold more than one account, so this
+  // matches if any of them are one of the checked types, not just the first.
   const boardProspects =
-    quickView === 'all' ? prospects : prospects.filter((p) => p.assets.some((a) => a.kind === quickView))
+    quickViewSelection.size === 0
+      ? prospects
+      : prospects.filter((p) => p.assets.some((a) => quickViewSelection.has(a.kind)))
+
+  const sortSummary =
+    sortSelection.size === 0
+      ? 'All Opportunities'
+      : sortSelection.size <= 2
+        ? SORTS.filter((s) => sortSelection.has(s.id))
+            .map((s) => s.label)
+            .join(', ')
+        : `${sortSelection.size} selected`
+
+  const quickViewSummary =
+    quickViewSelection.size === 0
+      ? 'All Types'
+      : quickViewSelection.size <= 2
+        ? [...quickViewSelection].join(', ')
+        : `${quickViewSelection.size} selected`
 
   const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
   const blurb = view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
@@ -323,7 +362,7 @@ export default function App() {
         <SideLabel>Summary</SideLabel>
         {view === 'pipeline' ? (
           <>
-            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => setSortBy('all')} />
+            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
               {settings.stages
                 .filter((s) => !s.offTrack)
@@ -359,9 +398,9 @@ export default function App() {
                   )
                 })}
             </div>
-            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => setSortBy('all')} />
-            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => setSortBy('funded')} />
-            <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => setSortBy('all')} />
+            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
+            <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
             <button className="btn-primary" onClick={addProspect}>
               + New Opportunity
             </button>
@@ -411,52 +450,23 @@ export default function App() {
               <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
               {view === 'pipeline' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <select
-                    aria-label="Sort opportunities"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortBy)}
-                    style={{
-                      border: `1px solid ${BORDER}`,
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontFamily: SANS,
-                      color: MUTED,
-                      background: '#fff',
-                      padding: '3px 6px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {SORTS.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
                   <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Quick View
                   </span>
-                  <select
-                    aria-label="Quick view by account type"
-                    value={quickView}
-                    onChange={(e) => setQuickView(e.target.value)}
-                    style={{
-                      border: `1px solid ${BORDER}`,
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontFamily: SANS,
-                      color: MUTED,
-                      background: '#fff',
-                      padding: '3px 6px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="all">All Types</option>
-                    {settings.accountTypes.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+                  <CheckboxDropdown
+                    label="Sort opportunities"
+                    summary={sortSummary}
+                    options={SORTS}
+                    selected={sortSelection}
+                    onToggle={(id) => toggleSort(id as SortBy)}
+                  />
+                  <CheckboxDropdown
+                    label="Filter by account type"
+                    summary={quickViewSummary}
+                    options={settings.accountTypes.map((t) => ({ id: t, label: t }))}
+                    selected={quickViewSelection}
+                    onToggle={toggleQuickView}
+                  />
                 </div>
               )}
             </div>
@@ -490,7 +500,7 @@ export default function App() {
             <PipelineBoard
               prospects={boardProspects}
               stages={settings.stages}
-              sortBy={sortBy}
+              sortBy={sortSelection.size === 0 ? ['all'] : [...sortSelection]}
               onOpen={(p) => setSelectedId(p.id)}
               onAddProspect={addProspect}
             />

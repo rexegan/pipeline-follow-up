@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { BORDER, CARD, FG, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SANS, SUCCESS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
@@ -544,6 +544,103 @@ export function Chip({ label, color, bg, border }: { label: string; color: strin
     <span className="chip" style={{ background: bg, color, border: border ? `1px solid ${BORDER}` : undefined }}>
       {label}
     </span>
+  )
+}
+
+/**
+ * A dropdown button that opens a checklist instead of picking one option —
+ * "a box next to each one of those to click on," checking any combination
+ * rather than a single choice. Closes on an outside click.
+ */
+export function CheckboxDropdown({
+  label,
+  summary,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string
+  summary: string
+  options: readonly { id: string; label: string }[]
+  selected: Set<string>
+  onToggle: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDocMouseDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    return () => document.removeEventListener('mousedown', onDocMouseDown)
+  }, [open])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 6,
+          fontSize: 12,
+          fontFamily: SANS,
+          color: MUTED,
+          background: '#fff',
+          padding: '3px 8px',
+          cursor: 'pointer',
+          maxWidth: 220,
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary}</span>
+        <span style={{ fontSize: 9, flexShrink: 0 }}>▾</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: 4,
+            zIndex: 30,
+            background: CARD,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 8,
+            boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+            minWidth: 210,
+            maxHeight: 320,
+            overflowY: 'auto',
+            padding: 4,
+          }}
+        >
+          {options.map((o) => (
+            <label
+              key={o.id}
+              className="combo-option"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 8px',
+                fontSize: 13,
+                color: FG,
+                cursor: 'pointer',
+                borderRadius: 5,
+              }}
+            >
+              <input type="checkbox" checked={selected.has(o.id)} onChange={() => onToggle(o.id)} />
+              {o.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
