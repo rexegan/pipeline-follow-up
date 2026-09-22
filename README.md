@@ -80,13 +80,16 @@ details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), a list of **Assets**, and an `activity` timeline. Each
-asset is `{ kind, amount, heldAt, newAccountType, movingTo, status }` —
-`heldAt` ("Where It's At Now") and `movingTo` ("Where It's Moving") are two
+asset is `{ kind, amount, heldAt, newAccountType, movingTo, status }`,
+grouped in the record form under two centered headings — **Current
+Account** (Account Type, Amount, Where It's At Now) and **Where It's
+Moving** (New Account Type, New Custodian / Carrier, Status). `heldAt`
+("Where It's At Now") and `movingTo` ("New Custodian / Carrier") are two
 *separate* Settings lists, not one shared one: an incoming prospect's money
 can plausibly be sitting almost anywhere, but only a handful of firms are
-ever the actual destination, so "moving to" starts out much shorter.
-`newAccountType` ("New Account Type," between them, same Account Type list
-and width as the account's own `kind`) is what the account is *becoming* — a
+ever the actual destination, so the "moving to" list starts out much
+shorter. `newAccountType` ("New Account Type," same Account Type list and
+width as the account's own `kind`) is what the account is *becoming* — a
 rollover often changes type, not just custodian, e.g. a 401(k) landing as a
 Traditional IRA — and defaults to matching `kind` until changed. All of
 these are typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any
@@ -95,10 +98,10 @@ names: `identified → doc-prep → docs-signed → processed → follow-up →
 funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
-(Where It's At Now / Moving), `source` (From), and Next Step are all the same
-typeahead pattern: a list of suggestions that don't have to be the only
-allowed answer. Typing something that isn't already an option quietly saves
-it into that Settings list (`addToSettingsList` in `App.tsx`, or
+(Where It's At Now / New Custodian), `source` (From), and Next Step are all
+the same typeahead pattern: a list of suggestions that don't have to be the
+only allowed answer. Typing something that isn't already an option quietly
+saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
 `addNextStepSuggestion` for Next Step specifically, since its suggestions are
 per-stage rather than one flat list) — an opportunity still at "Opportunity
 Uncovered" suggests "Schedule the first meeting," while one at Doc Prep
@@ -146,14 +149,12 @@ combination can be checked at once instead of picking just one:
 
 The two dropdowns compose with each other by intersection: Sort "Doc Prep"
 plus account type "401(k)" shows only opportunities that are both. Quick
-View only narrows the board grid, not the sidebar's totals or breakdown. All
-four sidebar stat cards (Total Opportunities, In Process, Completed, Open
-Opportunities) are clickable and reset both dropdowns to the matching view.
-
-The sidebar's Total Opportunities stat is also followed by a small
-per-stage count breakdown — clicking a stage with opportunities on it jumps
-straight into the first one's record (not the filtered view; see `App.tsx`'s
-stage-breakdown chips vs. Quick View for the difference).
+View only narrows the board grid, not the sidebar's totals. All four sidebar
+stat cards (Total Opportunities, In Process, Completed, Open Opportunities)
+are clickable and reset both dropdowns to the matching view. (The sidebar
+used to also show a small per-stage count breakdown under Total
+Opportunities — removed per feedback that it looked cluttered next to the
+four stat cards.)
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an
