@@ -149,12 +149,19 @@ combination can be checked at once instead of picking just one:
 
 The two dropdowns compose with each other by intersection: Sort "Doc Prep"
 plus account type "401(k)" shows only opportunities that are both. Quick
-View only narrows the board grid, not the sidebar's totals. All four sidebar
-stat cards (Total Opportunities, In Process, Completed, Open Opportunities)
-are clickable and reset both dropdowns to the matching view. (The sidebar
-used to also show a small per-stage count breakdown under Total
-Opportunities — removed per feedback that it looked cluttered next to the
-four stat cards.)
+View only narrows the board grid, not the sidebar's totals. All five sidebar
+stat cards (Total Opportunities, In Process, Needs Attention, Completed,
+Open Opportunities) are clickable and reset both dropdowns to the matching
+view. (The sidebar used to also show a small per-stage count breakdown under
+Total Opportunities — removed per feedback that it looked cluttered next to
+the stat cards.)
+
+**Needs Attention** totals the dollar amount of every opportunity currently
+on the NIGO stage — the only condition that feeds it today, but written so
+more conditions (e.g. a stalled follow-up) could feed the same card later
+without changing what it means to the user. It uses the NIGO stage's own
+color (`findStage(settings.stages, 'nigo').color`) so a re-colored NIGO
+stage stays in sync with the card automatically.
 
 A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
 task), a `reason` (why it needs doing — distinct from the task itself), an

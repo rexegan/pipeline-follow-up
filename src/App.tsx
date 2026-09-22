@@ -273,6 +273,11 @@ export default function App() {
   const funded = prospects
     .filter((p) => p.stage === 'funded')
     .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+  // NIGO is the only trigger for this today; more conditions can feed into
+  // it later without changing what "needs attention" means to the user.
+  const needsAttention = prospects
+    .filter((p) => p.stage === 'nigo')
+    .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
 
   const openFollowUps = followUps.filter((f) => !f.done)
   const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
@@ -377,6 +382,7 @@ export default function App() {
           <>
             <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
             <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+            <StatCard label="Needs Attention" value={fmtMoney(needsAttention)} color={findStage(settings.stages, 'nigo').color} onClick={() => { setSortSelection(new Set(['nigo'])); setQuickViewSelection(new Set()) }} />
             <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
             <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
             <button className="btn-primary" onClick={addProspect}>
