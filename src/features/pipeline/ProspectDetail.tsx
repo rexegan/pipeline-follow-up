@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Asset, Prospect, Settings, Stage } from '../../types'
+import type { Asset, EditableListKey, Prospect, Settings, Stage } from '../../types'
 import {
   ACTIVITY_KIND_ICONS,
   ACTIVITY_KIND_LABELS,
@@ -12,7 +12,7 @@ import {
   findStage,
 } from '../../types'
 import type { ActivityKind } from '../../types'
-import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS } from '../../ui/theme'
+import { BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SUCCESS } from '../../ui/theme'
 import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, ReadOnlyBox, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney, fmtWhen, uid } from '../../lib/dates'
 import { formatElapsed, useElapsedMs } from '../../lib/useElapsed'
@@ -32,6 +32,8 @@ type Props = {
   onAddAsset: () => void
   onDeleteAsset: (assetId: string) => void
   onAddNextStepSuggestion: (stage: string, text: string) => void
+  /** Quietly saves a typed value that isn't already an option in that Settings list. */
+  onAddListValue: (key: EditableListKey, text: string) => void
   onDelete: () => void
   onClose: () => void
   /** Cycles to the next opportunity in the same stage — only offered when there is one. */
@@ -49,6 +51,7 @@ export function ProspectDetail({
   onAddAsset,
   onDeleteAsset,
   onAddNextStepSuggestion,
+  onAddListValue,
   onDelete,
   onClose,
   onNext,
@@ -132,7 +135,10 @@ export function ProspectDetail({
               width={130}
               value={prospect.source}
               options={listOpts(settings.sources)}
-              onCommit={(v) => onChange({ source: v })}
+              onCommit={(v) => {
+                onChange({ source: v })
+                onAddListValue('sources', v)
+              }}
               placeholder="Type a source…"
             />
             <BoxText label="Referred By" width={150} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
@@ -154,24 +160,44 @@ export function ProspectDetail({
                 width={120}
                 value={asset.kind}
                 options={listOpts(settings.accountTypes)}
-                onCommit={(v) => onAssetChange(asset.id, { kind: v })}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { kind: v })
+                  onAddListValue('accountTypes', v)
+                }}
                 placeholder="Type a kind…"
               />
               <BoxMoney label="Amount" width={95} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
               <TypeaheadSelect
                 label="Where It's At Now"
-                grow
+                width={140}
                 value={asset.heldAt}
                 options={listOpts(settings.custodiansHeldAt)}
-                onCommit={(v) => onAssetChange(asset.id, { heldAt: v })}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { heldAt: v })
+                  onAddListValue('custodiansHeldAt', v)
+                }}
                 placeholder="Type a firm…"
               />
               <TypeaheadSelect
+                label="New Account Type"
+                width={120}
+                value={asset.newAccountType}
+                options={listOpts(settings.accountTypes)}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { newAccountType: v })
+                  onAddListValue('accountTypes', v)
+                }}
+                placeholder="Type a kind…"
+              />
+              <TypeaheadSelect
                 label="Where It's Moving"
-                grow
+                width={140}
                 value={asset.movingTo}
                 options={listOpts(settings.custodiansMovingTo)}
-                onCommit={(v) => onAssetChange(asset.id, { movingTo: v })}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { movingTo: v })
+                  onAddListValue('custodiansMovingTo', v)
+                }}
                 placeholder="Type a firm…"
               />
               <BoxSelect
@@ -293,7 +319,7 @@ export function ProspectDetail({
         <div style={{ display: 'flex', gap: 8 }}>
           {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
           <ActionBtn label="Duplicate" color={FG} onClick={onDuplicate} />
-          <ActionBtn label="Close" color={MUTED} onClick={onClose} />
+          <ActionBtn label="Save" color={SUCCESS} onClick={onClose} />
         </div>
       </div>
     </Modal>

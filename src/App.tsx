@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Asset, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
+import type { Asset, EditableListKey, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
 import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
@@ -114,6 +114,19 @@ export default function App() {
     const existing = settings.nextStepSuggestions[stage] ?? []
     if (existing.includes(trimmed)) return
     updateSettings({ ...settings, nextStepSuggestions: { ...settings.nextStepSuggestions, [stage]: [...existing, trimmed] } })
+  }
+
+  // Same idea as addNextStepSuggestion, for every other typeahead in the
+  // record form: Account Type, From, Where It's At Now, Where It's Moving.
+  // Typing something that isn't already an option quietly adds it, so the
+  // list grows from what advisors actually type instead of only what's
+  // configured up front.
+  function addToSettingsList(key: EditableListKey, text: string) {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const existing = settings[key]
+    if (existing.includes(trimmed)) return
+    updateSettings({ ...settings, [key]: [...existing, trimmed] })
   }
 
   const patchProspect = (id: string, patch: Partial<Prospect>) =>
@@ -526,6 +539,7 @@ export default function App() {
           onAddAsset={() => addAsset(selected.id)}
           onDeleteAsset={(assetId) => deleteAsset(selected.id, assetId)}
           onAddNextStepSuggestion={addNextStepSuggestion}
+          onAddListValue={addToSettingsList}
           onDelete={() => deleteProspect(selected.id)}
           onClose={() => setSelectedId(null)}
           onNext={goToNext}

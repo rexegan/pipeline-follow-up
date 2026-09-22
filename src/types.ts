@@ -162,11 +162,18 @@ export type Asset = {
   amount: number | null
   /** Where it's at now — current custodian, plan provider, or carrier. */
   heldAt: string
+  /** What kind of account it's becoming — a rollover often changes type, not
+   *  just custodian (a 401(k) landing as a Traditional IRA). One of
+   *  Settings' account types, or free text; defaults to matching `kind`. */
+  newAccountType: string
   /** Where it needs to go — destination custodian or account. */
   movingTo: string
   status: AssetStatus
   notes: string
 }
+
+/** The plain string-list Settings categories a typed value can be quietly saved into. */
+export type EditableListKey = 'accountTypes' | 'sources' | 'custodiansHeldAt' | 'custodiansMovingTo'
 
 /** One logged touch — what happened and when, not just what's true now. */
 export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const

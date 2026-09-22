@@ -156,12 +156,16 @@ function normalizeProspect(p: Prospect): Prospect {
     // shipped (or entered any other way) would sit there unformatted forever.
     phone: formatPhone(p.phone),
     source: LEGACY_SOURCE_LABELS[p.source] ?? p.source,
-    assets: p.assets.map((a) => ({
-      ...a,
-      kind: LEGACY_ASSET_KIND_LABELS[a.kind] ?? a.kind,
-      heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
-      movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
-    })),
+    assets: p.assets.map((a) => {
+      const kind = LEGACY_ASSET_KIND_LABELS[a.kind] ?? a.kind
+      return {
+        ...a,
+        kind,
+        heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
+        movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
+        newAccountType: a.newAccountType || kind,
+      }
+    }),
   }
 }
 
