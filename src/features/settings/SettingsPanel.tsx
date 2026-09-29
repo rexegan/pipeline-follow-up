@@ -226,6 +226,14 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
             />
           </Section>
 
+          <Section title="Product Name" hint="The specific carrier product — a Jackson National or F&G contract name, a specific fund, etc.">
+            <EditableList
+              values={settings.productNames}
+              onChange={(productNames) => onChange({ ...settings, productNames })}
+              placeholder="Add a product name…"
+            />
+          </Section>
+
           <Section title="From">
             <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
           </Section>

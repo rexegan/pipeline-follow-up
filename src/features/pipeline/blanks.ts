@@ -9,6 +9,7 @@ export const blankAsset = (defaultKind = ''): Asset => ({
   newAccountType: defaultKind,
   movingTo: '',
   investmentType: '',
+  productName: '',
   status: 'identified',
   notes: '',
 })

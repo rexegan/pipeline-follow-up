@@ -156,6 +156,11 @@ export const DEFAULT_INVESTMENT_TYPES = [
   'Other',
 ]
 
+/** The specific carrier product (a Jackson National or F&G annuity contract
+ *  name, a specific fund, etc.) — no starter list, since these are entirely
+ *  practice-specific; it grows from whatever gets typed in. */
+export const DEFAULT_PRODUCT_NAMES: string[] = []
+
 /**
  * How far along one pot of money is — mirrors the pipeline stage names. Not
  * user-editable: unlike `Stage`, it drives fixed color coding and isn't one
@@ -191,12 +196,21 @@ export type Asset = {
   /** What kind of vehicle the money sits in (mutual fund, ETF, annuity…) —
    *  one of Settings' investment types, or free text. */
   investmentType: string
+  /** The specific carrier product — a Jackson National or F&G contract name,
+   *  a specific fund, etc. — one of Settings' product names, or free text. */
+  productName: string
   status: AssetStatus
   notes: string
 }
 
 /** The plain string-list Settings categories a typed value can be quietly saved into. */
-export type EditableListKey = 'accountTypes' | 'sources' | 'custodiansHeldAt' | 'custodiansMovingTo' | 'investmentTypes'
+export type EditableListKey =
+  | 'accountTypes'
+  | 'sources'
+  | 'custodiansHeldAt'
+  | 'custodiansMovingTo'
+  | 'investmentTypes'
+  | 'productNames'
 
 /** One logged touch — what happened and when, not just what's true now. */
 export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const
@@ -341,6 +355,7 @@ export type Settings = {
   custodiansMovingTo: string[]
   accountTypes: string[]
   investmentTypes: string[]
+  productNames: string[]
   sources: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
   nextStepSuggestions: Record<string, string[]>
@@ -352,6 +367,7 @@ export const DEFAULT_SETTINGS: Settings = {
   custodiansMovingTo: DEFAULT_CUSTODIANS_MOVING_TO,
   accountTypes: DEFAULT_ACCOUNT_TYPES,
   investmentTypes: DEFAULT_INVESTMENT_TYPES,
+  productNames: DEFAULT_PRODUCT_NAMES,
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }

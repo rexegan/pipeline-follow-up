@@ -79,10 +79,10 @@ still in the data model (old records keep their history), but its own
 record-form panel was removed per feedback to give the form's fields the
 full width instead. Each
 asset is `{ kind, amount, heldAt, newAccountType, movingTo, investmentType,
-status }`, grouped in the record form under one centered heading —
-**Current Account** (Account Type, Amount, Held At) — followed
-by New Account Type, New Custodian, Investment Type, and Status,
-ungrouped. `heldAt` ("Held At") and `movingTo` ("New
+productName, status }`, grouped in the record form under one centered
+heading — **Current Account** (Account Type, Amount, Held At) — followed
+by New Account Type, New Custodian, Investment Type, Product Name, and
+Status, ungrouped. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
@@ -94,16 +94,20 @@ e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
 money is actually invested *in* — stocks, bonds, mutual fund, ETF, money
 market, CD, VA/fixed annuity/FIA, RILA, alts, REITs, managed
 money — its own Settings list, distinct from the account/tax wrapper
-`kind` describes. All of these are
-typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any typed
-value regardless of the list. `status` mirrors the pipeline stage names:
-`identified → doc-prep → docs-signed → processed → follow-up → funded` —
-this one's fixed, not a Settings category.
+`kind` describes. `productName` ("Product Name") is the specific carrier
+product — a Jackson National or F&G contract name, a specific fund, etc.
+Its Settings list starts empty (`DEFAULT_PRODUCT_NAMES` in `types.ts`),
+unlike every other list here, since actual product names are entirely
+practice-specific — it grows purely from what gets typed in. All of these
+are typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any
+typed value regardless of the list. `status` mirrors the pipeline stage
+names: `identified → doc-prep → docs-signed → processed → follow-up →
+funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
-(Held At / New Custodian), `investmentType` (Investment Type),
-`source` (From), and Next Step are all the same typeahead pattern: a list
-of suggestions that don't have to be the
+(Held At / New Custodian), `investmentType` (Investment Type), `productName`
+(Product Name), `source` (From), and Next Step are all the same typeahead
+pattern: a list of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
 saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
 `addNextStepSuggestion` for Next Step specifically, since its suggestions are
@@ -181,7 +185,7 @@ strip below the board instead of giving it a column. Deleting a stage (or any
 other Settings entry) that a record is still using doesn't corrupt anything —
 `findStage` falls back to a neutral gray stand-in for a stage key Settings no
 longer defines, rather than crashing. Where It's At Now / Where It's Moving,
-account types, investment types, sources, and Next Step suggestions are
+account types, investment types, product names, sources, and Next Step suggestions are
 plainer: each just an editable list of strings that populates the matching
 field's suggestions.
 
