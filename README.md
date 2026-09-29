@@ -93,7 +93,7 @@ account is *becoming* — a rollover often changes type, not just custodian,
 e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
 `kind` until changed. `investmentType` ("Investment Type") is what the
 money is actually invested *in* — stocks, bonds, mutual fund, ETF, money
-market, CD, variable/fixed/indexed annuity, RILA, alts, REITs, managed
+market, CD, VA/fixed annuity/FIA, RILA, alts, REITs, managed
 money — its own Settings list, distinct from the account/tax wrapper
 `kind` describes. All of these are
 typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any typed
