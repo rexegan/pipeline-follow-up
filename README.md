@@ -4,9 +4,9 @@ An opportunity-tracking tool for Russell Wealth Group.
 
 **Pipeline** is opportunities we've uncovered — existing clients with assets to
 move, and brand-new first meetings like the Dave Ramsey / SmartVestor referrals.
-Each one records who they are, how we got them, who referred them, a running
-activity log of what's actually happened with them, and for every pot of money:
-what it is, how much, where it's at now, and where it needs to go.
+Each one records who they are, how we got them, who referred them, and for
+every pot of money: what it is, how much, where it's at now, and where it
+needs to go.
 
 (An earlier version of this app also tracked a separate Follow-Up task list —
 today/this-week/this-month commitments tied back to a pipeline opportunity.
@@ -28,10 +28,6 @@ Financial Services Cloud:
   form, never a shape. `PipelineBoard.tsx` renders every opportunity as a
   compact card in one grid (not stage columns — see below); click a card to
   open the full record in `ProspectDetail.tsx`.
-- **Activity history, not a single notes field.** Redtail tracks
-  "communication history" as a dated timeline per relationship. A `Prospect`
-  carries `activity: ActivityEntry[]` (call / email / meeting / note, each
-  dated) instead of one flat `notes` string.
 - **Needs-attention surfacing.** Salesforce Financial Services Cloud leads
   with next-best-action / staleness scoring. The sidebar's **Needs Attention**
   stat card totals every NIGO opportunity's dollar amount, and board cards
@@ -62,7 +58,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 5-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
-| `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
+| `src/features/pipeline/ProspectDetail.tsx` | The full record: every editable field, opened from a board card |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
 | `src/App.tsx` | Sidebar shell, summary figures, load/save wiring, the Settings button |
 
@@ -78,7 +74,10 @@ stored shape. Also `kind` (new prospect vs existing client), `source`
 details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
-stage" is measured), a list of **Assets**, and an `activity` timeline. Each
+stage" is measured), a list of **Assets**, and an `activity` timeline —
+still in the data model (old records keep their history), but its own
+record-form panel was removed per feedback to give the form's fields the
+full width instead. Each
 asset is `{ kind, amount, heldAt, newAccountType, movingTo, investmentType,
 status }`, grouped in the record form under one centered heading —
 **Current Account** (Account Type, Amount, Held At) — followed
