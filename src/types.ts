@@ -161,6 +161,11 @@ export const DEFAULT_INVESTMENT_TYPES = [
  *  practice-specific; it grows from whatever gets typed in. */
 export const DEFAULT_PRODUCT_NAMES: string[] = []
 
+/** Who's working an opportunity — no starter list, since the practice's
+ *  staff/advisor names aren't something to guess; it grows from whatever
+ *  gets typed in. */
+export const DEFAULT_TEAM_MEMBERS: string[] = []
+
 /**
  * How far along one pot of money is — mirrors the pipeline stage names. Not
  * user-editable: unlike `Stage`, it drives fixed color coding and isn't one
@@ -211,6 +216,7 @@ export type EditableListKey =
   | 'custodiansMovingTo'
   | 'investmentTypes'
   | 'productNames'
+  | 'teamMembers'
 
 /** One logged touch — what happened and when, not just what's true now. */
 export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const
@@ -265,6 +271,8 @@ export type Prospect = {
   /** When `stage` last changed — how "days in stage" is measured. */
   stageChangedAt: string
   assets: Asset[]
+  /** Who's working this opportunity — one of Settings' team members, or free text. */
+  assignedTo: string
   nextStep: string
   nextStepStatus: NextStepStatus
   /** ISO date (yyyy-mm-dd) the next step is due, or '' if unscheduled. */
@@ -356,6 +364,7 @@ export type Settings = {
   accountTypes: string[]
   investmentTypes: string[]
   productNames: string[]
+  teamMembers: string[]
   sources: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
   nextStepSuggestions: Record<string, string[]>
@@ -368,6 +377,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accountTypes: DEFAULT_ACCOUNT_TYPES,
   investmentTypes: DEFAULT_INVESTMENT_TYPES,
   productNames: DEFAULT_PRODUCT_NAMES,
+  teamMembers: DEFAULT_TEAM_MEMBERS,
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }

@@ -74,7 +74,9 @@ stored shape. Also `kind` (new prospect vs existing client), `source`
 details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
-stage" is measured), a list of **Assets**, and an `activity` timeline —
+stage" is measured), an `assignedTo` (who's working it — its own Settings
+list, "Assigned To" on the Stage & Next Step row), a list of **Assets**, and
+an `activity` timeline —
 still in the data model (old records keep their history), but its own
 record-form panel was removed per feedback to give the form's fields the
 full width instead. Each
@@ -106,8 +108,8 @@ funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
 (Held At / New Custodian), `investmentType` (Investment Type), `productName`
-(Product Name), `source` (From), and Next Step are all the same typeahead
-pattern: a list of suggestions that don't have to be the
+(Product Name), `assignedTo` (Assigned To), `source` (From), and Next Step
+are all the same typeahead pattern: a list of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
 saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
 `addNextStepSuggestion` for Next Step specifically, since its suggestions are
@@ -152,8 +154,10 @@ combination can be checked at once instead of picking just one:
   shows both, and this is also how the off-track ones become visible outside
   the board's collapsed strip.
 - The second filters by account type (same list as Settings' Account Type
-  and the record form's Account Type field), unioning the same way —
-  checking 401(k) and Roth IRA shows a household with either.
+  and the record form's Account Type field, minus "Other" — not a real
+  category to filter by, though it's still a valid choice on the record
+  form itself), unioning the same way — checking 401(k) and Roth IRA shows
+  a household with either.
 
 The two dropdowns compose with each other by intersection: Sort "Doc Prep"
 plus account type "401(k)" shows only opportunities that are both. Quick
@@ -185,9 +189,18 @@ strip below the board instead of giving it a column. Deleting a stage (or any
 other Settings entry) that a record is still using doesn't corrupt anything —
 `findStage` falls back to a neutral gray stand-in for a stage key Settings no
 longer defines, rather than crashing. Where It's At Now / Where It's Moving,
-account types, investment types, product names, sources, and Next Step suggestions are
-plainer: each just an editable list of strings that populates the matching
-field's suggestions.
+account types, investment types, product names, team members (Assigned To),
+sources, and Next Step suggestions are plainer: each just an editable list
+of strings that populates the matching field's suggestions.
+
+Every entry in every one of these lists — and every stage — has its own
+pencil-icon **edit** button alongside the usual **×** remove button, so
+renaming a typo'd or outdated value doesn't mean deleting and re-adding it
+(`EditableList` in `SettingsPanel.tsx`; Stage rows have their own matching
+edit button since they're a richer row, not a plain string). Renaming only
+changes the Settings list itself — a record that already has the old value
+keeps it as-is, the same as when an entry is removed, since these are
+free-text typeaheads rather than a lookup by key.
 
 Settings persistence is deliberately *not* a write-through-on-load like
 prospects: `App.tsx` only calls `saveSettings` from inside the

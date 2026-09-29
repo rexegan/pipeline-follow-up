@@ -38,9 +38,9 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
   )
 }
 
-/** One editable list — add a new value, or remove an existing one. Used for
- * every plain string category (custodians, account types, sources, next
- * step suggestions); Stage gets its own richer rows below. */
+/** One editable list — add a new value, rename or remove an existing one.
+ * Used for every plain string category (custodians, account types, sources,
+ * next step suggestions); Stage gets its own richer rows below. */
 function EditableList({
   values,
   onChange,
@@ -51,6 +51,8 @@ function EditableList({
   placeholder: string
 }) {
   const [draft, setDraft] = useState('')
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editDraft, setEditDraft] = useState('')
 
   function add() {
     const v = draft.trim()
@@ -59,35 +61,95 @@ function EditableList({
     setDraft('')
   }
 
+  function startEdit(i: number) {
+    setEditingIndex(i)
+    setEditDraft(values[i])
+  }
+
+  // Renaming an entry only changes the Settings list itself — records that
+  // already typed the old value keep it as-is (these are free-text
+  // typeaheads, not a lookup by key), the same way removing an entry doesn't
+  // touch records already using it.
+  function commitEdit() {
+    if (editingIndex === null) return
+    const i = editingIndex
+    const next = editDraft.trim()
+    setEditingIndex(null)
+    if (!next || next === values[i]) return
+    if (values.some((v, idx) => idx !== i && v === next)) return
+    onChange(values.map((v, idx) => (idx === i ? next : v)))
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
         {values.length === 0 && <span style={{ fontSize: 12, color: MUTED }}>Nothing yet.</span>}
-        {values.map((v) => (
-          <span
-            key={v}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              background: MUTED_BG,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 999,
-              padding: '4px 4px 4px 10px',
-              fontSize: 12.5,
-              color: FG,
-            }}
-          >
-            {v}
-            <button
-              onClick={() => onChange(values.filter((x) => x !== v))}
-              title={`Remove ${v}`}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontWeight: 700, fontSize: 13, lineHeight: 1, padding: '2px 4px' }}
+        {values.map((v, i) =>
+          editingIndex === i ? (
+            <span
+              key={i}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 999,
+                padding: '2px 4px 2px 10px',
+              }}
             >
-              ×
-            </button>
-          </span>
-        ))}
+              <input
+                autoFocus
+                value={editDraft}
+                onChange={(e) => setEditDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitEdit()
+                  if (e.key === 'Escape') setEditingIndex(null)
+                }}
+                onBlur={commitEdit}
+                style={{
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: 12.5,
+                  fontFamily: SANS,
+                  color: FG,
+                  width: `${Math.max(4, editDraft.length + 1)}ch`,
+                }}
+              />
+            </span>
+          ) : (
+            <span
+              key={i}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+                background: MUTED_BG,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 999,
+                padding: '4px 4px 4px 10px',
+                fontSize: 12.5,
+                color: FG,
+              }}
+            >
+              {v}
+              <button
+                onClick={() => startEdit(i)}
+                title={`Edit ${v}`}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 12, lineHeight: 1, padding: '2px 4px' }}
+              >
+                ✎
+              </button>
+              <button
+                onClick={() => onChange(values.filter((_, idx) => idx !== i))}
+                title={`Remove ${v}`}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontWeight: 700, fontSize: 13, lineHeight: 1, padding: '2px 4px' }}
+              >
+                ×
+              </button>
+            </span>
+          ),
+        )}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <input
@@ -112,6 +174,25 @@ type Props = {
 export function SettingsPanel({ settings, onChange, onClose }: Props) {
   const [stageDraft, setStageDraft] = useState('')
   const [suggestionStageKey, setSuggestionStageKey] = useState(settings.stages[0]?.key ?? '')
+  const [editingStageKey, setEditingStageKey] = useState<string | null>(null)
+  const [stageEditDraft, setStageEditDraft] = useState('')
+
+  function startEditStage(s: StageDef) {
+    setEditingStageKey(s.key)
+    setStageEditDraft(s.label)
+  }
+
+  // Only the display label changes — shortLabel/formLabel (the board card
+  // and Stage-dropdown wording) stay as they are, since a default stage's
+  // three labels are deliberately different lengths for different spaces.
+  function commitEditStage() {
+    if (editingStageKey === null) return
+    const key = editingStageKey
+    const next = stageEditDraft.trim()
+    setEditingStageKey(null)
+    if (!next) return
+    onChange({ ...settings, stages: settings.stages.map((s) => (s.key === key ? { ...s, label: next } : s)) })
+  }
 
   function addStage() {
     const label = stageDraft.trim()
@@ -163,7 +244,21 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
             {settings.stages.map((s) => (
               <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '6px 8px' }}>
                 <span style={{ width: 9, height: 9, borderRadius: 999, background: s.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: FG, flex: 1 }}>{s.label}</span>
+                {editingStageKey === s.key ? (
+                  <input
+                    autoFocus
+                    value={stageEditDraft}
+                    onChange={(e) => setStageEditDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitEditStage()
+                      if (e.key === 'Escape') setEditingStageKey(null)
+                    }}
+                    onBlur={commitEditStage}
+                    style={{ ...inputStyle, flex: 1, height: 24 }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 13, color: FG, flex: 1 }}>{s.label}</span>
+                )}
                 <label
                   title="Checked: this stage means the opportunity stalled or fell through, and collapses into a strip below the board instead of getting a column. Unchecked: it's a normal step toward funding."
                   style={{ fontSize: 11, color: MUTED, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
@@ -171,6 +266,13 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
                   <input type="checkbox" checked={s.offTrack} onChange={() => toggleOffTrack(s.key)} />
                   Stalled / lost
                 </label>
+                <button
+                  onClick={() => startEditStage(s)}
+                  title={`Edit ${s.label}`}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 13, padding: '0 4px' }}
+                >
+                  ✎
+                </button>
                 <button
                   onClick={() => removeStage(s.key)}
                   title={`Remove ${s.label}`}
@@ -231,6 +333,14 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
               values={settings.productNames}
               onChange={(productNames) => onChange({ ...settings, productNames })}
               placeholder="Add a product name…"
+            />
+          </Section>
+
+          <Section title="Assigned To" hint="Who's working this opportunity.">
+            <EditableList
+              values={settings.teamMembers}
+              onChange={(teamMembers) => onChange({ ...settings, teamMembers })}
+              placeholder="Add a team member…"
             />
           </Section>
 

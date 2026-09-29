@@ -159,9 +159,10 @@ export default function App() {
   }
 
   // Same person, a new deal: keeps the contact info (name, middle initial,
-  // type, from, referred by, phone, email) but starts everything deal-specific — stage,
-  // assets, next step, activity — fresh, for when the same household turns
-  // up with a second, unrelated opportunity.
+  // type, from, referred by, phone, email) and who's assigned to it, but
+  // starts everything deal-specific — stage, assets, next step, activity —
+  // fresh, for when the same household turns up with a second, unrelated
+  // opportunity.
   function duplicateProspect(id: string) {
     const p = prospects.find((x) => x.id === id)
     if (!p) return
@@ -179,6 +180,7 @@ export default function App() {
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],
+      assignedTo: p.assignedTo,
       nextStep: '',
       nextStepStatus: 'in-process',
       nextStepOn: '',
@@ -332,7 +334,7 @@ export default function App() {
                 <CheckboxDropdown
                   label="Filter by account type"
                   summary={quickViewSummary}
-                  options={settings.accountTypes.map((t) => ({ id: t, label: t }))}
+                  options={settings.accountTypes.filter((t) => t !== 'Other').map((t) => ({ id: t, label: t }))}
                   selected={quickViewSelection}
                   onToggle={toggleQuickView}
                 />

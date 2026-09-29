@@ -148,7 +148,7 @@ export function ProspectDetail({
           </FieldRow>
 
           <div style={{ display: 'flex', gap: 8, margin: '14px 0 4px' }}>
-            <div style={{ width: 371, textAlign: 'center', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ width: 361, textAlign: 'center', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Current Account
             </div>
           </div>
@@ -168,7 +168,7 @@ export function ProspectDetail({
               <BoxMoney label="Amount" width={95} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
               <TypeaheadSelect
                 label="Held At"
-                width={140}
+                width={130}
                 value={asset.heldAt}
                 options={listOpts(settings.custodiansHeldAt)}
                 onCommit={(v) => {
@@ -179,7 +179,7 @@ export function ProspectDetail({
               />
               <TypeaheadSelect
                 label="New Account Type"
-                width={120}
+                width={115}
                 value={asset.newAccountType}
                 options={listOpts(settings.accountTypes)}
                 onCommit={(v) => {
@@ -201,7 +201,7 @@ export function ProspectDetail({
               />
               <TypeaheadSelect
                 label="Investment Type"
-                width={140}
+                width={115}
                 value={asset.investmentType}
                 options={listOpts(settings.investmentTypes)}
                 onCommit={(v) => {
@@ -212,7 +212,7 @@ export function ProspectDetail({
               />
               <TypeaheadSelect
                 label="Product Name"
-                width={150}
+                width={130}
                 value={asset.productName}
                 options={listOpts(settings.productNames)}
                 onCommit={(v) => {
@@ -258,6 +258,17 @@ export function ProspectDetail({
               options={settings.stages.map((s) => ({ value: s.key, label: s.formLabel }))}
               onCommit={onChangeStage}
               color={stageDef.color}
+            />
+            <TypeaheadSelect
+              label="Assigned To"
+              width={140}
+              value={prospect.assignedTo}
+              options={listOpts(settings.teamMembers)}
+              onCommit={(v) => {
+                onChange({ assignedTo: v })
+                onAddListValue('teamMembers', v)
+              }}
+              placeholder="Type a name…"
             />
             <TypeaheadSelect
               label="Next Step"

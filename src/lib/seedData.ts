@@ -21,6 +21,7 @@ export function seedProspects(): Prospect[] {
     email: 'bhoffman@example.com',
     stage: 'doc-prep',
     stageChangedAt: daysAgo(2),
+    assignedTo: '',
     assets: [
       {
         id: uid(),
@@ -71,6 +72,7 @@ export function seedProspects(): Prospect[] {
     email: '',
     stage: 'identified',
     stageChangedAt: daysAgo(1),
+    assignedTo: '',
     assets: [
       {
         id: uid(),
@@ -144,6 +146,7 @@ export function sampleProspects(): Prospect[] {
       stage: p.stage,
       stageChangedAt: createdAt,
       assets: p.assets,
+      assignedTo: '',
       nextStep: p.nextStep,
       nextStepStatus: 'in-process',
       nextStepOn: addDays(today(), Math.floor(Math.random() * 10) - 3),

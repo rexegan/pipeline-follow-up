@@ -143,6 +143,7 @@ function normalizeProspect(p: Prospect): Prospect {
   return {
     ...p,
     middleInitial: p.middleInitial ?? '',
+    assignedTo: p.assignedTo ?? '',
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
@@ -202,6 +203,7 @@ function normalizeSettings(raw: unknown): Settings {
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
     investmentTypes: Array.isArray(v.investmentTypes) ? v.investmentTypes : DEFAULT_SETTINGS.investmentTypes,
     productNames: Array.isArray(v.productNames) ? v.productNames : DEFAULT_SETTINGS.productNames,
+    teamMembers: Array.isArray(v.teamMembers) ? v.teamMembers : DEFAULT_SETTINGS.teamMembers,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
     nextStepSuggestions,
   }
