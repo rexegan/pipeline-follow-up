@@ -141,111 +141,6 @@ export function BoxSelect<T extends string>({
 }
 
 /**
- * A searchable "who is this about" field — type any part of a name to filter
- * a live dropdown, rather than scrolling a plain <select> of everyone in the
- * practice. Matches anywhere in the label (not just the start), so "davis"
- * finds "Davis, Robert" as readily as "Robert Davis".
- */
-export function Combobox({
-  label,
-  value,
-  options,
-  onCommit,
-  placeholder = 'Type a name…',
-  width,
-  grow,
-}: {
-  label: string
-  value: string
-  options: { value: string; label: string }[]
-  onCommit: (value: string) => void
-  placeholder?: string
-  width?: number
-  grow?: boolean
-}) {
-  const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
-  const selected = options.find((o) => o.value === value)
-  const filtered = query.trim()
-    ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
-    : options
-
-  return (
-    <FieldShell label={label} width={width} grow={grow}>
-      <div style={{ position: 'relative' }}>
-        <input
-          aria-label={label}
-          value={open ? query : (selected?.label ?? '')}
-          placeholder={placeholder}
-          onFocus={() => {
-            setQuery('')
-            setOpen(true)
-          }}
-          onChange={(e) => setQuery(e.target.value)}
-          onBlur={() => setOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') e.currentTarget.blur()
-            if (e.key === 'Enter' && filtered.length > 0) {
-              onCommit(filtered[0].value)
-              e.currentTarget.blur()
-            }
-          }}
-          className="box-input"
-          style={BOX_INPUT}
-          {...NO_PASSWORD_MANAGER}
-        />
-        {open && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              zIndex: 20,
-              background: CARD,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 6,
-              marginTop: 2,
-              maxHeight: 190,
-              overflowY: 'auto',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            }}
-          >
-            <div
-              onMouseDown={(e) => {
-                e.preventDefault()
-                onCommit('')
-                setOpen(false)
-              }}
-              style={{ padding: '6px 10px', fontSize: 13, color: MUTED, cursor: 'pointer' }}
-            >
-              — Not tied to anyone —
-            </div>
-            {filtered.length === 0 && (
-              <div style={{ padding: '6px 10px', fontSize: 13, color: MUTED }}>No matches</div>
-            )}
-            {filtered.map((o) => (
-              <div
-                key={o.value}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  onCommit(o.value)
-                  setOpen(false)
-                }}
-                className="combo-option"
-                style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer' }}
-              >
-                {o.label}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </FieldShell>
-  )
-}
-
-/**
  * A dropdown you can also type into. Filters the option list live like
  * `Combobox`, but — unlike it — isn't backed by a fixed set of IDs: leaving
  * text that doesn't match any option commits that text as-is on blur/Enter.
@@ -272,6 +167,7 @@ export function TypeaheadSelect({
 }) {
   const [query, setQuery] = useState<string | null>(null)
   const cancelledRef = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const editing = query !== null
   const shown = editing ? query : (options.find((o) => o.value === value)?.label ?? value)
   const filtered = editing && query.trim()
@@ -291,6 +187,7 @@ export function TypeaheadSelect({
     <FieldShell label={label} width={width} grow={grow}>
       <div style={{ position: 'relative' }}>
         <input
+          ref={inputRef}
           aria-label={label}
           value={shown}
           placeholder={placeholder}
@@ -339,8 +236,19 @@ export function TypeaheadSelect({
                 key={o.value}
                 onMouseDown={(e) => {
                   e.preventDefault()
+                  // preventDefault above stops the browser's default
+                  // mousedown blur, so the input never actually loses focus
+                  // here — without an explicit blur, clicking it again
+                  // wouldn't fire a new focus event (browsers only fire one
+                  // on an actual focus change), and the dropdown would stay
+                  // shut until something else was clicked first to truly
+                  // blur it. cancelledRef skips that blur's own commit,
+                  // which would otherwise re-commit whatever stale search
+                  // text was left over instead of the option just picked.
+                  cancelledRef.current = true
                   onCommit(o.value)
                   setQuery(null)
+                  inputRef.current?.blur()
                 }}
                 className="combo-option"
                 style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer' }}

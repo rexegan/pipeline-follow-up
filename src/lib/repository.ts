@@ -162,6 +162,7 @@ function normalizeProspect(p: Prospect): Prospect {
         heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
         movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
         newAccountType: a.newAccountType || kind,
+        investmentType: a.investmentType ?? '',
       }
     }),
   }
@@ -198,6 +199,7 @@ function normalizeSettings(raw: unknown): Settings {
       : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
     custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
+    investmentTypes: Array.isArray(v.investmentTypes) ? v.investmentTypes : DEFAULT_SETTINGS.investmentTypes,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
     nextStepSuggestions,
   }

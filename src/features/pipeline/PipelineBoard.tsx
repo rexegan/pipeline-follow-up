@@ -15,11 +15,11 @@ type Props = {
 
 const ORDER_IDS = new Set<SortBy>(['amount-desc', 'newest', 'oldest'])
 
-const COLUMN_WIDTH = 165
+const COLUMN_WIDTH = 200
 // Every view — "All Opportunities" and every Sort/filter option — lays out
 // as a strict grid of this many per row, left to right, then wrapping to a
 // new row, rather than a width-dependent flex-wrap or a horizontal scroll.
-const GRID_COLUMNS = 6
+const GRID_COLUMNS = 5
 const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLUMNS}, ${COLUMN_WIDTH}px)`, gap: 12 } as const
 
 /** A compact opportunity card — the glanceable state; click opens the full
@@ -41,13 +41,13 @@ function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; color: str
         padding: '9px 10px',
         cursor: 'pointer',
         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-        height: 122,
+        height: 140,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, alignItems: 'flex-start', height: 36 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, alignItems: 'flex-start', height: 42 }}>
         <div
           style={{
             fontSize: 14,
@@ -100,7 +100,7 @@ function totalOf(p: Prospect): number {
 }
 
 /**
- * Every opportunity flows left to right, six per row, then wraps —
+ * Every opportunity flows left to right, five per row, then wraps —
  * one unified grid rather than a column per stage. Stage is still visible
  * per card (the colored left border); change it from the record's own Stage
  * field, not by dragging between columns. Off-track opportunities (Stalled,

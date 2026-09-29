@@ -203,6 +203,17 @@ export function ProspectDetail({
                 }}
                 placeholder="Type a firm…"
               />
+              <TypeaheadSelect
+                label="Investment Type"
+                width={140}
+                value={asset.investmentType}
+                options={listOpts(settings.investmentTypes)}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { investmentType: v })
+                  onAddListValue('investmentTypes', v)
+                }}
+                placeholder="Type or choose…"
+              />
               <BoxSelect
                 label="Status"
                 width={110}

@@ -218,6 +218,14 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
             />
           </Section>
 
+          <Section title="Investment Type" hint="What the money is actually invested in — mutual fund, ETF, annuity, etc.">
+            <EditableList
+              values={settings.investmentTypes}
+              onChange={(investmentTypes) => onChange({ ...settings, investmentTypes })}
+              placeholder="Add an investment type…"
+            />
+          </Section>
+
           <Section title="From">
             <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
           </Section>

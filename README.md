@@ -60,8 +60,8 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
-| `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 6-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
+| `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 5-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
 | `src/App.tsx` | Sidebar shell, summary figures, load/save wiring, the Settings button |
@@ -76,26 +76,31 @@ details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), a list of **Assets**, and an `activity` timeline. Each
-asset is `{ kind, amount, heldAt, newAccountType, movingTo, status }`,
-grouped in the record form under one centered heading — **Current
-Account** (Account Type, Amount, Where It's At Now) — followed by New
-Account Type, New Custodian, and Status, ungrouped. `heldAt`
-("Where It's At Now") and `movingTo` ("New Custodian") are two
-*separate* Settings lists, not one shared one: an incoming prospect's money
-can plausibly be sitting almost anywhere, but only a handful of firms are
-ever the actual destination, so the "moving to" list starts out much
-shorter. `newAccountType` ("New Account Type," same Account Type list and
-width as the account's own `kind`) is what the account is *becoming* — a
-rollover often changes type, not just custodian, e.g. a 401(k) landing as a
-Traditional IRA — and defaults to matching `kind` until changed. All of
-these are typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any
-typed value regardless of the list. `status` mirrors the pipeline stage
-names: `identified → doc-prep → docs-signed → processed → follow-up →
-funded` — this one's fixed, not a Settings category.
+asset is `{ kind, amount, heldAt, newAccountType, movingTo, investmentType,
+status }`, grouped in the record form under one centered heading —
+**Current Account** (Account Type, Amount, Where It's At Now) — followed
+by New Account Type, New Custodian, Investment Type, and Status,
+ungrouped. `heldAt` ("Where It's At Now") and `movingTo` ("New
+Custodian") are two *separate* Settings lists, not one shared one: an
+incoming prospect's money can plausibly be sitting almost anywhere, but
+only a handful of firms are ever the actual destination, so the "moving
+to" list starts out much shorter. `newAccountType` ("New Account Type,"
+same Account Type list and width as the account's own `kind`) is what the
+account is *becoming* — a rollover often changes type, not just custodian,
+e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
+`kind` until changed. `investmentType` ("Investment Type") is what the
+money is actually invested *in* — mutual fund, ETF, variable/fixed/indexed
+annuity, RILA, alts, REITs, managed money — its own Settings list,
+distinct from the account/tax wrapper `kind` describes. All of these are
+typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any typed
+value regardless of the list. `status` mirrors the pipeline stage names:
+`identified → doc-prep → docs-signed → processed → follow-up → funded` —
+this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
-(Where It's At Now / New Custodian), `source` (From), and Next Step are all
-the same typeahead pattern: a list of suggestions that don't have to be the
+(Where It's At Now / New Custodian), `investmentType` (Investment Type),
+`source` (From), and Next Step are all the same typeahead pattern: a list
+of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
 saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
 `addNextStepSuggestion` for Next Step specifically, since its suggestions are

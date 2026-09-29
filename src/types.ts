@@ -136,6 +136,22 @@ export const DEFAULT_CUSTODIANS_MOVING_TO = [
   'Other',
 ]
 
+/** What kind of vehicle the money actually sits in, distinct from `kind`
+ *  (the account/tax wrapper) — a 401(k) can be invested in mutual funds,
+ *  a brokerage account can hold a REIT, etc. */
+export const DEFAULT_INVESTMENT_TYPES = [
+  'Mutual Fund',
+  'ETF',
+  'Variable Annuity',
+  'Fixed Annuity',
+  'Fixed Indexed Annuity (FIA)',
+  'RILA',
+  'Alts',
+  'REITs',
+  'Managed $',
+  'Other',
+]
+
 /**
  * How far along one pot of money is — mirrors the pipeline stage names. Not
  * user-editable: unlike `Stage`, it drives fixed color coding and isn't one
@@ -168,12 +184,15 @@ export type Asset = {
   newAccountType: string
   /** Where it needs to go — destination custodian or account. */
   movingTo: string
+  /** What kind of vehicle the money sits in (mutual fund, ETF, annuity…) —
+   *  one of Settings' investment types, or free text. */
+  investmentType: string
   status: AssetStatus
   notes: string
 }
 
 /** The plain string-list Settings categories a typed value can be quietly saved into. */
-export type EditableListKey = 'accountTypes' | 'sources' | 'custodiansHeldAt' | 'custodiansMovingTo'
+export type EditableListKey = 'accountTypes' | 'sources' | 'custodiansHeldAt' | 'custodiansMovingTo' | 'investmentTypes'
 
 /** One logged touch — what happened and when, not just what's true now. */
 export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const
@@ -317,6 +336,7 @@ export type Settings = {
   custodiansHeldAt: string[]
   custodiansMovingTo: string[]
   accountTypes: string[]
+  investmentTypes: string[]
   sources: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
   nextStepSuggestions: Record<string, string[]>
@@ -327,6 +347,7 @@ export const DEFAULT_SETTINGS: Settings = {
   custodiansHeldAt: DEFAULT_CUSTODIANS_HELD_AT,
   custodiansMovingTo: DEFAULT_CUSTODIANS_MOVING_TO,
   accountTypes: DEFAULT_ACCOUNT_TYPES,
+  investmentTypes: DEFAULT_INVESTMENT_TYPES,
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }
