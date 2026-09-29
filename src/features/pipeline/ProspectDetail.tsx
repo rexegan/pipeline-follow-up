@@ -154,9 +154,6 @@ export function ProspectDetail({
             <div style={{ width: 371, textAlign: 'center', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Current Account
             </div>
-            <div style={{ width: 386, textAlign: 'center', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Where It's Moving
-            </div>
           </div>
           {prospect.assets.map((asset) => (
             <FieldRow key={asset.id}>
@@ -195,7 +192,7 @@ export function ProspectDetail({
                 placeholder="Type a kind…"
               />
               <TypeaheadSelect
-                label="New Custodian / Carrier"
+                label="New Custodian"
                 width={140}
                 value={asset.movingTo}
                 options={listOpts(settings.custodiansMovingTo)}

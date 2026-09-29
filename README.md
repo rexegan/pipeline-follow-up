@@ -75,10 +75,10 @@ not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), a list of **Assets**, and an `activity` timeline. Each
 asset is `{ kind, amount, heldAt, newAccountType, movingTo, status }`,
-grouped in the record form under two centered headings — **Current
-Account** (Account Type, Amount, Where It's At Now) and **Where It's
-Moving** (New Account Type, New Custodian / Carrier, Status). `heldAt`
-("Where It's At Now") and `movingTo` ("New Custodian / Carrier") are two
+grouped in the record form under one centered heading — **Current
+Account** (Account Type, Amount, Where It's At Now) — followed by New
+Account Type, New Custodian, and Status, ungrouped. `heldAt`
+("Where It's At Now") and `movingTo` ("New Custodian") are two
 *separate* Settings lists, not one shared one: an incoming prospect's money
 can plausibly be sitting almost anywhere, but only a handful of firms are
 ever the actual destination, so the "moving to" list starts out much
