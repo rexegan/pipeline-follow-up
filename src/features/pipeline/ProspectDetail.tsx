@@ -23,6 +23,21 @@ const opts = <T extends string>(values: readonly T[], labels: Record<T, string>)
 
 const listOpts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 
+// `Prospect.name` stays one "Last, First" string everywhere else in the app
+// (board cards, search, duplicate) — only the Intake row shows it as two
+// boxes, split/joined here rather than changing the stored shape.
+function splitName(name: string): { last: string; first: string } {
+  const i = name.indexOf(',')
+  return i === -1 ? { last: name, first: '' } : { last: name.slice(0, i).trim(), first: name.slice(i + 1).trim() }
+}
+
+function joinName(last: string, first: string): string {
+  const l = last.trim()
+  const f = first.trim()
+  if (!l) return f
+  return f ? `${l}, ${f}` : l
+}
+
 type Props = {
   prospect: Prospect
   settings: Settings
@@ -63,6 +78,7 @@ export function ProspectDetail({
   const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
   const stageDef = findStage(settings.stages, prospect.stage)
   const offTrack = stageDef.offTrack
+  const { last: lastName, first: firstName } = splitName(prospect.name)
 
   // The clock runs from the moment the opportunity was opened until every
   // account has landed — not the Stage (which can say "Funded" before the
@@ -122,7 +138,8 @@ export function ProspectDetail({
             Intake
           </div>
           <FieldRow>
-            <BoxText label="Name" width={170} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
+            <BoxText label="Last Name" width={110} value={lastName} onCommit={(v) => onChange({ name: joinName(v, firstName) })} />
+            <BoxText label="First Name" width={110} value={firstName} onCommit={(v) => onChange({ name: joinName(lastName, v) })} />
             <BoxText label="MI" width={50} value={prospect.middleInitial} onCommit={(v) => onChange({ middleInitial: v })} />
             <BoxSelect
               label="Type"
@@ -171,7 +188,7 @@ export function ProspectDetail({
               />
               <BoxMoney label="Amount" width={95} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
               <TypeaheadSelect
-                label="Where It's At Now"
+                label="Held At"
                 width={140}
                 value={asset.heldAt}
                 options={listOpts(settings.custodiansHeldAt)}

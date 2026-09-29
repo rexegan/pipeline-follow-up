@@ -140,8 +140,12 @@ export const DEFAULT_CUSTODIANS_MOVING_TO = [
  *  (the account/tax wrapper) — a 401(k) can be invested in mutual funds,
  *  a brokerage account can hold a REIT, etc. */
 export const DEFAULT_INVESTMENT_TYPES = [
+  'Stocks',
+  'Bonds',
   'Mutual Fund',
   'ETF',
+  'Money Market',
+  'Certificate of Deposit',
   'Variable Annuity',
   'Fixed Annuity',
   'Fixed Indexed Annuity (FIA)',

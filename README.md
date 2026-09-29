@@ -68,9 +68,12 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 
 ## Data model
 
-A **Prospect** carries a `name` ("Last, First") and a separate
-`middleInitial` field (its own boxed "MI" input right after Name on the
-Intake row), `kind` (new prospect vs existing client), `source`
+A **Prospect** carries a `name` (still stored as one "Last, First" string
+everywhere else in the app — board cards, search, duplicate) and a separate
+`middleInitial` field. The Intake row shows these as three boxes — Last
+Name, First Name, MI, in that order — splitting/joining on the comma
+(`splitName`/`joinName` in `ProspectDetail.tsx`) rather than changing the
+stored shape. Also `kind` (new prospect vs existing client), `source`
 (Dave Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact
 details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
@@ -78,9 +81,9 @@ there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), a list of **Assets**, and an `activity` timeline. Each
 asset is `{ kind, amount, heldAt, newAccountType, movingTo, investmentType,
 status }`, grouped in the record form under one centered heading —
-**Current Account** (Account Type, Amount, Where It's At Now) — followed
+**Current Account** (Account Type, Amount, Held At) — followed
 by New Account Type, New Custodian, Investment Type, and Status,
-ungrouped. `heldAt` ("Where It's At Now") and `movingTo` ("New
+ungrouped. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
@@ -89,16 +92,17 @@ same Account Type list and width as the account's own `kind`) is what the
 account is *becoming* — a rollover often changes type, not just custodian,
 e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
 `kind` until changed. `investmentType` ("Investment Type") is what the
-money is actually invested *in* — mutual fund, ETF, variable/fixed/indexed
-annuity, RILA, alts, REITs, managed money — its own Settings list,
-distinct from the account/tax wrapper `kind` describes. All of these are
+money is actually invested *in* — stocks, bonds, mutual fund, ETF, money
+market, CD, variable/fixed/indexed annuity, RILA, alts, REITs, managed
+money — its own Settings list, distinct from the account/tax wrapper
+`kind` describes. All of these are
 typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any typed
 value regardless of the list. `status` mirrors the pipeline stage names:
 `identified → doc-prep → docs-signed → processed → follow-up → funded` —
 this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
-(Where It's At Now / New Custodian), `investmentType` (Investment Type),
+(Held At / New Custodian), `investmentType` (Investment Type),
 `source` (From), and Next Step are all the same typeahead pattern: a list
 of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
@@ -178,8 +182,9 @@ strip below the board instead of giving it a column. Deleting a stage (or any
 other Settings entry) that a record is still using doesn't corrupt anything —
 `findStage` falls back to a neutral gray stand-in for a stage key Settings no
 longer defines, rather than crashing. Where It's At Now / Where It's Moving,
-account types, sources, and Next Step suggestions are plainer: each just an
-editable list of strings that populates the matching field's suggestions.
+account types, investment types, sources, and Next Step suggestions are
+plainer: each just an editable list of strings that populates the matching
+field's suggestions.
 
 Settings persistence is deliberately *not* a write-through-on-load like
 prospects: `App.tsx` only calls `saveSettings` from inside the
