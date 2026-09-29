@@ -13,6 +13,7 @@ export function seedProspects(): Prospect[] {
   const hoffman: Prospect = {
     id: uid(),
     name: 'Hoffman, Bill & Karen',
+    middleInitial: '',
     kind: 'new-prospect',
     source: 'Dave Ramsey',
     referredBy: 'SmartVestor lead 9/2',
@@ -58,6 +59,7 @@ export function seedProspects(): Prospect[] {
   const garcia: Prospect = {
     id: uid(),
     name: 'Garcia, Robert',
+    middleInitial: 'A',
     kind: 'existing-client',
     source: 'Client referral',
     referredBy: 'Referred by the Hoffmans',
@@ -125,6 +127,7 @@ export function sampleProspects(): Prospect[] {
     return {
       id: uid(),
       name: p.name,
+      middleInitial: '',
       kind: p.kind,
       source: p.source,
       referredBy: p.referredBy ?? '',

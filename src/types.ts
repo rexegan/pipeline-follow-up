@@ -213,7 +213,9 @@ export const NEXT_STEP_STATUS_LABELS: Record<NextStepStatus, string> = {
 
 export type Prospect = {
   id: string
+  /** "Last, First" — see `middleInitial` for the household's middle initial. */
   name: string
+  middleInitial: string
   kind: ProspectKind
   /** Where they came from — one of Settings' sources, or free text. */
   source: string

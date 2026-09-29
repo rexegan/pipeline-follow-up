@@ -123,6 +123,7 @@ export function ProspectDetail({
           </div>
           <FieldRow>
             <BoxText label="Name" width={170} value={prospect.name} placeholder="Last, First" onCommit={(v) => onChange({ name: v })} />
+            <BoxText label="MI" width={50} value={prospect.middleInitial} onCommit={(v) => onChange({ middleInitial: v })} />
             <BoxSelect
               label="Type"
               width={100}
@@ -142,7 +143,7 @@ export function ProspectDetail({
               placeholder="Type a source…"
             />
             <BoxText label="Referred By" width={150} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
-            <ReadOnlyBox label="Time Open" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
+            <ReadOnlyBox label="Start" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
           </FieldRow>
           <FieldRow>
             <ReadOnlyBox label="Total" width={110} value={fmtMoney(total)} />

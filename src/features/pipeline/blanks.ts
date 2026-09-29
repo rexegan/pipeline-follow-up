@@ -17,6 +17,7 @@ export const blankProspect = (defaultStage: string, defaultAccountType = ''): Pr
   return {
     id: uid(),
     name: '',
+    middleInitial: '',
     kind: 'new-prospect',
     source: '',
     referredBy: '',

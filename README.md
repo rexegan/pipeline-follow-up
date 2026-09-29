@@ -58,7 +58,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it, plus `sampleProspects()` — twenty opportunities scattered across every stage, loadable anytime from the sidebar |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
-| `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
+| `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
 | `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 6-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
@@ -68,7 +68,9 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 
 ## Data model
 
-A **Prospect** carries `kind` (new prospect vs existing client), `source`
+A **Prospect** carries a `name` ("Last, First") and a separate
+`middleInitial` field (its own boxed "MI" input right after Name on the
+Intake row), `kind` (new prospect vs existing client), `source`
 (Dave Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact
 details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
@@ -102,12 +104,12 @@ Uncovered" suggests "Schedule the first meeting," while one at Doc Prep
 suggests "Complete transfer paperwork signatures." A `nextStepStatus` (In
 Process / Completed) sits between Next Step and Next Step Due.
 
-"Time Open" is a running stopwatch (`useElapsedMs` in `lib/useElapsed.ts`) —
+"Start" is a running stopwatch (`useElapsedMs` in `lib/useElapsed.ts`) —
 days/hours/minutes/seconds since `createdAt`, ticking every second like the
 Trade Blotter's clock on an open position. It only stops once every asset's
 `status` is Funded (not the Stage, which can say "Funded" before the last
 account has actually settled) — freezing at whatever it read at that moment
-rather than resetting or continuing. Next to Referred By and Time Open, a
+rather than resetting or continuing. Next to Referred By and Start, a
 read-only "Total" field mirrors the header's dollar total.
 
 The record modal's footer offers a **Next** button, when more than one

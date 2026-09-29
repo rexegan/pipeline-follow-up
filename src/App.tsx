@@ -158,8 +158,8 @@ export default function App() {
     setProspects((prev) => [...prev, ...sampleProspects()])
   }
 
-  // Same person, a new deal: keeps the contact info (name, type, from,
-  // referred by, phone, email) but starts everything deal-specific — stage,
+  // Same person, a new deal: keeps the contact info (name, middle initial,
+  // type, from, referred by, phone, email) but starts everything deal-specific — stage,
   // assets, next step, activity — fresh, for when the same household turns
   // up with a second, unrelated opportunity.
   function duplicateProspect(id: string) {
@@ -170,6 +170,7 @@ export default function App() {
     const copy: Prospect = {
       id: uid(),
       name: p.name,
+      middleInitial: p.middleInitial,
       kind: p.kind,
       source: p.source,
       referredBy: p.referredBy,

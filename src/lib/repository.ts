@@ -142,6 +142,7 @@ function isProspect(value: unknown): value is Prospect {
 function normalizeProspect(p: Prospect): Prospect {
   return {
     ...p,
+    middleInitial: p.middleInitial ?? '',
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
