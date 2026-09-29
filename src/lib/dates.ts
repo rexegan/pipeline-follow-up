@@ -44,18 +44,6 @@ export function endOfWeek(isoDate = today()): string {
   return addDays(startOfWeek(isoDate), 6)
 }
 
-export function endOfMonth(isoDate = today()): string {
-  const d = new Date(`${isoDate}T00:00:00`)
-  return toIso(new Date(d.getFullYear(), d.getMonth() + 1, 0))
-}
-
-export function fmtDate(isoDate: string): string {
-  if (!isoDate) return '—'
-  const d = new Date(`${isoDate}T00:00:00`)
-  if (Number.isNaN(d.getTime())) return isoDate
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 /** Whole days since an ISO timestamp — how "days in stage" is measured. */
 export function daysSince(isoTimestamp: string): number {
   const then = Date.parse(isoTimestamp)

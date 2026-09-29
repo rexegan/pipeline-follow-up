@@ -1,36 +1,21 @@
 import { useEffect, useState } from 'react'
-import type { Asset, EditableListKey, FollowUp, Horizon, Prospect, Settings, SortBy, Stage } from './types'
+import type { Asset, EditableListKey, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
-import { BG, BORDER, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { sampleProspects, seedFollowUps, seedProspects } from './lib/seedData'
+import { sampleProspects, seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
-import { suggestFollowUpFor } from './features/pipeline/stageWorkflow'
 import { SettingsPanel } from './features/settings/SettingsPanel'
-import { FollowUpTable } from './features/followup/FollowUpTable'
-import { daysUntil, fmtDate, fmtMoney, uid } from './lib/dates'
-import { defaultDue } from './features/followup/horizons'
-
-const VIEWS = [
-  { id: 'pipeline', label: 'Pipeline', icon: '💼', color: '#1d4ed8', bg: '#eff6ff' },
-  { id: 'followup', label: 'Follow-Up', icon: '📋', color: '#15803d', bg: '#f0fdf4' },
-] as const
-
-type ViewId = (typeof VIEWS)[number]['id']
-
-type PendingSuggestion = { prospectId: string; prospectName: string; title: string; dueOn: string; reason: string }
+import { fmtMoney, uid } from './lib/dates'
 
 export default function App() {
-  const [view, setView] = useState<ViewId>('pipeline')
   const [prospects, setProspects] = useState<Prospect[]>([])
-  const [followUps, setFollowUps] = useState<FollowUp[]>([])
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [loaded, setLoaded] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [suggestion, setSuggestion] = useState<PendingSuggestion | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   // Both start as "no filter": sortSelection empty means "All Opportunities";
   // quickViewSelection empty means every account type. Checking any box adds
@@ -59,21 +44,19 @@ export default function App() {
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      let [p, f] = await Promise.all([localRepository.loadProspects(), localRepository.loadFollowUps()])
+      let p = await localRepository.loadProspects()
       const s = await localRepository.loadSettings()
       // First time this browser has ever opened the app: seed a demo
       // household so the page shows something instead of an empty state.
       // Gated on hasSeeded, not just an empty list, so deleting everything
       // later doesn't bring the demo back.
-      if (p.length === 0 && f.length === 0 && !(await localRepository.hasSeeded())) {
+      if (p.length === 0 && !(await localRepository.hasSeeded())) {
         p = seedProspects()
-        f = seedFollowUps(p[0].id)
-        await Promise.all([localRepository.saveProspects(p), localRepository.saveFollowUps(f)])
+        await localRepository.saveProspects(p)
         await localRepository.markSeeded()
       }
       if (cancelled) return
       setProspects(p)
-      setFollowUps(f)
       setSettings(s)
       setLoaded(true)
     })()
@@ -88,11 +71,7 @@ export default function App() {
     if (loaded) void localRepository.saveProspects(prospects)
   }, [prospects, loaded])
 
-  useEffect(() => {
-    if (loaded) void localRepository.saveFollowUps(followUps)
-  }, [followUps, loaded])
-
-  // Deliberately not a write-through-on-load effect like prospects/follow-ups:
+  // Deliberately not a write-through-on-load effect like prospects:
   // Settings merges in code defaults for anything a browser hasn't saved
   // (see loadSettings), and eagerly saving that merged result back would
   // freeze every category at whatever the defaults were on first load —
@@ -145,37 +124,6 @@ export default function App() {
     setProspects((prev) =>
       prev.map((p) => (p.id === prospectId ? { ...p, stage, stageChangedAt: now, updatedAt: now } : p)),
     )
-    const suggested = suggestFollowUpFor(stage)
-    setSuggestion(
-      suggested
-        ? {
-            prospectId,
-            prospectName: prospect.name || 'this opportunity',
-            reason: `Moved to ${findStage(settings.stages, stage).label}`,
-            ...suggested,
-          }
-        : null,
-    )
-  }
-
-  function acceptSuggestion() {
-    if (!suggestion) return
-    setFollowUps((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        title: suggestion.title,
-        horizon: 'week',
-        prospectId: suggestion.prospectId,
-        owner: '',
-        reason: suggestion.reason,
-        dueOn: suggestion.dueOn,
-        done: false,
-        completedAt: null,
-        createdAt: new Date().toISOString(),
-      },
-    ])
-    setSuggestion(null)
   }
 
   const patchAsset = (prospectId: string, assetId: string, patch: Partial<Asset>) =>
@@ -244,25 +192,7 @@ export default function App() {
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
-    setSuggestion((s) => (s?.prospectId === id ? null : s))
   }
-
-  const addFollowUp = (horizon: Horizon) =>
-    setFollowUps((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        title: '',
-        horizon,
-        prospectId: null,
-        owner: '',
-        reason: '',
-        dueOn: defaultDue(horizon),
-        done: false,
-        completedAt: null,
-        createdAt: new Date().toISOString(),
-      },
-    ])
 
   const openProspects = prospects.filter((p) => !findStage(settings.stages, p.stage).offTrack)
   const inPlay = openProspects.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
@@ -278,10 +208,6 @@ export default function App() {
   const needsAttention = prospects
     .filter((p) => p.stage === 'nigo')
     .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
-
-  const openFollowUps = followUps.filter((f) => !f.done)
-  const dueToday = openFollowUps.filter((f) => f.horizon === 'today' || (daysUntil(f.dueOn) ?? 1) <= 0).length
-  const overdueCount = openFollowUps.filter((f) => (daysUntil(f.dueOn) ?? 1) < 0).length
 
   // Quick View narrows the board to opportunities holding any of the checked
   // account types (same list as the record form's Account Type field), on
@@ -309,8 +235,6 @@ export default function App() {
         ? [...quickViewSelection].join(', ')
         : `${quickViewSelection.size} selected`
 
-  const heading = view === 'pipeline' ? 'Pipeline' : 'Follow-Up'
-  const blurb = view === 'pipeline' ? 'Opportunities' : 'Today, this week, this month'
   const stamp = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -349,76 +273,37 @@ export default function App() {
       >
         <div style={{ padding: '4px 4px 16px' }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: FG, letterSpacing: '-0.01em' }}>Russell Wealth Group</div>
-          <div style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>Pipeline &amp; Follow-Up</div>
+          <div style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>Pipeline</div>
         </div>
 
-        <SideLabel>Views</SideLabel>
-        {VIEWS.map((v) => (
-          <button key={v.id} className="side-btn" aria-current={view === v.id} onClick={() => setView(v.id)}>
-            <span
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 5,
-                background: v.bg,
-                color: v.color,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 11,
-                flexShrink: 0,
-              }}
-            >
-              {v.icon}
-            </span>
-            <span>{v.label}</span>
-          </button>
-        ))}
-
-        <div style={{ margin: '14px 0', borderTop: `1px solid ${BORDER}` }} />
-
         <SideLabel>Summary</SideLabel>
-        {view === 'pipeline' ? (
-          <>
-            <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
-            <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
-            <StatCard label="Needs Attention" value={fmtMoney(needsAttention)} color={findStage(settings.stages, 'nigo').color} onClick={() => { setSortSelection(new Set(['nigo'])); setQuickViewSelection(new Set()) }} />
-            <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
-            <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
-            <button className="btn-primary" onClick={addProspect}>
-              + New Opportunity
-            </button>
-            <button
-              onClick={loadSampleData}
-              style={{
-                display: 'block',
-                width: '100%',
-                background: 'none',
-                color: MUTED,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 6,
-                padding: '7px 14px',
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontFamily: SANS,
-                marginTop: 6,
-              }}
-            >
-              + Load sample opportunities
-            </button>
-          </>
-        ) : (
-          <>
-            <StatCard label="Due Today" value={dueToday} color={dueToday > 0 ? WARN : FG} />
-            <StatCard label="Overdue" value={overdueCount} color={overdueCount > 0 ? DANGER : FG} />
-            <StatCard label="Open" value={openFollowUps.length} />
-            <StatCard label="Done" value={followUps.length - openFollowUps.length} color={SUCCESS} />
-            <button className="btn-primary" onClick={() => addFollowUp('today')}>
-              + New Follow-Up
-            </button>
-          </>
-        )}
+        <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Needs Attention" value={fmtMoney(needsAttention)} color={findStage(settings.stages, 'nigo').color} onClick={() => { setSortSelection(new Set(['nigo'])); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <button className="btn-primary" onClick={addProspect}>
+          + New Opportunity
+        </button>
+        <button
+          onClick={loadSampleData}
+          style={{
+            display: 'block',
+            width: '100%',
+            background: 'none',
+            color: MUTED,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 6,
+            padding: '7px 14px',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: SANS,
+            marginTop: 6,
+          }}
+        >
+          + Load sample opportunities
+        </button>
       </aside>
 
       <div style={{ flex: 1, minWidth: 0, background: BG }}>
@@ -427,76 +312,41 @@ export default function App() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: FG }}>
-                  {heading}
+                  Pipeline
                 </h1>
-                <Chip label={blurb} color={MUTED} bg={MUTED_BG} border />
+                <Chip label="Opportunities" color={MUTED} bg={MUTED_BG} border />
               </div>
               <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
-              {view === 'pipeline' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Quick View
-                  </span>
-                  <CheckboxDropdown
-                    label="Sort opportunities"
-                    summary={sortSummary}
-                    options={SORTS}
-                    selected={sortSelection}
-                    onToggle={(id) => toggleSort(id as SortBy)}
-                  />
-                  <CheckboxDropdown
-                    label="Filter by account type"
-                    summary={quickViewSummary}
-                    options={settings.accountTypes.map((t) => ({ id: t, label: t }))}
-                    selected={quickViewSelection}
-                    onToggle={toggleQuickView}
-                  />
-                </div>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Quick View
+                </span>
+                <CheckboxDropdown
+                  label="Sort opportunities"
+                  summary={sortSummary}
+                  options={SORTS}
+                  selected={sortSelection}
+                  onToggle={(id) => toggleSort(id as SortBy)}
+                />
+                <CheckboxDropdown
+                  label="Filter by account type"
+                  summary={quickViewSummary}
+                  options={settings.accountTypes.map((t) => ({ id: t, label: t }))}
+                  selected={quickViewSelection}
+                  onToggle={toggleQuickView}
+                />
+              </div>
             </div>
-            {view === 'pipeline' && <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />}
+            <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />
           </div>
 
-          {view === 'pipeline' && suggestion && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
-                borderRadius: 8,
-                padding: '10px 14px',
-                marginBottom: 16,
-                fontSize: 13,
-              }}
-            >
-              <span style={{ flex: 1 }}>
-                <strong>{suggestion.prospectName}</strong> moved stage — add "{suggestion.title}" as a follow-up due{' '}
-                {fmtDate(suggestion.dueOn)}?
-              </span>
-              <ActionBtn label="Add follow-up" onClick={acceptSuggestion} small />
-              <ActionBtn label="Skip" color={MUTED} onClick={() => setSuggestion(null)} small />
-            </div>
-          )}
-
-          {view === 'pipeline' ? (
-            <PipelineBoard
-              prospects={boardProspects}
-              stages={settings.stages}
-              sortBy={sortSelection.size === 0 ? ['all'] : [...sortSelection]}
-              onOpen={(p) => setSelectedId(p.id)}
-              onAddProspect={addProspect}
-            />
-          ) : (
-            <FollowUpTable
-              followUps={followUps}
-              prospects={prospects}
-              onChange={(id, patch) => setFollowUps((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))}
-              onDelete={(id) => setFollowUps((prev) => prev.filter((f) => f.id !== id))}
-              onAdd={addFollowUp}
-            />
-          )}
+          <PipelineBoard
+            prospects={boardProspects}
+            stages={settings.stages}
+            sortBy={sortSelection.size === 0 ? ['all'] : [...sortSelection]}
+            onOpen={(p) => setSelectedId(p.id)}
+            onAddProspect={addProspect}
+          />
         </div>
       </div>
 

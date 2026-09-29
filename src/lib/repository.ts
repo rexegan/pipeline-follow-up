@@ -1,5 +1,5 @@
-import type { FollowUp, Prospect, Settings, StageDef } from '../types'
-import { DEFAULT_SETTINGS, HORIZONS } from '../types'
+import type { Prospect, Settings, StageDef } from '../types'
+import { DEFAULT_SETTINGS } from '../types'
 import { formatPhone } from './phone'
 
 /**
@@ -10,8 +10,6 @@ import { formatPhone } from './phone'
 export interface Repository {
   loadProspects(): Promise<Prospect[]>
   saveProspects(prospects: Prospect[]): Promise<void>
-  loadFollowUps(): Promise<FollowUp[]>
-  saveFollowUps(followUps: FollowUp[]): Promise<void>
   loadSettings(): Promise<Settings>
   saveSettings(settings: Settings): Promise<void>
   /** Whether this browser has ever had data written to it — gates the
@@ -21,7 +19,6 @@ export interface Repository {
 }
 
 const PROSPECTS_KEY = 'pipeline-follow-up:prospects:v1'
-const FOLLOWUPS_KEY = 'pipeline-follow-up:followups:v1'
 const SETTINGS_KEY = 'pipeline-follow-up:settings:v1'
 const SEEDED_KEY = 'pipeline-follow-up:seeded:v1'
 
@@ -169,17 +166,6 @@ function normalizeProspect(p: Prospect): Prospect {
   }
 }
 
-function isFollowUp(value: unknown): value is FollowUp {
-  if (typeof value !== 'object' || value === null) return false
-  const v = value as Record<string, unknown>
-  return typeof v.id === 'string' && typeof v.title === 'string' && HORIZONS.includes(v.horizon as never)
-}
-
-/** Backfills `reason`, added after some browsers may already have follow-ups saved. */
-function normalizeFollowUp(f: FollowUp): FollowUp {
-  return { ...f, reason: f.reason ?? '' }
-}
-
 /** Backfills any settings category missing from a browser's saved settings
  *  (added after that browser last saved, or never saved at all) with its default. */
 function normalizeSettings(raw: unknown): Settings {
@@ -241,12 +227,6 @@ export const localRepository: Repository = {
   },
   async saveProspects(prospects) {
     write(PROSPECTS_KEY, prospects)
-  },
-  async loadFollowUps() {
-    return read(FOLLOWUPS_KEY, isFollowUp).map(normalizeFollowUp)
-  },
-  async saveFollowUps(followUps) {
-    write(FOLLOWUPS_KEY, followUps)
   },
   async loadSettings() {
     try {

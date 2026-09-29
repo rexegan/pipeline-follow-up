@@ -423,51 +423,6 @@ export function FieldRow({ children, last }: { children: ReactNode; last?: boole
   )
 }
 
-/**
- * A record — one prospect, one follow-up — as a bordered card of stacked
- * field rows instead of one very wide table row. Keeps everything visible
- * without horizontal scrolling no matter how many fields a record grows to;
- * more fields mean a taller card, not a wider table.
- */
-export function RecordCard({
-  accent,
-  onDelete,
-  deleteTitle,
-  children,
-}: {
-  accent: string
-  onDelete?: () => void
-  deleteTitle?: string
-  children: ReactNode
-}) {
-  return (
-    <div
-      className="record-card"
-      style={{
-        position: 'relative',
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderLeft: `3px solid ${accent}`,
-        borderRadius: 8,
-        padding: onDelete ? '10px 34px 10px 12px' : '10px 12px',
-        marginBottom: 8,
-      }}
-    >
-      {children}
-      {onDelete && (
-        <button
-          className="b-del"
-          title={deleteTitle}
-          onClick={onDelete}
-          style={{ position: 'absolute', top: 8, right: 8 }}
-        >
-          ×
-        </button>
-      )}
-    </div>
-  )
-}
-
 /** Full-screen overlay with a centered panel — the opportunity detail view. */
 export function Modal({ onClose, children, width = 720 }: { onClose: () => void; children: ReactNode; width?: number }) {
   return (

@@ -1,6 +1,6 @@
-# Pipeline Follow-up
+# Pipeline
 
-Two related but separate tools for Russell Wealth Group, in one app.
+An opportunity-tracking tool for Russell Wealth Group.
 
 **Pipeline** is opportunities we've uncovered — existing clients with assets to
 move, and brand-new first meetings like the Dave Ramsey / SmartVestor referrals.
@@ -8,10 +8,10 @@ Each one records who they are, how we got them, who referred them, a running
 activity log of what's actually happened with them, and for every pot of money:
 what it is, how much, where it's at now, and where it needs to go.
 
-**Follow-up** is what has to get done — today, this week, this month. Not a flat
-task list: these are commitment windows, and items can be tied back to the
-pipeline opportunity they serve. Overdue items are pulled out and surfaced
-first, ahead of whichever window they were originally due in.
+(An earlier version of this app also tracked a separate Follow-Up task list —
+today/this-week/this-month commitments tied back to a pipeline opportunity.
+That module, its stage-change task suggestions, and its own view/tab were
+removed per feedback to keep the app scoped to Pipeline alone.)
 
 ## Design references
 
@@ -32,15 +32,11 @@ Financial Services Cloud:
   "communication history" as a dated timeline per relationship. A `Prospect`
   carries `activity: ActivityEntry[]` (call / email / meeting / note, each
   dated) instead of one flat `notes` string.
-- **Stage-triggered workflows.** Redtail and Wealthbox auto-generate a task
-  when a deal changes stage. Moving a card's stage here offers a suggested
-  follow-up (`stageWorkflow.ts`) — e.g. hitting Paperwork Out offers "Confirm
-  the paperwork was signed and returned," due in 5 days — rather than relying
-  on remembering to add it.
 - **Needs-attention surfacing.** Salesforce Financial Services Cloud leads
-  with next-best-action / staleness scoring. Overdue follow-ups get their own
-  section at the top of the list, and board cards show days-in-stage, instead
-  of a red date you have to notice yourself.
+  with next-best-action / staleness scoring. The sidebar's **Needs Attention**
+  stat card totals every NIGO opportunity's dollar amount, and board cards
+  show days-in-stage and an overdue Next Step, instead of a red date you have
+  to notice yourself.
 
 ## Run it
 
@@ -57,20 +53,18 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 
 | Path | What it holds |
 | --- | --- |
-| `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry` and `FollowUp`, plus every enum and its display labels |
+| `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, the one-time demo seed gate, and Settings load/save |
 | `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it, plus `sampleProspects()` — twenty opportunities scattered across every stage, loadable anytime from the sidebar |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Time Open stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `RecordCard` + `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
-| `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 7-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `Combobox`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
+| `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 6-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: editable fields plus the activity timeline, opened from a board card |
-| `src/features/pipeline/stageWorkflow.ts` | What follow-up a stage change typically implies |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
-| `src/features/followup/FollowUpTable.tsx` | One card per follow-up: an Overdue section first, then Today / This Week / This Month |
-| `src/App.tsx` | Sidebar shell, summary figures, the stage-change suggestion banner, load/save wiring, the Settings button |
+| `src/App.tsx` | Sidebar shell, summary figures, load/save wiring, the Settings button |
 
 ## Data model
 
@@ -158,16 +152,10 @@ the stat cards.)
 
 **Needs Attention** totals the dollar amount of every opportunity currently
 on the NIGO stage — the only condition that feeds it today, but written so
-more conditions (e.g. a stalled follow-up) could feed the same card later
+more conditions (e.g. an overdue Next Step) could feed the same card later
 without changing what it means to the user. It uses the NIGO stage's own
 color (`findStage(settings.stages, 'nigo').color`) so a re-colored NIGO
 stage stays in sync with the card automatically.
-
-A **FollowUp** carries a `horizon` (`today` / `week` / `month`), a `title` (the
-task), a `reason` (why it needs doing — distinct from the task itself), an
-`owner` (who's doing it), an optional `prospectId` (who it's about — a
-prospect or an existing client, searched by name via the `Combobox` primitive
-rather than scrolled in a plain dropdown), a due date, and done state.
 
 No SSNs or account numbers are stored, deliberately — see below.
 
@@ -187,7 +175,7 @@ account types, sources, and Next Step suggestions are plainer: each just an
 editable list of strings that populates the matching field's suggestions.
 
 Settings persistence is deliberately *not* a write-through-on-load like
-prospects/follow-ups: `App.tsx` only calls `saveSettings` from inside the
+prospects: `App.tsx` only calls `saveSettings` from inside the
 Settings panel's own `onChange`, never from an effect tied to the loaded
 state. `loadSettings` fills in the current code default for any category a
 browser hasn't saved — if it eagerly wrote that merged result back on every
@@ -225,10 +213,7 @@ has actually been issued by the receiving firm, not just funded.
    machine. Every read and write already goes through the async `Repository`
    interface in `src/lib/repository.ts`, so this is one new implementation plus
    auth — not a rewrite.
-2. **The 12 Week Year.** Follow-up horizons are built as commitment windows, not
-   calendar buckets, so "this month" is the natural place for the cycle/week-of-12
-   view. Not built yet — we haven't spec'd it.
-3. **Compliance review before real client data goes in.** This currently holds
+2. **Compliance review before real client data goes in.** This currently holds
    prospect names, contact details, and account balances in unencrypted browser
    storage with no audit trail, no retention policy, and no access control. That
    is fine for evaluating the tool with fake data; it should be reviewed against

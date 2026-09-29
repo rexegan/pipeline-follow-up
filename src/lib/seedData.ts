@@ -1,4 +1,4 @@
-import type { FollowUp, Prospect } from '../types'
+import type { Prospect } from '../types'
 import { addDays, today, uid } from './dates'
 
 /**
@@ -350,47 +350,5 @@ export function sampleProspects(): Prospect[] {
       nextStep: 'Note the reason it fell through',
       activityText: 'Decided the CD rate wasn’t worth moving for.',
     }),
-  ]
-}
-
-export function seedFollowUps(hoffmanId: string): FollowUp[] {
-  const now = new Date().toISOString()
-  return [
-    {
-      id: uid(),
-      title: 'Call Fidelity for the Lockheed 401(k) transfer packet',
-      horizon: 'today',
-      prospectId: hoffmanId,
-      owner: 'Rex',
-      reason: 'Need the packet in hand before the plan presentation',
-      dueOn: today(),
-      done: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: uid(),
-      title: 'Prep the plan presentation for the Hoffmans',
-      horizon: 'week',
-      prospectId: hoffmanId,
-      owner: '',
-      reason: 'Karen wants her CPA sister to review it before they decide',
-      dueOn: addDays(today(), 4),
-      done: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: uid(),
-      title: 'Review all open Dave Ramsey referrals from the last 90 days',
-      horizon: 'month',
-      prospectId: null,
-      owner: '',
-      reason: 'Monthly check that SmartVestor leads aren’t going stale',
-      dueOn: addDays(today(), 21),
-      done: false,
-      completedAt: null,
-      createdAt: now,
-    },
   ]
 }

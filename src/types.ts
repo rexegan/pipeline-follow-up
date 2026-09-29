@@ -236,40 +236,6 @@ export type Prospect = {
   updatedAt: string
 }
 
-/* ---------- Follow-up ---------- */
-
-/**
- * Execution horizons. Deliberately not calendar buckets — these are commitment
- * windows. When we wire up the 12 Week Year, 'month' is the one that gives:
- * it becomes the cycle/week-of-12 view rather than a calendar month.
- */
-export const HORIZONS = ['today', 'week', 'month'] as const
-
-export type Horizon = (typeof HORIZONS)[number]
-
-export const HORIZON_LABELS: Record<Horizon, string> = {
-  today: 'Today',
-  week: 'This week',
-  month: 'This month',
-}
-
-export type FollowUp = {
-  id: string
-  title: string
-  horizon: Horizon
-  /** Who this concerns — a prospect or an existing client, searched by name. */
-  prospectId: string | null
-  /** Who has to do it. */
-  owner: string
-  /** Why — the reason this needs doing, distinct from the task itself. */
-  reason: string
-  /** ISO date (yyyy-mm-dd), or '' when only the horizon matters. */
-  dueOn: string
-  done: boolean
-  completedAt: string | null
-  createdAt: string
-}
-
 /* ---------- Settings ---------- */
 
 /**
@@ -342,7 +308,7 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
  * Everything in the app that's meant to be tuned per-practice rather than
  * hardcoded — stage names/colors/order, and the vocabulary offered in
  * dropdowns and typeaheads. Edited from the Settings panel, persisted
- * alongside prospects/follow-ups.
+ * alongside prospects.
  */
 export type Settings = {
   stages: StageDef[]
