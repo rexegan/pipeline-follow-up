@@ -396,9 +396,20 @@ export function BoxMoney({
 }
 
 /** One line of fields within a record card. */
-export function FieldRow({ children, last }: { children: ReactNode; last?: boolean }) {
+export function FieldRow({
+  children,
+  last,
+  marginBottom,
+}: {
+  children: ReactNode
+  last?: boolean
+  /** Overrides the default 8px gap below the row — used to tighten a
+   *  repeated block of rows (each Bridge Account) without affecting every
+   *  other FieldRow in the form. */
+  marginBottom?: number
+}) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: last ? 0 : 8 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: marginBottom ?? (last ? 0 : 8) }}>
       {children}
     </div>
   )

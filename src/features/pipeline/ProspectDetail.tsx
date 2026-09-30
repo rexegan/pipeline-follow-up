@@ -175,7 +175,7 @@ export function ProspectDetail({
             </div>
           </div>
           {prospect.assets.map((asset, i) => (
-            <FieldRow key={asset.id}>
+            <FieldRow key={asset.id} marginBottom={2}>
               <TypeaheadSelect
                 label="Account Type"
                 width={120}
