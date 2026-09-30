@@ -272,7 +272,7 @@ export function ProspectDetail({
               />
               <BoxSelect
                 label="Next Action"
-                width={150}
+                width={180}
                 hideLabel={i > 0}
                 value={asset.nextAction}
                 options={opts(ASSET_NEXT_ACTIONS, ASSET_NEXT_ACTION_LABELS)}
