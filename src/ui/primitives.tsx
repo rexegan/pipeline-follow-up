@@ -1,8 +1,46 @@
-import { useEffect, useRef, useState } from 'react'
-import type { CSSProperties, ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import type { CSSProperties, ReactNode, RefObject } from 'react'
 import { BORDER, CARD, FG, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SANS, SUCCESS } from './theme'
 import { fmtMoney, parseMoney } from '../lib/dates'
 import { formatPhone } from '../lib/phone'
+
+/**
+ * Where an open dropdown panel should render, in viewport coordinates —
+ * always below the anchor, never above ("drop down, not up"). Recalculated
+ * on scroll/resize while open. A plain `position: absolute` popup would get
+ * silently clipped by any scrollable ancestor (the modal's own scroll area)
+ * once it grows past that ancestor's visible edge — invisible and
+ * unreachable by scrolling, since an absolutely positioned box doesn't
+ * contribute to the ancestor's scrollable content size. Portaling to
+ * `document.body` with `position: fixed` at this rect sidesteps that
+ * entirely, and the max-height below is sized to the actual remaining
+ * viewport space so the full option list shows without an inner scrollbar
+ * in the overwhelming majority of cases.
+ */
+function useDropdownPosition(open: boolean, anchorRef: RefObject<HTMLElement | null>) {
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null)
+      return
+    }
+    function update() {
+      const r = anchorRef.current?.getBoundingClientRect()
+      if (r) setPos({ top: r.bottom, left: r.left, width: r.width })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open, anchorRef])
+
+  return pos
+}
 
 /**
  * Boxed field variants for the stacked record-card layout: a bordered box
@@ -169,6 +207,7 @@ export function TypeaheadSelect({
   const cancelledRef = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const editing = query !== null
+  const pos = useDropdownPosition(editing, inputRef)
   const shown = editing ? query : (options.find((o) => o.value === value)?.label ?? value)
   const filtered = editing && query.trim()
     ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
@@ -209,19 +248,18 @@ export function TypeaheadSelect({
           style={BOX_INPUT}
           {...NO_PASSWORD_MANAGER}
         />
-        {editing && (
+        {editing && pos && createPortal(
           <div
             style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              zIndex: 20,
+              position: 'fixed',
+              top: pos.top + 2,
+              left: pos.left,
+              minWidth: pos.width,
+              zIndex: 1000,
               background: CARD,
               border: `1px solid ${BORDER}`,
               borderRadius: 6,
-              marginTop: 2,
-              maxHeight: 190,
+              maxHeight: `calc(100vh - ${pos.top + 2}px - 12px)`,
               overflowY: 'auto',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             }}
@@ -256,7 +294,8 @@ export function TypeaheadSelect({
                 {o.label}
               </div>
             ))}
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
     </FieldShell>
@@ -433,11 +472,16 @@ export function CheckboxDropdown({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const pos = useDropdownPosition(open, ref)
 
   useEffect(() => {
     if (!open) return
     function onDocMouseDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (ref.current?.contains(target)) return
+      if (panelRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', onDocMouseDown)
     return () => document.removeEventListener('mousedown', onDocMouseDown)
@@ -467,20 +511,20 @@ export function CheckboxDropdown({
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary}</span>
         <span style={{ fontSize: 9, flexShrink: 0 }}>▾</span>
       </button>
-      {open && (
+      {open && pos && createPortal(
         <div
+          ref={panelRef}
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            marginTop: 4,
-            zIndex: 30,
+            position: 'fixed',
+            top: pos.top + 4,
+            left: pos.left,
+            zIndex: 1000,
             background: CARD,
             border: `1px solid ${BORDER}`,
             borderRadius: 8,
             boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-            minWidth: 210,
-            maxHeight: 320,
+            minWidth: Math.max(210, pos.width),
+            maxHeight: `calc(100vh - ${pos.top + 4}px - 12px)`,
             overflowY: 'auto',
             padding: 4,
           }}
@@ -504,7 +548,8 @@ export function CheckboxDropdown({
               {o.label}
             </label>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
