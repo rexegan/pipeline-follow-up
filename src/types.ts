@@ -286,6 +286,11 @@ export type Prospect = {
   relationship: string
   phone: string
   email: string
+  /** A manually-typed dollar total (Intake's "Total" box) — independent of
+   *  the assets' summed amount shown in the header and on board cards, since
+   *  this is meant for an early discovery-stage estimate before every
+   *  account is itemized. Null when not yet entered. */
+  manualTotal: number | null
   /** One of Settings' stage keys — resolve with `findStage`. */
   stage: Stage
   /** When `stage` last changed — how "days in stage" is measured. */

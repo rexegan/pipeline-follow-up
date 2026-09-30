@@ -158,7 +158,7 @@ export function ProspectDetail({
             <ReadOnlyBox label="Start" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
           </FieldRow>
           <FieldRow>
-            <ReadOnlyBox label="Total" width={110} value={fmtMoney(total)} />
+            <BoxMoney label="Total" width={110} value={prospect.manualTotal} onCommit={(v) => onChange({ manualTotal: v })} />
             <BoxPhone label="Phone" width={140} value={prospect.phone} onCommit={(v) => onChange({ phone: v })} />
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>

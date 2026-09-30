@@ -129,8 +129,12 @@ days/hours/minutes/seconds since `createdAt`, ticking every second like the
 Trade Blotter's clock on an open position. It only stops once every asset's
 `status` is Funded (not the Stage, which can say "Funded" before the last
 account has actually settled) — freezing at whatever it read at that moment
-rather than resetting or continuing. Next to Phone and Email, a read-only
-"Total" field mirrors the header's dollar total.
+rather than resetting or continuing. Next to Phone and Email, "Total" is a
+manually-typed dollar figure (`Prospect.manualTotal`) — independent of, and
+not synced with, the header's/board card's actual sum of the itemized
+accounts below it. It's meant for an early discovery-stage estimate you
+have before every account is itemized, and defaults to blank on a new or
+duplicated record.
 
 The record modal's footer offers a **Next** button, when more than one
 opportunity shares the currently open one's stage — it cycles through them

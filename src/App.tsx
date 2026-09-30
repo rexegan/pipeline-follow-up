@@ -221,6 +221,7 @@ export default function App() {
       relationship: p.relationship,
       phone: p.phone,
       email: p.email,
+      manualTotal: null,
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],

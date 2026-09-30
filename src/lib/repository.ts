@@ -160,6 +160,7 @@ function normalizeProspect(p: Prospect): Prospect {
     middleInitial: p.middleInitial ?? '',
     assignedTo: p.assignedTo ?? '',
     relationship: p.relationship ?? '',
+    manualTotal: p.manualTotal ?? null,
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
