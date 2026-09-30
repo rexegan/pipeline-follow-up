@@ -201,6 +201,19 @@ export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
   funded: 'Funded',
 }
 
+/** What happens next with this specific account — a fixed enum, not a
+ *  Settings category, same reasoning as `AssetStatus`. */
+export const ASSET_NEXT_ACTIONS = ['continue-to-next-step', 'final-destination', 'on-hold', 'canceled'] as const
+
+export type AssetNextAction = (typeof ASSET_NEXT_ACTIONS)[number]
+
+export const ASSET_NEXT_ACTION_LABELS: Record<AssetNextAction, string> = {
+  'continue-to-next-step': 'Continue to Next Step',
+  'final-destination': 'Final Destination',
+  'on-hold': 'On Hold',
+  canceled: 'Canceled',
+}
+
 export type Asset = {
   id: string
   /** What kind of account it is — one of Settings' account types, or free text. */
@@ -227,6 +240,8 @@ export type Asset = {
    *  a specific fund, etc. — one of Settings' product names, or free text. */
   productName: string
   status: AssetStatus
+  /** What happens next with this account. */
+  nextAction: AssetNextAction
   notes: string
 }
 

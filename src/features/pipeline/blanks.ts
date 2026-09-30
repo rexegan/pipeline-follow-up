@@ -12,6 +12,7 @@ export const blankAsset = (defaultKind = ''): Asset => ({
   investmentType: '',
   productName: '',
   status: 'identified',
+  nextAction: 'continue-to-next-step',
   notes: '',
 })
 

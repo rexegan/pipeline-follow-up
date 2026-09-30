@@ -183,6 +183,7 @@ function normalizeProspect(p: Prospect): Prospect {
         currentInvestmentType: a.currentInvestmentType ?? '',
         investmentType: a.investmentType ?? '',
         productName: a.productName ?? '',
+        nextAction: a.nextAction ?? 'continue-to-next-step',
       }
     }),
   }

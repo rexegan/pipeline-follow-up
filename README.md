@@ -56,7 +56,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal` (caps at its `width` prop but scales down to 96vw on narrower screens, so the gray backdrop margin doesn't grow unbounded on a wide monitor), `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) — `TypeaheadSelect` and `CheckboxDropdown`'s option lists render via `useDropdownPosition` + a `createPortal` into `document.body`, not a plain `position: absolute` popup, so a long list (27 custodians) never gets silently clipped by the modal's own `overflow: auto` scroll area; it always opens downward at the field's actual position, sized to whatever viewport space is actually available below it |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal` (caps at its `width` prop but scales down to 96vw on narrower screens, so the gray backdrop margin doesn't grow unbounded on a wide monitor), `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) — `TypeaheadSelect` and `CheckboxDropdown`'s option lists render via `useDropdownPosition` + a `createPortal` into `document.body`, not a plain `position: absolute` popup, so a long list (27 custodians) never gets silently clipped by the modal's own `overflow: auto` scroll area; it always opens downward at the field's actual position, sized to whatever viewport space is actually available below it. Focusing a `TypeaheadSelect` that already has a value shows that value selected (ready to type over) rather than blanking the field, and every option renders unfiltered until the text actually changes — clicking in to look, then clicking away without picking or typing anything, leaves the field exactly as it was (no re-commit at all, not even of the same value). `FieldShell`'s caption (`BoxText`/`BoxSelect`/`BoxMoney`/`TypeaheadSelect` all take a `hideLabel` prop) is bold, and each repeated row of fields — every Bridge Account after the first — hides its captions (`visibility: hidden`, not unrendered, so the row's height and the inputs' vertical alignment stay identical to the first row) rather than re-printing the same column headings every time. |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 5-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: every editable field, opened from a board card |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
@@ -83,12 +83,13 @@ still in the data model (old records keep their history), but its own
 record-form panel was removed per feedback to give the form's fields the
 full width instead. Each
 asset is `{ kind, amount, heldAt, currentInvestmentType, newAccountType,
-movingTo, investmentType, productName, status }`, grouped in the record
-form under one centered heading — **Transition Account**, or **Transition
-Accounts** once a second one is added (`prospect.assets.length > 1`) —
-spanning Account Type, Amount, Held At, and Investment Type; New Account
-Type, New Custodian, [destination] Investment Type, Product Name, and
-Status follow ungrouped. `heldAt` ("Held At") and `movingTo` ("New
+movingTo, investmentType, productName, status, nextAction }`, grouped in
+the record form under two centered headings — **Current Account**
+(Account Type, Amount, Held At, [current] Investment Type), then
+**Transition Account**, or **Transition Accounts** once a second one is
+added (`prospect.assets.length > 1`), spanning New Account Type, New
+Custodian, [destination] Investment Type, and Product Name; Status and
+Next Action follow ungrouped. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
@@ -101,10 +102,11 @@ account is *becoming* — a rollover often changes type, not just custodian,
 e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
 `kind` until changed. `currentInvestmentType` and `investmentType` are both
 labeled "Investment Type" and share the same Settings list — the first is
-what the money is invested in *right now* (next to Held At, under the
-Transition Account heading), the second is what it'll be invested in
-*after* the move (next to New Custodian) — stocks, bonds, mutual fund, ETF,
-money market, CD, VA/fixed annuity/FIA, RILA, alts, REITs, managed money.
+what the money is invested in *right now* (next to Held At, under Current
+Account), the second is what it'll be invested in *after* the move (next
+to New Custodian, under Transition Account(s)) — stocks, bonds, mutual
+fund, ETF, money market, CD, VA/fixed annuity/FIA, RILA, alts, REITs,
+managed money.
 `productName` ("Product Name") is the specific carrier
 product — a Jackson National or F&G contract name, a specific fund, etc.
 Its Settings list starts empty (`DEFAULT_PRODUCT_NAMES` in `types.ts`),
@@ -114,6 +116,10 @@ are typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any
 typed value regardless of the list. `status` mirrors the pipeline stage
 names: `identified → doc-prep → awaiting-signatures → docs-signed →
 processed → follow-up → funded` — this one's fixed, not a Settings category.
+So is `nextAction` ("Next Action," right after Status, delete-account
+pushed to the row's end to make room): `continue-to-next-step →
+final-destination`, or off to the side with `on-hold` / `canceled` —
+`ASSET_NEXT_ACTIONS` in `types.ts`.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
 (Held At / New Custodian), `currentInvestmentType`/`investmentType` (both

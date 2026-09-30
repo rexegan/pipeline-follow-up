@@ -36,6 +36,7 @@ export function seedProspects(): Prospect[] {
         investmentType: 'Mutual Fund',
         productName: '',
         status: 'identified',
+        nextAction: 'continue-to-next-step',
         notes: '',
       },
       {
@@ -49,6 +50,7 @@ export function seedProspects(): Prospect[] {
         investmentType: 'ETF',
         productName: '',
         status: 'identified',
+        nextAction: 'continue-to-next-step',
         notes: '',
       },
     ],
@@ -91,6 +93,7 @@ export function seedProspects(): Prospect[] {
         investmentType: 'Mutual Fund',
         productName: '',
         status: 'identified',
+        nextAction: 'continue-to-next-step',
         notes: '',
       },
     ],

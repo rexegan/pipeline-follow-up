@@ -61,7 +61,22 @@ const BOX_INPUT: CSSProperties = {
   boxSizing: 'border-box',
 }
 
-function FieldShell({ label, width, grow, children }: { label: string; width?: number; grow?: boolean; children: ReactNode }) {
+function FieldShell({
+  label,
+  width,
+  grow,
+  hideLabel,
+  children,
+}: {
+  label: string
+  width?: number
+  grow?: boolean
+  /** Skips rendering the caption text, keeping its layout space reserved —
+   *  used so a repeated row of fields (each Bridge Account after the first)
+   *  doesn't re-print the same column headings every time. */
+  hideLabel?: boolean
+  children: ReactNode
+}) {
   return (
     <div
       style={{
@@ -72,7 +87,7 @@ function FieldShell({ label, width, grow, children }: { label: string; width?: n
         flex: grow ? '1 1 200px' : width ? `0 1 ${width}px` : '1 1 120px',
       }}
     >
-      <span style={{ fontSize: 10, fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', visibility: hideLabel ? 'hidden' : 'visible' }}>
         {label}
       </span>
       {children}
@@ -149,6 +164,7 @@ export function BoxSelect<T extends string>({
   color,
   width,
   grow,
+  hideLabel,
 }: {
   label: string
   value: T
@@ -157,9 +173,10 @@ export function BoxSelect<T extends string>({
   color?: string
   width?: number
   grow?: boolean
+  hideLabel?: boolean
 }) {
   return (
-    <FieldShell label={label} width={width} grow={grow}>
+    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel}>
       <select
         aria-label={label}
         value={value}
@@ -194,6 +211,7 @@ export function TypeaheadSelect({
   placeholder = 'Type or choose…',
   width,
   grow,
+  hideLabel,
 }: {
   label: string
   value: string
@@ -202,14 +220,19 @@ export function TypeaheadSelect({
   placeholder?: string
   width?: number
   grow?: boolean
+  hideLabel?: boolean
 }) {
   const [query, setQuery] = useState<string | null>(null)
   const cancelledRef = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const editing = query !== null
   const pos = useDropdownPosition(editing, inputRef)
-  const shown = editing ? query : (options.find((o) => o.value === value)?.label ?? value)
-  const filtered = editing && query.trim()
+  const currentLabel = options.find((o) => o.value === value)?.label ?? value
+  const shown = editing ? query : currentLabel
+  // Until the text actually changes from what was already there, show every
+  // option rather than filtering down to just what's already typed — a
+  // click to reopen and browse shouldn't first require clearing the field.
+  const filtered = editing && query.trim() && query !== currentLabel
     ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()))
     : options
 
@@ -223,17 +246,26 @@ export function TypeaheadSelect({
   }
 
   return (
-    <FieldShell label={label} width={width} grow={grow}>
+    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel}>
       <div style={{ position: 'relative' }}>
         <input
           ref={inputRef}
           aria-label={label}
           value={shown}
           placeholder={placeholder}
-          onFocus={() => setQuery('')}
+          onFocus={(e) => {
+            // Shows the existing value (selected, ready to type over) rather
+            // than blanking it — clicking in to look, then clicking away
+            // without picking or typing anything, leaves it exactly as it
+            // was instead of visually appearing to wipe it first.
+            setQuery(currentLabel)
+            e.target.select()
+          }}
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => {
-            if (!cancelledRef.current) commit(query ?? '')
+            if (!cancelledRef.current && query !== null && query.trim().toLowerCase() !== currentLabel.toLowerCase()) {
+              commit(query)
+            }
             cancelledRef.current = false
             setQuery(null)
           }}
@@ -329,17 +361,19 @@ export function BoxMoney({
   value,
   onCommit,
   width,
+  hideLabel,
 }: {
   label: string
   value: number | null
   onCommit: (value: number | null) => void
   width?: number
+  hideLabel?: boolean
 }) {
   const [focused, setFocused] = useState(false)
   const [draft, setDraft] = useState('')
 
   return (
-    <FieldShell label={label} width={width}>
+    <FieldShell label={label} width={width} hideLabel={hideLabel}>
       <input
         aria-label={label}
         value={focused ? draft : value === null ? '' : fmtMoney(value)}
