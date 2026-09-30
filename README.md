@@ -51,7 +51,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | --- | --- |
 | `src/types.ts` | `Prospect`/`Asset`/`ActivityEntry`, plus every enum and its display labels |
 | `src/lib/repository.ts` | The storage seam — an async `Repository` interface with a localStorage implementation, the one-time demo seed gate, and Settings load/save |
-| `src/lib/seedData.ts` | The demo household shown on a browser that's never had data in it, plus `sampleProspects()` — twenty opportunities scattered across every stage, loadable anytime from the sidebar |
+| `src/lib/seedData.ts` | The demo household (Hoffman, Garcia) shown on a browser that's never had data in it |
 | `src/lib/dates.ts` | Local-time date math, week/month boundaries, money formatting, "3d ago" style relative stamps |
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
@@ -166,7 +166,19 @@ stat cards (Total Opportunities, In Process, Needs Attention, Completed,
 Open Opportunities) are clickable and reset both dropdowns to the matching
 view. (The sidebar used to also show a small per-stage count breakdown under
 Total Opportunities — removed per feedback that it looked cluttered next to
-the stat cards.)
+the stat cards. It also used to have a "+ Load sample opportunities" button
+that added twenty scattered demo records for trying out sorting/filtering —
+removed per feedback once real usage no longer needed it.)
+
+**Search By**, next to the date stamp, is a free-text box plus its own
+checklist dropdown (`SEARCH_FIELDS` in `App.tsx`) of which fields to match
+against — Last Name, First Name, Phone, Email, Referred By, Assigned To,
+Custodian (Held At or New Custodian, either asset field), and Product Name.
+Checking none searches all of them (`matchesSearch` treats an empty
+selection as "every field," the same convention Quick View and Sort use);
+checking a subset narrows to just those — a search for a phone fragment
+with only Phone checked won't match a coincidentally-similar name. It
+combines with Quick View by intersection, same as Sort does.
 
 **Needs Attention** totals the dollar amount of every opportunity currently
 on the NIGO stage — the only condition that feeds it today, but written so

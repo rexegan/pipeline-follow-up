@@ -1,15 +1,51 @@
 import { useEffect, useState } from 'react'
 import type { Asset, EditableListKey, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
-import { BG, BORDER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { BG, BORDER, CARD, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
-import { sampleProspects, seedProspects } from './lib/seedData'
+import { seedProspects } from './lib/seedData'
 import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
 import { SettingsPanel } from './features/settings/SettingsPanel'
 import { fmtMoney, uid } from './lib/dates'
+
+/** What Search By can match against — a fixed set of fields, not a Settings
+ *  vocabulary, since these describe the record's own shape rather than a
+ *  per-practice list of values. Checking none searches all of them. */
+const SEARCH_FIELDS = [
+  { id: 'lastName', label: 'Last Name' },
+  { id: 'firstName', label: 'First Name' },
+  { id: 'phone', label: 'Phone' },
+  { id: 'email', label: 'Email' },
+  { id: 'referredBy', label: 'Referred By' },
+  { id: 'assignedTo', label: 'Assigned To' },
+  { id: 'custodian', label: 'Custodian (Held At / New Custodian)' },
+  { id: 'product', label: 'Product Name' },
+] as const
+type SearchField = (typeof SEARCH_FIELDS)[number]['id']
+
+function matchesSearch(p: Prospect, query: string, fields: Set<SearchField>): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const active = fields.size === 0 ? new Set(SEARCH_FIELDS.map((f) => f.id)) : fields
+  const commaIndex = p.name.indexOf(',')
+  const lastName = commaIndex === -1 ? p.name : p.name.slice(0, commaIndex)
+  const firstName = commaIndex === -1 ? '' : p.name.slice(commaIndex + 1)
+  const has = (s: string) => s.toLowerCase().includes(q)
+  const checks: Record<SearchField, () => boolean> = {
+    lastName: () => has(lastName),
+    firstName: () => has(firstName),
+    phone: () => has(p.phone),
+    email: () => has(p.email),
+    referredBy: () => has(p.referredBy),
+    assignedTo: () => has(p.assignedTo),
+    custodian: () => p.assets.some((a) => has(a.heldAt) || has(a.movingTo)),
+    product: () => p.assets.some((a) => has(a.productName)),
+  }
+  return [...active].some((f) => checks[f]())
+}
 
 export default function App() {
   const [prospects, setProspects] = useState<Prospect[]>([])
@@ -22,6 +58,17 @@ export default function App() {
   // to the set rather than replacing it — see toggleSort/toggleQuickView.
   const [sortSelection, setSortSelection] = useState<Set<SortBy>>(new Set())
   const [quickViewSelection, setQuickViewSelection] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchFields, setSearchFields] = useState<Set<SearchField>>(new Set())
+
+  function toggleSearchField(id: SearchField) {
+    setSearchFields((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   function toggleSort(id: SortBy) {
     setSortSelection((prev) => {
@@ -154,10 +201,6 @@ export default function App() {
     setSelectedId(p.id)
   }
 
-  function loadSampleData() {
-    setProspects((prev) => [...prev, ...sampleProspects()])
-  }
-
   // Same person, a new deal: keeps the contact info (name, middle initial,
   // type, from, referred by, phone, email) and who's assigned to it, but
   // starts everything deal-specific — stage, assets, next step, activity —
@@ -217,10 +260,9 @@ export default function App() {
   // top of whatever the Sort checklist is already doing — a second,
   // independent filter. A household can hold more than one account, so this
   // matches if any of them are one of the checked types, not just the first.
-  const boardProspects =
-    quickViewSelection.size === 0
-      ? prospects
-      : prospects.filter((p) => p.assets.some((a) => quickViewSelection.has(a.kind)))
+  const boardProspects = prospects
+    .filter((p) => quickViewSelection.size === 0 || p.assets.some((a) => quickViewSelection.has(a.kind)))
+    .filter((p) => matchesSearch(p, searchQuery, searchFields))
 
   const sortSummary =
     sortSelection.size === 0
@@ -237,6 +279,15 @@ export default function App() {
       : quickViewSelection.size <= 2
         ? [...quickViewSelection].join(', ')
         : `${quickViewSelection.size} selected`
+
+  const searchFieldsSummary =
+    searchFields.size === 0
+      ? 'All Fields'
+      : searchFields.size <= 2
+        ? SEARCH_FIELDS.filter((f) => searchFields.has(f.id))
+            .map((f) => f.label)
+            .join(', ')
+        : `${searchFields.size} selected`
 
   const stamp = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -288,25 +339,6 @@ export default function App() {
         <button className="btn-primary" onClick={addProspect}>
           + New Opportunity
         </button>
-        <button
-          onClick={loadSampleData}
-          style={{
-            display: 'block',
-            width: '100%',
-            background: 'none',
-            color: MUTED,
-            border: `1px solid ${BORDER}`,
-            borderRadius: 6,
-            padding: '7px 14px',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: 'pointer',
-            fontFamily: SANS,
-            marginTop: 6,
-          }}
-        >
-          + Load sample opportunities
-        </button>
       </aside>
 
       <div style={{ flex: 1, minWidth: 0, background: BG }}>
@@ -319,7 +351,35 @@ export default function App() {
                 </h1>
                 <Chip label="Opportunities" color={MUTED} bg={MUTED_BG} border />
               </div>
-              <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 13, color: MUTED }}>Russell Wealth Group &mdash; {stamp}</p>
+                <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: 8 }}>
+                  Search By
+                </span>
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search opportunities…"
+                  style={{
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontFamily: SANS,
+                    background: CARD,
+                    color: FG,
+                    padding: '0 8px',
+                    height: 28,
+                    width: 180,
+                  }}
+                />
+                <CheckboxDropdown
+                  label="Search fields"
+                  summary={searchFieldsSummary}
+                  options={SEARCH_FIELDS}
+                  selected={searchFields}
+                  onToggle={(id) => toggleSearchField(id as SearchField)}
+                />
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Quick View
