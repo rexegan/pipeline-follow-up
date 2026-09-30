@@ -163,8 +163,8 @@ export function ProspectDetail({
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>
 
-          <div style={{ display: 'flex', gap: 8, margin: '14px 0 4px' }}>
-            <div style={{ width: 361, textAlign: 'center', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
+            <div style={{ width: 361, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
               Current Account
             </div>
           </div>
