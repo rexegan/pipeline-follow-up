@@ -79,7 +79,7 @@ export function ProspectDetail({
   const elapsedMs = useElapsedMs(prospect.createdAt, isFunded)
 
   return (
-    <Modal onClose={onClose} width={1180}>
+    <Modal onClose={onClose} width={1500}>
       {/* Header */}
       <div
         style={{
@@ -139,6 +139,17 @@ export function ProspectDetail({
               placeholder="Type a source…"
             />
             <BoxText label="Referred By" width={150} value={prospect.referredBy} onCommit={(v) => onChange({ referredBy: v })} />
+            <TypeaheadSelect
+              label="Relationship"
+              width={130}
+              value={prospect.relationship}
+              options={listOpts(settings.relationships)}
+              onCommit={(v) => {
+                onChange({ relationship: v })
+                onAddListValue('relationships', v)
+              }}
+              placeholder="Type or choose…"
+            />
             <ReadOnlyBox label="Start" width={140} value={formatElapsed(elapsedMs)} done={isFunded} />
           </FieldRow>
           <FieldRow>

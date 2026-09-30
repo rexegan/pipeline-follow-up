@@ -358,7 +358,10 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
           borderRadius: 10,
           border: `1px solid ${BORDER}`,
           width: '100%',
-          maxWidth: width,
+          // Capped by `width`, but also scales down on narrower screens
+          // rather than sitting at a fixed px that leaves a wide gray
+          // backdrop margin on anything bigger than that cap.
+          maxWidth: `min(${width}px, 96vw)`,
           boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
           display: 'flex',
           flexDirection: 'column',

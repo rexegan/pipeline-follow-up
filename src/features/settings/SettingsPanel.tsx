@@ -348,6 +348,14 @@ export function SettingsPanel({ settings, onChange, onClose }: Props) {
             <EditableList values={settings.sources} onChange={(sources) => onChange({ ...settings, sources })} placeholder="Add a source…" />
           </Section>
 
+          <Section title="Relationship" hint="How the referrer relates to the prospect.">
+            <EditableList
+              values={settings.relationships}
+              onChange={(relationships) => onChange({ ...settings, relationships })}
+              placeholder="Add a relationship…"
+            />
+          </Section>
+
           <Section title="Next Step" hint="Suggestions offered in the Next Step field — different per stage.">
             <select
               value={suggestionStageKey}

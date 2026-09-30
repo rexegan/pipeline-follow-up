@@ -20,6 +20,7 @@ export const DEFAULT_STAGES: StageDef[] = [
   { key: 'first-meeting', label: 'First Meeting', shortLabel: '1st MTG/Call', formLabel: 'First Meeting', color: '#be185d', offTrack: false },
   { key: 'identified', label: 'Opportunity Uncovered', shortLabel: 'Uncovered', formLabel: 'OPP Uncovered', color: '#71717a', offTrack: false },
   { key: 'doc-prep', label: 'Doc Prep', shortLabel: 'Doc Prep', formLabel: 'Doc Prep', color: '#1d4ed8', offTrack: false },
+  { key: 'awaiting-signatures', label: 'Awaiting Signatures', shortLabel: 'Awaiting Sigs', formLabel: 'Awaiting Signatures', color: '#4f46e5', offTrack: false },
   { key: 'docs-signed', label: 'Docs Signed', shortLabel: 'Signed', formLabel: 'Docs Signed', color: '#6d28d9', offTrack: false },
   // Standard back-office shorthand: paperwork came back either In Good Order
   // or Not In Good Order (missing signatures, wrong date, etc.) — two
@@ -51,6 +52,21 @@ export const DEFAULT_SOURCES = [
   'Seminar / event',
   'Walk-in / inbound',
   'Other',
+]
+
+/** How the referrer relates to the prospect — a free, user-editable list
+ *  (see Settings), same typeahead pattern as everything else here. */
+export const DEFAULT_RELATIONSHIPS = [
+  'Spouse',
+  'Child',
+  'Grandchild',
+  'Aunt',
+  'Uncle',
+  'Niece',
+  'Nephew',
+  'Coworker',
+  'Friend',
+  'Neighbor',
 ]
 
 export type ProspectKind = 'new-prospect' | 'existing-client'
@@ -217,6 +233,7 @@ export type EditableListKey =
   | 'investmentTypes'
   | 'productNames'
   | 'teamMembers'
+  | 'relationships'
 
 /** One logged touch — what happened and when, not just what's true now. */
 export const ACTIVITY_KINDS = ['call', 'email', 'meeting', 'note'] as const
@@ -264,6 +281,8 @@ export type Prospect = {
   source: string
   /** Who sent them, when the source is a referral. */
   referredBy: string
+  /** How the referrer relates to the prospect — one of Settings' relationships, or free text. */
+  relationship: string
   phone: string
   email: string
   /** One of Settings' stage keys — resolve with `findStage`. */
@@ -308,6 +327,11 @@ export const DEFAULT_NEXT_STEP_SUGGESTIONS: Record<string, string[]> = {
     'Confirm account numbers and statement copies are in hand',
     'Verify the receiving firm’s paperwork requirements',
     'Schedule a signing appointment',
+  ],
+  'awaiting-signatures': [
+    'Follow up on outstanding signatures',
+    'Confirm the client received the paperwork',
+    'Resend the signing link or documents',
   ],
   'docs-signed': [
     'Submit the signed paperwork to the receiving firm',
@@ -365,6 +389,7 @@ export type Settings = {
   investmentTypes: string[]
   productNames: string[]
   teamMembers: string[]
+  relationships: string[]
   sources: string[]
   /** Suggested Next Step phrases, keyed by stage key. */
   nextStepSuggestions: Record<string, string[]>
@@ -378,6 +403,7 @@ export const DEFAULT_SETTINGS: Settings = {
   investmentTypes: DEFAULT_INVESTMENT_TYPES,
   productNames: DEFAULT_PRODUCT_NAMES,
   teamMembers: DEFAULT_TEAM_MEMBERS,
+  relationships: DEFAULT_RELATIONSHIPS,
   sources: DEFAULT_SOURCES,
   nextStepSuggestions: DEFAULT_NEXT_STEP_SUGGESTIONS,
 }
@@ -395,6 +421,7 @@ export const SORTS = [
   { id: 'newest', label: 'Newest Opportunity' },
   { id: 'oldest', label: 'Oldest Opportunity' },
   { id: 'doc-prep', label: 'Doc Prep' },
+  { id: 'awaiting-signatures', label: 'Awaiting Signatures' },
   { id: 'docs-signed', label: 'Signed' },
   { id: 'igo', label: 'IGO' },
   { id: 'nigo', label: 'NIGO' },

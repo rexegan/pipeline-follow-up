@@ -23,6 +23,7 @@ export const blankProspect = (defaultStage: string, defaultAccountType = ''): Pr
     kind: 'new-prospect',
     source: '',
     referredBy: '',
+    relationship: '',
     phone: '',
     email: '',
     stage: defaultStage,

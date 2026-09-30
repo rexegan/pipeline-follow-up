@@ -56,7 +56,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal`, `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal` (caps at its `width` prop but scales down to 96vw on narrower screens, so the gray backdrop margin doesn't grow unbounded on a wide monitor), `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 5-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: every editable field, opened from a board card |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
@@ -70,8 +70,10 @@ everywhere else in the app — board cards, search, duplicate) and a separate
 Name, First Name, MI, in that order — splitting/joining on the comma
 (`splitName`/`joinName` in `ProspectDetail.tsx`) rather than changing the
 stored shape. Also `kind` (new prospect vs existing client), `source`
-(Dave Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, contact
-details (phone auto-formats to `(817) 555-0142` as you type — on every load,
+(Dave Ramsey, client referral, COI, seminar, walk-in…), `referredBy`, a
+`relationship` (how the referrer relates to the prospect — Spouse, Child,
+Friend, Coworker, etc. — its own Settings list, right after Referred By on
+the Intake row), contact details (phone auto-formats to `(817) 555-0142` as you type — on every load,
 not just while typing, so a number entered before this shipped doesn't sit
 there unformatted forever), a `stage` plus `stageChangedAt` (how "days in
 stage" is measured), an `assignedTo` (who's working it — its own Settings
@@ -108,8 +110,9 @@ funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
 (Held At / New Custodian), `investmentType` (Investment Type), `productName`
-(Product Name), `assignedTo` (Assigned To), `source` (From), and Next Step
-are all the same typeahead pattern: a list of suggestions that don't have to be the
+(Product Name), `assignedTo` (Assigned To), `relationship` (Relationship),
+`source` (From), and Next Step are all the same typeahead pattern: a list
+of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
 saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
 `addNextStepSuggestion` for Next Step specifically, since its suggestions are
@@ -123,18 +126,19 @@ days/hours/minutes/seconds since `createdAt`, ticking every second like the
 Trade Blotter's clock on an open position. It only stops once every asset's
 `status` is Funded (not the Stage, which can say "Funded" before the last
 account has actually settled) — freezing at whatever it read at that moment
-rather than resetting or continuing. Next to Referred By and Start, a
-read-only "Total" field mirrors the header's dollar total.
+rather than resetting or continuing. Next to Phone and Email, a read-only
+"Total" field mirrors the header's dollar total.
 
 The record modal's footer offers a **Next** button, when more than one
 opportunity shares the currently open one's stage — it cycles through them
 in order and wraps back around, so you can work through every open Doc Prep
 (say) one after another without closing and re-picking a card each time.
-Between Next and Close sits **Duplicate** — for the same household turning
+Between Next and Save sits **Duplicate** — for the same household turning
 up with a second, unrelated opportunity: it opens a new record carrying over
-the contact info (name, Type, From, Referred By, phone, email) but starting
-the deal itself fresh (stage back to the first active one, a blank asset,
-no Next Step, no activity log).
+the contact info (name, middle initial, Type, From, Referred By,
+Relationship, phone, email) and who's Assigned To it, but starting the deal
+itself fresh (stage back to the first active one, a blank asset, no Next
+Step, no activity log).
 
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
@@ -202,8 +206,8 @@ other Settings entry) that a record is still using doesn't corrupt anything —
 `findStage` falls back to a neutral gray stand-in for a stage key Settings no
 longer defines, rather than crashing. Where It's At Now / Where It's Moving,
 account types, investment types, product names, team members (Assigned To),
-sources, and Next Step suggestions are plainer: each just an editable list
-of strings that populates the matching field's suggestions.
+relationships, sources, and Next Step suggestions are plainer: each just an
+editable list of strings that populates the matching field's suggestions.
 
 Every entry in every one of these lists — and every stage — has its own
 pencil-icon **edit** button alongside the usual **×** remove button, so
@@ -229,15 +233,17 @@ That "freeze on first load" bug predates the fix above, so a browser that
 had already loaded the app before it landed still has a `stages` array
 frozen at whatever shipped then — non-empty, so the missing-category
 fallback doesn't touch it. Adding a stage after that point (the IGO/NIGO
-split, `First Meeting`, `Issued`) needs its own explicit one-off migration
-in `repository.ts` (`splitLegacyIgoNigoStage`, `ensureFirstMeetingStage`,
-`ensureIssuedStage`) rather than relying on the general fallback — the same
-pattern as the `LEGACY_*` label tables below, just for stage keys instead of
-free-text field values.
+split, `First Meeting`, `Issued`, `Awaiting Signatures`) needs its own
+explicit one-off migration in `repository.ts` (`splitLegacyIgoNigoStage`,
+`ensureFirstMeetingStage`, `ensureIssuedStage`,
+`ensureAwaitingSignaturesStage`) rather than relying on the general
+fallback — the same pattern as the `LEGACY_*` label tables below, just for
+stage keys instead of free-text field values.
 
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `First Meeting →
-Opportunity Uncovered → Doc Prep → Docs Signed → IGO → NIGO → Follow Up →
-Funded → Issued`, plus `Stalled` and `Lost` marked off track. `First
+Opportunity Uncovered → Doc Prep → Awaiting Signatures → Docs Signed → IGO →
+NIGO → Follow Up → Funded → Issued`, plus `Stalled` and `Lost` marked off
+track. `First
 Meeting` is the very first touchpoint — before the opportunity itself is
 confirmed — and is the default stage a brand-new opportunity starts on.
 IGO/NIGO is standard back-office shorthand for paperwork coming back either

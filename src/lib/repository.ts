@@ -127,6 +127,21 @@ function ensureIssuedStage(stages: StageDef[]): StageDef[] {
   return [...stages.slice(0, i), issued, ...stages.slice(i)]
 }
 
+function ensureAwaitingSignaturesStage(stages: StageDef[]): StageDef[] {
+  if (stages.some((s) => s.key === 'awaiting-signatures')) return stages
+  const awaitingSignatures: StageDef = {
+    key: 'awaiting-signatures',
+    label: 'Awaiting Signatures',
+    shortLabel: 'Awaiting Sigs',
+    formLabel: 'Awaiting Signatures',
+    color: '#4f46e5',
+    offTrack: false,
+  }
+  const i = stages.findIndex((s) => s.key === 'docs-signed')
+  if (i === -1) return [...stages, awaitingSignatures]
+  return [...stages.slice(0, i), awaitingSignatures, ...stages.slice(i)]
+}
+
 function isProspect(value: unknown): value is Prospect {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
@@ -144,6 +159,7 @@ function normalizeProspect(p: Prospect): Prospect {
     ...p,
     middleInitial: p.middleInitial ?? '',
     assignedTo: p.assignedTo ?? '',
+    relationship: p.relationship ?? '',
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',
@@ -195,7 +211,7 @@ function normalizeSettings(raw: unknown): Settings {
     : suggestionsRest
 
   return {
-    stages: ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages))),
+    stages: ensureAwaitingSignaturesStage(ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages)))),
     custodiansHeldAt: Array.isArray(v.custodiansHeldAt)
       ? v.custodiansHeldAt
       : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
@@ -204,6 +220,7 @@ function normalizeSettings(raw: unknown): Settings {
     investmentTypes: Array.isArray(v.investmentTypes) ? v.investmentTypes : DEFAULT_SETTINGS.investmentTypes,
     productNames: Array.isArray(v.productNames) ? v.productNames : DEFAULT_SETTINGS.productNames,
     teamMembers: Array.isArray(v.teamMembers) ? v.teamMembers : DEFAULT_SETTINGS.teamMembers,
+    relationships: Array.isArray(v.relationships) ? v.relationships : DEFAULT_SETTINGS.relationships,
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
     nextStepSuggestions,
   }

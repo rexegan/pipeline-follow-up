@@ -202,10 +202,10 @@ export default function App() {
   }
 
   // Same person, a new deal: keeps the contact info (name, middle initial,
-  // type, from, referred by, phone, email) and who's assigned to it, but
-  // starts everything deal-specific — stage, assets, next step, activity —
-  // fresh, for when the same household turns up with a second, unrelated
-  // opportunity.
+  // type, from, referred by, relationship, phone, email) and who's assigned
+  // to it, but starts everything deal-specific — stage, assets, next step,
+  // activity — fresh, for when the same household turns up with a second,
+  // unrelated opportunity.
   function duplicateProspect(id: string) {
     const p = prospects.find((x) => x.id === id)
     if (!p) return
@@ -218,6 +218,7 @@ export default function App() {
       kind: p.kind,
       source: p.source,
       referredBy: p.referredBy,
+      relationship: p.relationship,
       phone: p.phone,
       email: p.email,
       stage: defaultStage,
