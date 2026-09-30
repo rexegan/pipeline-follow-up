@@ -90,7 +90,10 @@ Status, ungrouped. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
-to" list starts out much shorter. `newAccountType` ("New Account Type,"
+to" list starts out much shorter. New Custodian's options are sorted
+alphabetically (`alphabetical` in `ProspectDetail.tsx`, "Other" pinned last
+rather than sorted in) — Held At's are not, left in Settings' own order.
+`newAccountType` ("New Account Type,"
 same Account Type list and width as the account's own `kind`) is what the
 account is *becoming* — a rollover often changes type, not just custodian,
 e.g. a 401(k) landing as a Traditional IRA — and defaults to matching

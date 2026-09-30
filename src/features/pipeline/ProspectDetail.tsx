@@ -18,6 +18,11 @@ const opts = <T extends string>(values: readonly T[], labels: Record<T, string>)
 
 const listOpts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 
+// "Other" is a fallback, not a firm name — pin it last instead of letting it
+// sort wherever it happens to land alphabetically.
+const alphabetical = (values: string[]) =>
+  [...values].sort((a, b) => (a === 'Other' ? 1 : b === 'Other' ? -1 : a.localeCompare(b)))
+
 // `Prospect.name` stays one "Last, First" string everywhere else in the app
 // (board cards, search, duplicate) — only the Intake row shows it as two
 // boxes, split/joined here rather than changing the stored shape.
@@ -203,7 +208,7 @@ export function ProspectDetail({
                 label="New Custodian"
                 width={140}
                 value={asset.movingTo}
-                options={listOpts(settings.custodiansMovingTo)}
+                options={listOpts(alphabetical(settings.custodiansMovingTo))}
                 onCommit={(v) => {
                   onAssetChange(asset.id, { movingTo: v })
                   onAddListValue('custodiansMovingTo', v)
