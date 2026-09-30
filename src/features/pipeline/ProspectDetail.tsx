@@ -255,7 +255,7 @@ export function ProspectDetail({
             </FieldRow>
           ))}
           <button className="b-plus" style={{ marginBottom: 14 }} onClick={onAddAsset}>
-            + Add account
+            + Bridge Account
           </button>
 
           <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '14px 0 8px' }}>
