@@ -187,13 +187,14 @@ export const DEFAULT_TEAM_MEMBERS: string[] = []
  * user-editable: unlike `Stage`, it drives fixed color coding and isn't one
  * of the categories Settings exposes.
  */
-export const ASSET_STATUSES = ['identified', 'doc-prep', 'docs-signed', 'processed', 'follow-up', 'funded'] as const
+export const ASSET_STATUSES = ['identified', 'doc-prep', 'awaiting-signatures', 'docs-signed', 'processed', 'follow-up', 'funded'] as const
 
 export type AssetStatus = (typeof ASSET_STATUSES)[number]
 
 export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
   identified: 'Identified',
   'doc-prep': 'Doc Prep',
+  'awaiting-signatures': 'Awaiting Signatures',
   'docs-signed': 'Docs Signed',
   processed: 'Processed',
   'follow-up': 'Follow Up',

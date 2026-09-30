@@ -105,8 +105,8 @@ unlike every other list here, since actual product names are entirely
 practice-specific — it grows purely from what gets typed in. All of these
 are typeaheads (`TypeaheadSelect` in `primitives.tsx`) that accept any
 typed value regardless of the list. `status` mirrors the pipeline stage
-names: `identified → doc-prep → docs-signed → processed → follow-up →
-funded` — this one's fixed, not a Settings category.
+names: `identified → doc-prep → awaiting-signatures → docs-signed →
+processed → follow-up → funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
 (Held At / New Custodian), `investmentType` (Investment Type), `productName`

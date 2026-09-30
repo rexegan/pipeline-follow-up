@@ -9,6 +9,7 @@ import { MUTED, SUCCESS, WARN } from '../../ui/theme'
 export const ASSET_STATUS_COLOR: Record<Asset['status'], string> = {
   identified: MUTED,
   'doc-prep': '#1d4ed8',
+  'awaiting-signatures': '#4f46e5',
   'docs-signed': '#6d28d9',
   processed: WARN,
   'follow-up': '#0f766e',
