@@ -209,14 +209,19 @@ export type Asset = {
   amount: number | null
   /** Where it's at now — current custodian, plan provider, or carrier. */
   heldAt: string
+  /** What kind of vehicle the money is invested in right now (mutual fund,
+   *  ETF, annuity…) — one of Settings' investment types, or free text. Same
+   *  list as `investmentType`, which is this asset's *destination* vehicle. */
+  currentInvestmentType: string
   /** What kind of account it's becoming — a rollover often changes type, not
    *  just custodian (a 401(k) landing as a Traditional IRA). One of
    *  Settings' account types, or free text; defaults to matching `kind`. */
   newAccountType: string
   /** Where it needs to go — destination custodian or account. */
   movingTo: string
-  /** What kind of vehicle the money sits in (mutual fund, ETF, annuity…) —
-   *  one of Settings' investment types, or free text. */
+  /** What kind of vehicle the money will be invested in after the move —
+   *  one of Settings' investment types, or free text. See
+   *  `currentInvestmentType` for what it's invested in now. */
   investmentType: string
   /** The specific carrier product — a Jackson National or F&G contract name,
    *  a specific fund, etc. — one of Settings' product names, or free text. */
@@ -306,6 +311,17 @@ export type Prospect = {
   activity: ActivityEntry[]
   createdAt: string
   updatedAt: string
+}
+
+/** A prospect's single "total dollar amount" figure, wherever one is shown
+ *  as one number (the record header, a board card, sort-by-amount, the
+ *  sidebar's per-prospect sums) — `manualTotal` wins when set, otherwise the
+ *  assets' summed `amount`. Not used for a partial/filtered sum across many
+ *  prospects' individual assets (e.g. "dollars in accounts with status X"),
+ *  since a manual total describes the whole relationship, not a subset of
+ *  its accounts. */
+export function displayTotal(p: Prospect): number {
+  return p.manualTotal ?? p.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
 }
 
 /* ---------- Settings ---------- */

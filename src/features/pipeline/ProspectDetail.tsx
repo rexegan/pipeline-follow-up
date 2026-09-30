@@ -5,6 +5,7 @@ import {
   KIND_LABELS,
   NEXT_STEP_STATUSES,
   NEXT_STEP_STATUS_LABELS,
+  displayTotal,
   findStage,
 } from '../../types'
 import { BORDER, DANGER, FG, MUTED, SUCCESS } from '../../ui/theme'
@@ -72,7 +73,7 @@ export function ProspectDetail({
   onNext,
   onDuplicate,
 }: Props) {
-  const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
+  const total = displayTotal(prospect)
   const stageDef = findStage(settings.stages, prospect.stage)
   const offTrack = stageDef.offTrack
   const { last: lastName, first: firstName } = splitName(prospect.name)
@@ -164,8 +165,8 @@ export function ProspectDetail({
           </FieldRow>
 
           <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
-            <div style={{ width: 361, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
-              Current Account
+            <div style={{ width: 484, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
+              {prospect.assets.length > 1 ? 'Transition Accounts' : 'Transition Account'}
             </div>
           </div>
           {prospect.assets.map((asset) => (
@@ -192,6 +193,17 @@ export function ProspectDetail({
                   onAddListValue('custodiansHeldAt', v)
                 }}
                 placeholder="Type a firm…"
+              />
+              <TypeaheadSelect
+                label="Investment Type"
+                width={115}
+                value={asset.currentInvestmentType}
+                options={listOpts(settings.investmentTypes)}
+                onCommit={(v) => {
+                  onAssetChange(asset.id, { currentInvestmentType: v })
+                  onAddListValue('investmentTypes', v)
+                }}
+                placeholder="Type or choose…"
               />
               <TypeaheadSelect
                 label="New Account Type"

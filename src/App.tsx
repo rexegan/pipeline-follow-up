@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Asset, EditableListKey, Prospect, Settings, SortBy, Stage } from './types'
-import { DEFAULT_SETTINGS, SORTS, findStage } from './types'
+import { DEFAULT_SETTINGS, SORTS, displayTotal, findStage } from './types'
 import { BG, BORDER, CARD, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
@@ -243,19 +243,19 @@ export default function App() {
   }
 
   const openProspects = prospects.filter((p) => !findStage(settings.stages, p.stage).offTrack)
-  const inPlay = openProspects.reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+  const inPlay = openProspects.reduce((s, p) => s + displayTotal(p), 0)
+  // Unlike the sums above and below, this one can't defer to a manual total:
+  // it's a partial sum across only the assets currently in a given status,
+  // not a whole prospect's total, and a manual total describes the whole
+  // relationship rather than a subset of its accounts.
   const moving = openProspects
     .flatMap((p) => p.assets)
     .filter((a) => a.status !== 'identified' && a.status !== 'funded')
     .reduce((s, a) => s + (a.amount ?? 0), 0)
-  const funded = prospects
-    .filter((p) => p.stage === 'funded')
-    .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+  const funded = prospects.filter((p) => p.stage === 'funded').reduce((s, p) => s + displayTotal(p), 0)
   // NIGO is the only trigger for this today; more conditions can feed into
   // it later without changing what "needs attention" means to the user.
-  const needsAttention = prospects
-    .filter((p) => p.stage === 'nigo')
-    .reduce((s, p) => s + p.assets.reduce((t, a) => t + (a.amount ?? 0), 0), 0)
+  const needsAttention = prospects.filter((p) => p.stage === 'nigo').reduce((s, p) => s + displayTotal(p), 0)
 
   // Quick View narrows the board to opportunities holding any of the checked
   // account types (same list as the record form's Account Type field), on

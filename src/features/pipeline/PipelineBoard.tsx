@@ -1,5 +1,5 @@
 import type { Prospect, SortBy, StageDef } from '../../types'
-import { findStage } from '../../types'
+import { displayTotal, findStage } from '../../types'
 import { BORDER, CARD, FG, MUTED } from '../../ui/theme'
 import { daysSince, daysUntil, fmtMoney } from '../../lib/dates'
 import { useState } from 'react'
@@ -26,7 +26,7 @@ const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLUMNS
  *  record. Every card is the same fixed height (not just a minimum) so a row
  *  of them lines up regardless of name length or whether a next step is set. */
 function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; color: string; onOpen: () => void }) {
-  const total = prospect.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
+  const total = displayTotal(prospect)
   const overdue = (daysUntil(prospect.nextStepOn) ?? 1) < 0
   const inStage = daysSince(prospect.stageChangedAt)
 
@@ -95,10 +95,6 @@ function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; color: str
   )
 }
 
-function totalOf(p: Prospect): number {
-  return p.assets.reduce((s, a) => s + (a.amount ?? 0), 0)
-}
-
 /**
  * Every opportunity flows left to right, five per row, then wraps —
  * one unified grid rather than a column per stage. Stage is still visible
@@ -129,7 +125,7 @@ export function PipelineBoard({ prospects, stages, sortBy, onOpen, onAddProspect
       ? prospects.filter((p) => checkedStageFilters.has(p.stage))
       : prospects.filter((p) => activeKeys.has(p.stage))
 
-  if (checkedOrders.includes('amount-desc')) flat = [...flat].sort((a, b) => totalOf(b) - totalOf(a))
+  if (checkedOrders.includes('amount-desc')) flat = [...flat].sort((a, b) => displayTotal(b) - displayTotal(a))
   else if (checkedOrders.includes('newest')) flat = [...flat].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   else if (checkedOrders.includes('oldest')) flat = [...flat].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 

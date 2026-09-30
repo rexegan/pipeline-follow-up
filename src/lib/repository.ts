@@ -180,6 +180,7 @@ function normalizeProspect(p: Prospect): Prospect {
         heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
         movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
         newAccountType: a.newAccountType || kind,
+        currentInvestmentType: a.currentInvestmentType ?? '',
         investmentType: a.investmentType ?? '',
         productName: a.productName ?? '',
       }

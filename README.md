@@ -82,11 +82,13 @@ an `activity` timeline —
 still in the data model (old records keep their history), but its own
 record-form panel was removed per feedback to give the form's fields the
 full width instead. Each
-asset is `{ kind, amount, heldAt, newAccountType, movingTo, investmentType,
-productName, status }`, grouped in the record form under one centered
-heading — **Current Account** (Account Type, Amount, Held At) — followed
-by New Account Type, New Custodian, Investment Type, Product Name, and
-Status, ungrouped. `heldAt` ("Held At") and `movingTo` ("New
+asset is `{ kind, amount, heldAt, currentInvestmentType, newAccountType,
+movingTo, investmentType, productName, status }`, grouped in the record
+form under one centered heading — **Transition Account**, or **Transition
+Accounts** once a second one is added (`prospect.assets.length > 1`) —
+spanning Account Type, Amount, Held At, and Investment Type; New Account
+Type, New Custodian, [destination] Investment Type, Product Name, and
+Status follow ungrouped. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
@@ -97,11 +99,13 @@ rather than sorted in) — Held At's are not, left in Settings' own order.
 same Account Type list and width as the account's own `kind`) is what the
 account is *becoming* — a rollover often changes type, not just custodian,
 e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
-`kind` until changed. `investmentType` ("Investment Type") is what the
-money is actually invested *in* — stocks, bonds, mutual fund, ETF, money
-market, CD, VA/fixed annuity/FIA, RILA, alts, REITs, managed
-money — its own Settings list, distinct from the account/tax wrapper
-`kind` describes. `productName` ("Product Name") is the specific carrier
+`kind` until changed. `currentInvestmentType` and `investmentType` are both
+labeled "Investment Type" and share the same Settings list — the first is
+what the money is invested in *right now* (next to Held At, under the
+Transition Account heading), the second is what it'll be invested in
+*after* the move (next to New Custodian) — stocks, bonds, mutual fund, ETF,
+money market, CD, VA/fixed annuity/FIA, RILA, alts, REITs, managed money.
+`productName` ("Product Name") is the specific carrier
 product — a Jackson National or F&G contract name, a specific fund, etc.
 Its Settings list starts empty (`DEFAULT_PRODUCT_NAMES` in `types.ts`),
 unlike every other list here, since actual product names are entirely
@@ -112,9 +116,10 @@ names: `identified → doc-prep → awaiting-signatures → docs-signed →
 processed → follow-up → funded` — this one's fixed, not a Settings category.
 
 The record form's `kind`/`newAccountType` (Account Type), `heldAt`/`movingTo`
-(Held At / New Custodian), `investmentType` (Investment Type), `productName`
-(Product Name), `assignedTo` (Assigned To), `relationship` (Relationship),
-`source` (From), and Next Step are all the same typeahead pattern: a list
+(Held At / New Custodian), `currentInvestmentType`/`investmentType` (both
+labeled Investment Type), `productName` (Product Name), `assignedTo`
+(Assigned To), `relationship` (Relationship), `source` (From), and Next Step
+are all the same typeahead pattern: a list
 of suggestions that don't have to be the
 only allowed answer. Typing something that isn't already an option quietly
 saves it into that Settings list (`addToSettingsList` in `App.tsx`, or
@@ -130,11 +135,16 @@ Trade Blotter's clock on an open position. It only stops once every asset's
 `status` is Funded (not the Stage, which can say "Funded" before the last
 account has actually settled) — freezing at whatever it read at that moment
 rather than resetting or continuing. Next to Phone and Email, "Total" is a
-manually-typed dollar figure (`Prospect.manualTotal`) — independent of, and
-not synced with, the header's/board card's actual sum of the itemized
-accounts below it. It's meant for an early discovery-stage estimate you
-have before every account is itemized, and defaults to blank on a new or
-duplicated record.
+manually-typed dollar figure (`Prospect.manualTotal`) — meant for an early
+discovery-stage estimate you have before every account is itemized. Once
+set, it's what `displayTotal(prospect)` returns everywhere a single "this
+opportunity's total" figure is shown — the header, board cards, sort-by-
+amount, and the sidebar's Total Opportunities/Completed/Needs Attention
+sums — in place of the assets' summed `amount`, until it's cleared. It
+doesn't feed the "In Process" sum, which totals only the assets currently
+in a given status rather than a whole prospect at once, so a single
+manual figure for the relationship has no sensible share of it. Defaults
+to blank on a new or duplicated record.
 
 The record modal's footer offers a **Next** button, when more than one
 opportunity shares the currently open one's stage — it cycles through them
