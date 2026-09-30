@@ -66,6 +66,7 @@ function FieldShell({
   width,
   grow,
   hideLabel,
+  centerLabel,
   children,
 }: {
   label: string
@@ -75,6 +76,9 @@ function FieldShell({
    *  used so a repeated row of fields (each Bridge Account after the first)
    *  doesn't re-print the same column headings every time. */
   hideLabel?: boolean
+  /** Centers the caption over the field instead of the default left align —
+   *  used for the account row's column headings. */
+  centerLabel?: boolean
   children: ReactNode
 }) {
   return (
@@ -87,7 +91,7 @@ function FieldShell({
         flex: grow ? '1 1 200px' : width ? `0 1 ${width}px` : '1 1 120px',
       }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', visibility: hideLabel ? 'hidden' : 'visible' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: centerLabel ? 'center' : 'left', visibility: hideLabel ? 'hidden' : 'visible' }}>
         {label}
       </span>
       {children}
@@ -165,6 +169,7 @@ export function BoxSelect<T extends string>({
   width,
   grow,
   hideLabel,
+  centerLabel,
 }: {
   label: string
   value: T
@@ -174,9 +179,10 @@ export function BoxSelect<T extends string>({
   width?: number
   grow?: boolean
   hideLabel?: boolean
+  centerLabel?: boolean
 }) {
   return (
-    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel}>
+    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel} centerLabel={centerLabel}>
       <select
         aria-label={label}
         value={value}
@@ -212,6 +218,7 @@ export function TypeaheadSelect({
   width,
   grow,
   hideLabel,
+  centerLabel,
 }: {
   label: string
   value: string
@@ -221,6 +228,7 @@ export function TypeaheadSelect({
   width?: number
   grow?: boolean
   hideLabel?: boolean
+  centerLabel?: boolean
 }) {
   const [query, setQuery] = useState<string | null>(null)
   const cancelledRef = useRef(false)
@@ -246,7 +254,7 @@ export function TypeaheadSelect({
   }
 
   return (
-    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel}>
+    <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel} centerLabel={centerLabel}>
       <div style={{ position: 'relative' }}>
         <input
           ref={inputRef}
@@ -362,18 +370,20 @@ export function BoxMoney({
   onCommit,
   width,
   hideLabel,
+  centerLabel,
 }: {
   label: string
   value: number | null
   onCommit: (value: number | null) => void
   width?: number
   hideLabel?: boolean
+  centerLabel?: boolean
 }) {
   const [focused, setFocused] = useState(false)
   const [draft, setDraft] = useState('')
 
   return (
-    <FieldShell label={label} width={width} hideLabel={hideLabel}>
+    <FieldShell label={label} width={width} hideLabel={hideLabel} centerLabel={centerLabel}>
       <input
         aria-label={label}
         value={focused ? draft : value === null ? '' : fmtMoney(value)}

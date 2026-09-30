@@ -179,7 +179,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="Account Type"
                 width={120}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.kind}
                 options={listOpts(settings.accountTypes)}
                 onCommit={(v) => {
@@ -188,11 +188,11 @@ export function ProspectDetail({
                 }}
                 placeholder="Type a kind…"
               />
-              <BoxMoney label="Amount" width={95} hideLabel={i > 0} value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
+              <BoxMoney label="Amount" width={95} hideLabel={i > 0} centerLabel value={asset.amount} onCommit={(v) => onAssetChange(asset.id, { amount: v })} />
               <TypeaheadSelect
                 label="Held At"
                 width={130}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.heldAt}
                 options={listOpts(settings.custodiansHeldAt)}
                 onCommit={(v) => {
@@ -204,7 +204,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="Investment Type"
                 width={115}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.currentInvestmentType}
                 options={listOpts(settings.investmentTypes)}
                 onCommit={(v) => {
@@ -216,7 +216,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="New Account Type"
                 width={115}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.newAccountType}
                 options={listOpts(settings.accountTypes)}
                 onCommit={(v) => {
@@ -228,7 +228,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="New Custodian"
                 width={140}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.movingTo}
                 options={listOpts(alphabetical(settings.custodiansMovingTo))}
                 onCommit={(v) => {
@@ -240,7 +240,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="Investment Type"
                 width={115}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.investmentType}
                 options={listOpts(settings.investmentTypes)}
                 onCommit={(v) => {
@@ -252,7 +252,7 @@ export function ProspectDetail({
               <TypeaheadSelect
                 label="Product Name"
                 width={130}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.productName}
                 options={listOpts(settings.productNames)}
                 onCommit={(v) => {
@@ -264,7 +264,7 @@ export function ProspectDetail({
               <BoxSelect
                 label="Status"
                 width={110}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.status}
                 options={opts(ASSET_STATUSES, ASSET_STATUS_LABELS)}
                 onCommit={(v) => onAssetChange(asset.id, { status: v })}
@@ -273,7 +273,7 @@ export function ProspectDetail({
               <BoxSelect
                 label="Next Action"
                 width={180}
-                hideLabel={i > 0}
+                hideLabel={i > 0} centerLabel
                 value={asset.nextAction}
                 options={opts(ASSET_NEXT_ACTIONS, ASSET_NEXT_ACTION_LABELS)}
                 onCommit={(v) => onAssetChange(asset.id, { nextAction: v })}
