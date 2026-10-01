@@ -56,7 +56,7 @@ Pushing to `main` auto-deploys to GitHub Pages via `.github/workflows/deploy-pag
 | `src/lib/slugify.ts` | Turns a typed stage label into a stable storage key |
 | `src/lib/useElapsed.ts` | The Start stopwatch — ticks every second, freezes once passed `frozen: true` |
 | `src/ui/theme.ts` | Blotter tokens, injected global styles |
-| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal` (caps at its `width` prop but scales down to 96vw on narrower screens, so the gray backdrop margin doesn't grow unbounded on a wide monitor), `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) — `TypeaheadSelect` and `CheckboxDropdown`'s option lists render via `useDropdownPosition` + a `createPortal` into `document.body`, not a plain `position: absolute` popup, so a long list (27 custodians) never gets silently clipped by the modal's own `overflow: auto` scroll area; it always opens downward at the field's actual position, sized to whatever viewport space is actually available below it. Focusing a `TypeaheadSelect` that already has a value shows that value selected (ready to type over) rather than blanking the field, and every option renders unfiltered until the text actually changes — clicking in to look, then clicking away without picking or typing anything, leaves the field exactly as it was (no re-commit at all, not even of the same value). `FieldShell`'s caption (`BoxText`/`BoxSelect`/`BoxMoney`/`TypeaheadSelect` all take a `hideLabel` prop) is bold, and each repeated row of fields — every Bridge Account after the first — hides its captions (`visibility: hidden`, not unrendered, so the row's height and the inputs' vertical alignment stay identical to the first row) rather than re-printing the same column headings every time. |
+| `src/ui/primitives.tsx` | Boxed field editors (`BoxText`, `BoxSelect`, `BoxMoney`, `TypeaheadSelect`), `FieldRow`, `Modal` (caps at its `width` prop but scales down to 96vw on narrower screens, so the gray backdrop margin doesn't grow unbounded on a wide monitor), `ActionBtn`, `Chip`, `StatCard`, `CheckboxDropdown` (Quick View's checklist dropdowns) — `TypeaheadSelect`, `CheckboxDropdown`, and `BoxSelect`'s option lists all render via `useDropdownPosition` + a `createPortal` into `document.body`, not a plain `position: absolute` popup (or, for `BoxSelect`, not a native `<select>` at all) — so a long list (27 custodians) never gets silently clipped by the modal's own `overflow: auto` scroll area, and it always opens downward at the field's actual position instead of a browser flipping it upward when space runs out below (a native `<select>`'s own call, not something CSS can override), sized to whatever viewport space is actually available below it. Focusing a `TypeaheadSelect` that already has a value shows that value selected (ready to type over) rather than blanking the field, and every option renders unfiltered until the text actually changes — clicking in to look, then clicking away without picking or typing anything, leaves the field exactly as it was (no re-commit at all, not even of the same value). `FieldShell`'s caption (`BoxText`/`BoxSelect`/`BoxMoney`/`TypeaheadSelect` all take a `hideLabel` prop, and a `centerLabel` prop used only by the account row's column headings) is bold, and each repeated row of fields — every Bridge Account after the first — hides its captions (`visibility: hidden`, not unrendered, so the row's height and the inputs' vertical alignment stay identical to the first row) rather than re-printing the same column headings every time. |
 | `src/features/pipeline/PipelineBoard.tsx` | Every opportunity in one grid, not stage columns — a strict 5-per-row layout, wrapping to a new row rather than scrolling, for every Sort option including "All Opportunities"; a collapsed strip for off-track stages |
 | `src/features/pipeline/ProspectDetail.tsx` | The full record: every editable field, opened from a board card |
 | `src/features/settings/SettingsPanel.tsx` | Add/remove stages, custodians, account types, sources, and per-stage Next Step suggestions |
@@ -161,7 +161,11 @@ up with a second, unrelated opportunity: it opens a new record carrying over
 the contact info (name, middle initial, Type, From, Referred By,
 Relationship, phone, email) and who's Assigned To it, but starting the deal
 itself fresh (stage back to the first active one, a blank asset, no Next
-Step, no activity log).
+Step, no activity log). **Save** isn't wired to close the record — every
+field already persists on its own commit, so there's nothing left to save
+by the time you'd click it; it stays a no-op deliberately, so you can keep
+working the same opportunity without it closing out from under you. Only
+the × next to the dollar total (top right) actually closes the record.
 
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
@@ -261,7 +265,12 @@ explicit one-off migration in `repository.ts` (`splitLegacyIgoNigoStage`,
 `ensureFirstMeetingStage`, `ensureIssuedStage`,
 `ensureAwaitingSignaturesStage`) rather than relying on the general
 fallback — the same pattern as the `LEGACY_*` label tables below, just for
-stage keys instead of free-text field values.
+stage keys instead of free-text field values. Renaming a value already in
+one of the plain string lists (e.g. "Certificate of Deposit" → "CD") needs
+the same treatment: `LEGACY_INVESTMENT_TYPE_LABELS` renames it both inside
+a saved Settings list and on any asset's `currentInvestmentType` /
+`investmentType` that was already set to the old text, since neither one
+would otherwise ever see the new default.
 
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `First Meeting →
 Opportunity Uncovered → Doc Prep → Awaiting Signatures → Docs Signed → IGO →

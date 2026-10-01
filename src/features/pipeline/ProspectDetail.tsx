@@ -352,7 +352,12 @@ export function ProspectDetail({
         <div style={{ display: 'flex', gap: 8 }}>
           {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
           <ActionBtn label="Duplicate" color={FG} onClick={onDuplicate} />
-          <ActionBtn label="Save" color={SUCCESS} onClick={onClose} />
+          {/* Every field already saves on its own commit (onChange/onCommit),
+              so there's nothing left to persist here — Save is deliberately
+              not wired to onClose. Only the × next to the dollar total
+              closes the record; Save staying open lets you keep working the
+              same opportunity without reopening it. */}
+          <ActionBtn label="Save" color={SUCCESS} onClick={() => {}} />
         </div>
       </div>
     </Modal>

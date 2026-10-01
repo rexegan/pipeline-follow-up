@@ -83,6 +83,12 @@ const LEGACY_SOURCE_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
+/** Shortened after the fact — a browser that saved either Settings' list or
+ *  an asset's investment type before the rename still has the old text. */
+const LEGACY_INVESTMENT_TYPE_LABELS: Record<string, string> = {
+  'Certificate of Deposit': 'CD',
+}
+
 /**
  * IGO and NIGO used to be one combined stage ('igo-nigo'). A browser that
  * saved its stage list before the split still has that single entry — since
@@ -180,8 +186,8 @@ function normalizeProspect(p: Prospect): Prospect {
         heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
         movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
         newAccountType: a.newAccountType || kind,
-        currentInvestmentType: a.currentInvestmentType ?? '',
-        investmentType: a.investmentType ?? '',
+        currentInvestmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.currentInvestmentType] ?? a.currentInvestmentType ?? '',
+        investmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.investmentType] ?? a.investmentType ?? '',
         productName: a.productName ?? '',
         nextAction: a.nextAction ?? 'continue-to-next-step',
       }
@@ -220,7 +226,9 @@ function normalizeSettings(raw: unknown): Settings {
       : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
     custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
-    investmentTypes: Array.isArray(v.investmentTypes) ? v.investmentTypes : DEFAULT_SETTINGS.investmentTypes,
+    investmentTypes: Array.isArray(v.investmentTypes)
+      ? [...new Set(v.investmentTypes.map((t) => LEGACY_INVESTMENT_TYPE_LABELS[t] ?? t))]
+      : DEFAULT_SETTINGS.investmentTypes,
     productNames: Array.isArray(v.productNames) ? v.productNames : DEFAULT_SETTINGS.productNames,
     teamMembers: Array.isArray(v.teamMembers) ? v.teamMembers : DEFAULT_SETTINGS.teamMembers,
     relationships: Array.isArray(v.relationships) ? v.relationships : DEFAULT_SETTINGS.relationships,

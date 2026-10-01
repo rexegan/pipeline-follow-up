@@ -161,7 +161,7 @@ export const DEFAULT_INVESTMENT_TYPES = [
   'Mutual Fund',
   'ETF',
   'Money Market',
-  'Certificate of Deposit',
+  'CD',
   'VA',
   'Fixed Annuity',
   'FIA',

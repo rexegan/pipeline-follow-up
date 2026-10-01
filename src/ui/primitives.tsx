@@ -160,6 +160,11 @@ export function BoxPhone({
   )
 }
 
+// A real <select>'s open direction (up vs down) is decided entirely by the
+// browser/OS once there's not enough room below it — no CSS can override
+// that. Rendered as a button + portal panel instead, the same as every other
+// dropdown here, so it always opens downward and is never silently clipped
+// by the modal's own scroll area.
 export function BoxSelect<T extends string>({
   label,
   value,
@@ -181,22 +186,81 @@ export function BoxSelect<T extends string>({
   hideLabel?: boolean
   centerLabel?: boolean
 }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const pos = useDropdownPosition(open, ref)
+  const currentLabel = options.find((o) => o.value === value)?.label || '—'
+
+  useEffect(() => {
+    if (!open) return
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node
+      if (ref.current?.contains(target)) return
+      if (panelRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    return () => document.removeEventListener('mousedown', onDocMouseDown)
+  }, [open])
+
   return (
     <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel} centerLabel={centerLabel}>
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onCommit(e.target.value as T)}
-        className="box-input"
-        style={{ ...BOX_INPUT, cursor: 'pointer', color: color ?? FG, fontWeight: color ? 600 : 400 }}
-        {...NO_PASSWORD_MANAGER}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label || '—'}
-          </option>
-        ))}
-      </select>
+      <div ref={ref} style={{ position: 'relative' }}>
+        <button
+          type="button"
+          aria-label={label}
+          onClick={() => setOpen((o) => !o)}
+          style={{
+            ...BOX_INPUT,
+            cursor: 'pointer',
+            color: color ?? FG,
+            fontWeight: color ? 600 : 400,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 4,
+            textAlign: 'left',
+          }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentLabel}</span>
+          <span style={{ fontSize: 9, color: MUTED, flexShrink: 0 }}>▾</span>
+        </button>
+        {open && pos && createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              position: 'fixed',
+              top: pos.top + 2,
+              left: pos.left,
+              minWidth: pos.width,
+              zIndex: 1000,
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 6,
+              maxHeight: `calc(100vh - ${pos.top + 2}px - 12px)`,
+              overflowY: 'auto',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            }}
+          >
+            {options.map((o) => (
+              <div
+                key={o.value}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  onCommit(o.value)
+                  setOpen(false)
+                }}
+                className="combo-option"
+                style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer' }}
+              >
+                {o.label || '—'}
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
+      </div>
     </FieldShell>
   )
 }
