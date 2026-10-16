@@ -474,16 +474,20 @@ export function FieldRow({
   children,
   last,
   marginBottom,
+  indent,
 }: {
   children: ReactNode
   last?: boolean
+  /** Left offset in px — lets a second line of fields start under a later
+   *  column of the line above it. */
+  indent?: number
   /** Overrides the default 8px gap below the row — used to tighten a
    *  repeated block of rows (each Bridge Account) without affecting every
    *  other FieldRow in the form. */
   marginBottom?: number
 }) {
   return (
-    <div className="field-row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: marginBottom ?? (last ? 0 : 8) }}>
+    <div className="field-row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: marginBottom ?? (last ? 0 : 8), marginLeft: indent }}>
       {children}
     </div>
   )

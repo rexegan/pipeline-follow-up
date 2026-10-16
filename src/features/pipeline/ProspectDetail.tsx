@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { Asset, EditableListKey, Prospect, Settings, Stage } from '../../types'
 import {
   ASSET_BLOTTER_TARGETS,
@@ -17,6 +18,8 @@ import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, Rea
 import { fmtMoney } from '../../lib/dates'
 import { formatElapsed, useElapsedMs } from '../../lib/useElapsed'
 import { ASSET_STATUS_COLOR } from './stageColors'
+
+const ACCOUNT_TYPE_WIDTH = 120
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
   values.map((v) => ({ value: v, label: labels[v] }))
@@ -89,7 +92,7 @@ export function ProspectDetail({
   const elapsedMs = useElapsedMs(prospect.createdAt, isFunded)
 
   return (
-    <Modal onClose={onClose} width={1600} printZoom={0.62}>
+    <Modal onClose={onClose} width={1600} printZoom={0.85}>
       {/* Header */}
       <div
         style={{
@@ -178,10 +181,11 @@ export function ProspectDetail({
             </div>
           </div>
           {prospect.assets.map((asset, i) => (
-            <FieldRow key={asset.id} marginBottom={2}>
+          <Fragment key={asset.id}>
+            <FieldRow marginBottom={2}>
               <TypeaheadSelect
                 label="Account Type"
-                width={120}
+                width={ACCOUNT_TYPE_WIDTH}
                 hideLabel={i > 0} centerLabel
                 value={asset.kind}
                 options={listOpts(settings.accountTypes)}
@@ -264,6 +268,23 @@ export function ProspectDetail({
                 }}
                 placeholder="Type a product…"
               />
+              {prospect.assets.length > 1 && (
+                <button
+                  className="b-del no-print"
+                  title="Delete this account"
+                  onClick={() => {
+                    if (confirm('Delete this account?')) onDeleteAsset(asset.id)
+                  }}
+                  style={{ alignSelf: 'center' }}
+                >
+                  ×
+                </button>
+              )}
+            </FieldRow>
+            {/* Second line: Status, Next Action, and Move to Trade Blotter, indented
+                one column (Account Type's width plus the row gap) so they start
+                under Amount. */}
+            <FieldRow indent={ACCOUNT_TYPE_WIDTH + 8}>
               <BoxSelect
                 label="Status"
                 width={110}
@@ -281,22 +302,6 @@ export function ProspectDetail({
                 options={opts(ASSET_NEXT_ACTIONS, ASSET_NEXT_ACTION_LABELS)}
                 onCommit={(v) => onAssetChange(asset.id, { nextAction: v })}
               />
-              {/* Always reserves the × slot (even with one account, when there's
-                  no × to show) so the Trade Blotter column to its right stays
-                  lined up across accounts; the × itself doesn't print. */}
-              <span style={{ width: 22, alignSelf: 'center', textAlign: 'center' }}>
-                {prospect.assets.length > 1 && (
-                  <button
-                    className="b-del no-print"
-                    title="Delete this account"
-                    onClick={() => {
-                      if (confirm('Delete this account?')) onDeleteAsset(asset.id)
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
               <BoxSelect
                 label={'Move to\nTrade Blotter'}
                 width={100}
@@ -307,6 +312,7 @@ export function ProspectDetail({
                 onCommit={(v) => onAssetChange(asset.id, { moveToBlotter: v })}
               />
             </FieldRow>
+          </Fragment>
           ))}
           <button className="b-plus" style={{ marginBottom: 14 }} onClick={onAddAsset}>
             + Bridge Account

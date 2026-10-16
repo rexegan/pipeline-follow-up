@@ -88,14 +88,16 @@ the record form under two centered headings — **Current Account**
 (Account Type, Amount, Held At, [current] Investment Type), then
 **Transition Account** (always singular, however many accounts there
 are), spanning New Account Type, New Custodian, [destination] Investment
-Type, and Product Name; Status, Next Action, and **Move to Trade Blotter**
-(BD or INS — a stacked two-line caption, past the delete × whose slot is
-always reserved so the column stays aligned) follow ungrouped. A **Print**
+Type, and Product Name. Each account is two lines: the line above, and
+under it Status, Next Action, and **Move to Trade Blotter** (BD or INS — a
+stacked two-line caption), indented one column so they start under Amount.
+The column captions print once, over the first account's lines. The delete
+× sits at the end of the first line. A **Print**
 button in the record's footer prints just that record, landscape, one line
 per row left to right: print CSS in `theme.ts` hides the board, sidebar,
 backdrop, and action buttons, makes the modal overlay fill the page (it
 otherwise shrink-wraps to the account row's width), and zooms the panel
-(`printZoom` on `Modal`, 0.62 for the record) so the ~1,460px-wide account
+(`printZoom` on `Modal`, 0.85 for the record) so the ~1,050px-wide account
 row fits the ~980px page instead of wrapping. Chrome/Safari/Edge honor CSS
 `zoom`; an older Firefox ignores it and would wrap. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
