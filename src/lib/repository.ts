@@ -87,7 +87,25 @@ const LEGACY_SOURCE_LABELS: Record<string, string> = {
  *  an asset's investment type before the rename still has the old text. */
 const LEGACY_INVESTMENT_TYPE_LABELS: Record<string, string> = {
   'Certificate of Deposit': 'CD',
+  'Mutual Fund': 'MF',
+  'Money Market': '$MRK',
+  'Fixed Annuity': 'FA',
+  'Managed $': 'MNGD',
 }
+
+/** Held At shortened after the fact — applies to Settings' Held At list and
+ *  to any asset already holding the longer name. (Not New Custodian's list:
+ *  that one is separate and was left alone.) */
+const LEGACY_HELD_AT_LABELS: Record<string, string> = {
+  'Wells Fargo Advisors': 'Wells Fargo',
+  'Lincoln Financial': 'Lincoln',
+}
+
+/** Names dropped from Held At's list outright. Only ever applied once per
+ *  browser (see `trimHeldAtOnce`) — unlike a rename, running a removal on
+ *  every load would silently delete the entry again if it were re-added. */
+const HELD_AT_REMOVED = ['Charles Schwab']
+const HELD_AT_TRIM_FLAG = 'pipeline-follow-up:migration:held-at-trim:v1'
 
 /**
  * IGO and NIGO used to be one combined stage ('igo-nigo'). A browser that
@@ -183,7 +201,7 @@ function normalizeProspect(p: Prospect): Prospect {
       return {
         ...a,
         kind,
-        heldAt: LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
+        heldAt: LEGACY_HELD_AT_LABELS[LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt] ?? LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
         movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
         newAccountType: a.newAccountType || kind,
         currentInvestmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.currentInvestmentType] ?? a.currentInvestmentType ?? '',
@@ -222,9 +240,14 @@ function normalizeSettings(raw: unknown): Settings {
 
   return {
     stages: ensureAwaitingSignaturesStage(ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages)))),
-    custodiansHeldAt: Array.isArray(v.custodiansHeldAt)
-      ? v.custodiansHeldAt
-      : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt),
+    custodiansHeldAt: [
+      ...new Set(
+        (Array.isArray(v.custodiansHeldAt)
+          ? v.custodiansHeldAt
+          : (legacyCustodians ?? DEFAULT_SETTINGS.custodiansHeldAt)
+        ).map((t) => LEGACY_HELD_AT_LABELS[t] ?? t),
+      ),
+    ],
     custodiansMovingTo: Array.isArray(v.custodiansMovingTo) ? v.custodiansMovingTo : DEFAULT_SETTINGS.custodiansMovingTo,
     accountTypes: Array.isArray(v.accountTypes) ? v.accountTypes : DEFAULT_SETTINGS.accountTypes,
     investmentTypes: Array.isArray(v.investmentTypes)
@@ -236,6 +259,26 @@ function normalizeSettings(raw: unknown): Settings {
     sources: Array.isArray(v.sources) ? v.sources : DEFAULT_SETTINGS.sources,
     nextStepSuggestions,
   }
+}
+
+/** Removes `HELD_AT_REMOVED` from a browser's saved Held At list, once. Edits
+ *  the saved JSON in place (not the normalized Settings) so a category that
+ *  browser never customized isn't frozen at today's defaults by this write. */
+function trimHeldAtOnce(saved: unknown): unknown {
+  try {
+    if (localStorage.getItem(HELD_AT_TRIM_FLAG)) return saved
+    // A browser with nothing saved yet has nothing to trim, but still gets
+    // flagged so a later deliberate re-add of a removed name sticks.
+    const obj = saved as { custodiansHeldAt?: unknown } | null
+    if (obj && typeof obj === 'object' && Array.isArray(obj.custodiansHeldAt)) {
+      obj.custodiansHeldAt = obj.custodiansHeldAt.filter((t) => !HELD_AT_REMOVED.includes(t as string))
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj))
+    }
+    localStorage.setItem(HELD_AT_TRIM_FLAG, 'true')
+  } catch {
+    // Storage unavailable — fall through with the list untrimmed.
+  }
+  return saved
 }
 
 function read<T>(key: string, guard: (value: unknown) => value is T): T[] {
@@ -267,7 +310,9 @@ export const localRepository: Repository = {
   async loadSettings() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY)
-      return raw ? normalizeSettings(JSON.parse(raw)) : DEFAULT_SETTINGS
+      const saved: unknown = raw ? JSON.parse(raw) : null
+      const trimmed = trimHeldAtOnce(saved)
+      return saved ? normalizeSettings(trimmed) : DEFAULT_SETTINGS
     } catch {
       return DEFAULT_SETTINGS
     }

@@ -112,9 +112,9 @@ e.g. a 401(k) landing as a Traditional IRA — and defaults to matching
 labeled "Investment Type" and share the same Settings list — the first is
 what the money is invested in *right now* (next to Held At, under Current
 Account), the second is what it'll be invested in *after* the move (next
-to New Custodian, under Transition Account(s)) — stocks, bonds, mutual
-fund, ETF, money market, CD, VA/fixed annuity/FIA, RILA, alts, REITs,
-managed money.
+to New Custodian, under Transition Account(s)) — written in shorthand:
+Stocks, Bonds, MF, ETF, $MRK (money market), CD, VA, FA, FIA, RILA, Alts,
+REITs, MNGD (managed money).
 `productName` ("Product Name") is the specific carrier
 product — a Jackson National or F&G contract name, a specific fund, etc.
 Its Settings list starts empty (`DEFAULT_PRODUCT_NAMES` in `types.ts`),
@@ -274,11 +274,19 @@ explicit one-off migration in `repository.ts` (`splitLegacyIgoNigoStage`,
 `ensureAwaitingSignaturesStage`) rather than relying on the general
 fallback — the same pattern as the `LEGACY_*` label tables below, just for
 stage keys instead of free-text field values. Renaming a value already in
-one of the plain string lists (e.g. "Certificate of Deposit" → "CD") needs
-the same treatment: `LEGACY_INVESTMENT_TYPE_LABELS` renames it both inside
-a saved Settings list and on any asset's `currentInvestmentType` /
-`investmentType` that was already set to the old text, since neither one
-would otherwise ever see the new default.
+one of the plain string lists (e.g. "Certificate of Deposit" → "CD",
+"Mutual Fund" → "MF") needs the same treatment: `LEGACY_INVESTMENT_TYPE_LABELS`
+renames it both inside a saved Settings list and on any asset's
+`currentInvestmentType` / `investmentType` already set to the old text, and
+`LEGACY_HELD_AT_LABELS` does the same for Held At ("Wells Fargo Advisors" →
+"Wells Fargo", "Lincoln Financial" → "Lincoln"; New Custodian's separate
+list is untouched) — neither would otherwise ever see the new default. A
+*removal* (Charles Schwab dropped from Held At) can't work like a rename,
+since running it every load would delete the entry again if someone
+deliberately re-added it; `trimHeldAtOnce` does it a single time per
+browser, behind a localStorage flag, editing the saved JSON in place so no
+other category gets frozen at today's defaults. Assets already holding a
+removed name keep it — only the suggestion list changes.
 
 The defaults (`DEFAULT_STAGES` in `types.ts`) ship as `First Meeting →
 Opportunity Uncovered → Doc Prep → Awaiting Signatures → Docs Signed → IGO →
