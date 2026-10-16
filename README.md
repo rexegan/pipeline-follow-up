@@ -86,10 +86,12 @@ asset is `{ kind, amount, heldAt, currentInvestmentType, newAccountType,
 movingTo, investmentType, productName, status, nextAction }`, grouped in
 the record form under two centered headings — **Current Account**
 (Account Type, Amount, Held At, [current] Investment Type), then
-**Transition Account**, or **Transition Accounts** once a second one is
-added (`prospect.assets.length > 1`), spanning New Account Type, New
-Custodian, [destination] Investment Type, and Product Name; Status and
-Next Action follow ungrouped. `heldAt` ("Held At") and `movingTo` ("New
+**Transition Account** (always singular, however many accounts there
+are), spanning New Account Type, New Custodian, [destination] Investment
+Type, and Product Name; Status and Next Action follow ungrouped. A
+**Print** button in the record's footer prints just that record (landscape;
+the board, sidebar, backdrop, and action buttons are hidden by print CSS
+in `theme.ts`). `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving

@@ -315,6 +315,7 @@ export default function App() {
       <style>{styles}</style>
 
       <aside
+        className="app-chrome"
         style={{
           width: 220,
           flexShrink: 0,
@@ -343,7 +344,7 @@ export default function App() {
         </button>
       </aside>
 
-      <div style={{ flex: 1, minWidth: 0, background: BG }}>
+      <div className="app-chrome" style={{ flex: 1, minWidth: 0, background: BG }}>
         <div style={{ padding: '28px 28px 48px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
             <div>

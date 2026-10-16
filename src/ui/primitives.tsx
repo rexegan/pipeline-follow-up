@@ -493,6 +493,7 @@ export function FieldRow({
 export function Modal({ onClose, children, width = 720 }: { onClose: () => void; children: ReactNode; width?: number }) {
   return (
     <div
+      className="modal-overlay"
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -510,6 +511,7 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
       }}
     >
       <div
+        className="modal-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: CARD,

@@ -91,4 +91,14 @@ export const styles = `
   input:focus-visible, select:focus-visible, button:focus-visible {
     outline: 2px solid ${PRIMARY}; outline-offset: -1px;
   }
+
+  /* Printing while a record is open prints just that record's panel: the
+     board/sidebar behind it, the backdrop, and the action buttons drop out. */
+  @page { size: landscape; margin: 0.4in; }
+  @media print {
+    .app-chrome, .no-print { display: none !important; }
+    .modal-overlay { position: static !important; background: none !important; padding: 0 !important; overflow: visible !important; }
+    .modal-panel { max-width: none !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+    .modal-scroll { overflow: visible !important; }
+  }
 `

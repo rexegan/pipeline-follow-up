@@ -111,6 +111,7 @@ export function ProspectDetail({
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: FG, fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(total)}</div>
           <button
+            className="no-print"
             onClick={onClose}
             aria-label="Close"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: MUTED, fontSize: 20, padding: '2px 6px', marginTop: 0, lineHeight: 1 }}
@@ -120,7 +121,7 @@ export function ProspectDetail({
         </div>
       </div>
 
-      <div style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '8px 20px 16px' }}>
+      <div className="modal-scroll" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', padding: '8px 20px 16px' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
           Intake
         </div>
@@ -171,7 +172,7 @@ export function ProspectDetail({
               Current Account
             </div>
             <div style={{ width: 524, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
-              {prospect.assets.length > 1 ? 'Transition Accounts' : 'Transition Account'}
+              Transition Account
             </div>
           </div>
           {prospect.assets.map((asset, i) => (
@@ -341,7 +342,7 @@ export function ProspectDetail({
           </FieldRow>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', borderTop: `1px solid ${BORDER}` }}>
+      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', borderTop: `1px solid ${BORDER}` }}>
         <ActionBtn
           label="Delete opportunity"
           color={DANGER}
@@ -352,6 +353,7 @@ export function ProspectDetail({
         <div style={{ display: 'flex', gap: 8 }}>
           {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
           <ActionBtn label="Duplicate" color={FG} onClick={onDuplicate} />
+          <ActionBtn label="Print" color={FG} onClick={() => window.print()} />
           {/* Every field already saves on its own commit (onChange/onCommit),
               so there's nothing left to persist here — Save is deliberately
               not wired to onClose. Only the × next to the dollar total
