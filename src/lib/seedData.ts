@@ -37,6 +37,7 @@ export function seedProspects(): Prospect[] {
         productName: '',
         status: 'identified',
         nextAction: 'continue-to-next-step',
+        moveToBlotter: '',
         notes: '',
       },
       {
@@ -51,6 +52,7 @@ export function seedProspects(): Prospect[] {
         productName: '',
         status: 'identified',
         nextAction: 'continue-to-next-step',
+        moveToBlotter: '',
         notes: '',
       },
     ],
@@ -94,6 +96,7 @@ export function seedProspects(): Prospect[] {
         productName: '',
         status: 'identified',
         nextAction: 'continue-to-next-step',
+        moveToBlotter: '',
         notes: '',
       },
     ],

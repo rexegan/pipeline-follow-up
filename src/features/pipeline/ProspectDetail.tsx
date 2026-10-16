@@ -1,5 +1,7 @@
 import type { Asset, EditableListKey, Prospect, Settings, Stage } from '../../types'
 import {
+  ASSET_BLOTTER_TARGETS,
+  ASSET_BLOTTER_TARGET_LABELS,
   ASSET_NEXT_ACTIONS,
   ASSET_NEXT_ACTION_LABELS,
   ASSET_STATUSES,
@@ -87,7 +89,7 @@ export function ProspectDetail({
   const elapsedMs = useElapsedMs(prospect.createdAt, isFunded)
 
   return (
-    <Modal onClose={onClose} width={1500}>
+    <Modal onClose={onClose} width={1600} printZoom={0.62}>
       {/* Header */}
       <div
         style={{
@@ -279,18 +281,31 @@ export function ProspectDetail({
                 options={opts(ASSET_NEXT_ACTIONS, ASSET_NEXT_ACTION_LABELS)}
                 onCommit={(v) => onAssetChange(asset.id, { nextAction: v })}
               />
-              {prospect.assets.length > 1 && (
-                <button
-                  className="b-del"
-                  title="Delete this account"
-                  onClick={() => {
-                    if (confirm('Delete this account?')) onDeleteAsset(asset.id)
-                  }}
-                  style={{ alignSelf: 'center' }}
-                >
-                  ×
-                </button>
-              )}
+              {/* Always reserves the × slot (even with one account, when there's
+                  no × to show) so the Trade Blotter column to its right stays
+                  lined up across accounts; the × itself doesn't print. */}
+              <span style={{ width: 22, alignSelf: 'center', textAlign: 'center' }}>
+                {prospect.assets.length > 1 && (
+                  <button
+                    className="b-del no-print"
+                    title="Delete this account"
+                    onClick={() => {
+                      if (confirm('Delete this account?')) onDeleteAsset(asset.id)
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+              <BoxSelect
+                label={'Move to\nTrade Blotter'}
+                width={100}
+                hideLabel={i > 0}
+                centerLabel
+                value={asset.moveToBlotter}
+                options={opts(ASSET_BLOTTER_TARGETS, ASSET_BLOTTER_TARGET_LABELS)}
+                onCommit={(v) => onAssetChange(asset.id, { moveToBlotter: v })}
+              />
             </FieldRow>
           ))}
           <button className="b-plus" style={{ marginBottom: 14 }} onClick={onAddAsset}>

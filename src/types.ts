@@ -214,6 +214,19 @@ export const ASSET_NEXT_ACTION_LABELS: Record<AssetNextAction, string> = {
   canceled: 'Canceled',
 }
 
+/** Which side of the practice this account moves to the Trade Blotter under
+ *  — BD (broker-dealer) or INS (insurance). '' until chosen. Fixed, not a
+ *  Settings category. */
+export const ASSET_BLOTTER_TARGETS = ['', 'BD', 'INS'] as const
+
+export type AssetBlotterTarget = (typeof ASSET_BLOTTER_TARGETS)[number]
+
+export const ASSET_BLOTTER_TARGET_LABELS: Record<AssetBlotterTarget, string> = {
+  '': '',
+  BD: 'BD',
+  INS: 'INS',
+}
+
 export type Asset = {
   id: string
   /** What kind of account it is — one of Settings' account types, or free text. */
@@ -242,6 +255,8 @@ export type Asset = {
   status: AssetStatus
   /** What happens next with this account. */
   nextAction: AssetNextAction
+  /** Whether this account is being moved to the Trade Blotter, and under BD or INS. */
+  moveToBlotter: AssetBlotterTarget
   notes: string
 }
 

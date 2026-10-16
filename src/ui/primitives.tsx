@@ -91,7 +91,7 @@ function FieldShell({
         flex: grow ? '1 1 200px' : width ? `0 1 ${width}px` : '1 1 120px',
       }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: centerLabel ? 'center' : 'left', visibility: hideLabel ? 'hidden' : 'visible' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: centerLabel ? 'center' : 'left', whiteSpace: 'pre-line', visibility: hideLabel ? 'hidden' : 'visible', height: hideLabel ? 12 : undefined, overflow: hideLabel ? 'hidden' : undefined }}>
         {label}
       </span>
       {children}
@@ -483,14 +483,26 @@ export function FieldRow({
   marginBottom?: number
 }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: marginBottom ?? (last ? 0 : 8) }}>
+    <div className="field-row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8, marginBottom: marginBottom ?? (last ? 0 : 8) }}>
       {children}
     </div>
   )
 }
 
 /** Full-screen overlay with a centered panel — the opportunity detail view. */
-export function Modal({ onClose, children, width = 720 }: { onClose: () => void; children: ReactNode; width?: number }) {
+export function Modal({
+  onClose,
+  children,
+  width = 720,
+  printZoom = 1,
+}: {
+  onClose: () => void
+  children: ReactNode
+  width?: number
+  /** Shrinks the panel when printed (see theme.ts) so a layout wider than the
+   *  page prints on one line per row instead of wrapping and spilling over. */
+  printZoom?: number
+}) {
   return (
     <div
       className="modal-overlay"
@@ -525,6 +537,7 @@ export function Modal({ onClose, children, width = 720 }: { onClose: () => void;
           boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
           display: 'flex',
           flexDirection: 'column',
+          ['--print-zoom' as string]: printZoom,
         }}
       >
         {children}

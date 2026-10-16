@@ -83,15 +83,21 @@ still in the data model (old records keep their history), but its own
 record-form panel was removed per feedback to give the form's fields the
 full width instead. Each
 asset is `{ kind, amount, heldAt, currentInvestmentType, newAccountType,
-movingTo, investmentType, productName, status, nextAction }`, grouped in
+movingTo, investmentType, productName, status, nextAction, moveToBlotter }`, grouped in
 the record form under two centered headings — **Current Account**
 (Account Type, Amount, Held At, [current] Investment Type), then
 **Transition Account** (always singular, however many accounts there
 are), spanning New Account Type, New Custodian, [destination] Investment
-Type, and Product Name; Status and Next Action follow ungrouped. A
-**Print** button in the record's footer prints just that record (landscape;
-the board, sidebar, backdrop, and action buttons are hidden by print CSS
-in `theme.ts`). `heldAt` ("Held At") and `movingTo` ("New
+Type, and Product Name; Status, Next Action, and **Move to Trade Blotter**
+(BD or INS — a stacked two-line caption, past the delete × whose slot is
+always reserved so the column stays aligned) follow ungrouped. A **Print**
+button in the record's footer prints just that record, landscape, one line
+per row left to right: print CSS in `theme.ts` hides the board, sidebar,
+backdrop, and action buttons, makes the modal overlay fill the page (it
+otherwise shrink-wraps to the account row's width), and zooms the panel
+(`printZoom` on `Modal`, 0.62 for the record) so the ~1,460px-wide account
+row fits the ~980px page instead of wrapping. Chrome/Safari/Edge honor CSS
+`zoom`; an older Firefox ignores it and would wrap. `heldAt` ("Held At") and `movingTo` ("New
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving

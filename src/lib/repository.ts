@@ -190,6 +190,7 @@ function normalizeProspect(p: Prospect): Prospect {
         investmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.investmentType] ?? a.investmentType ?? '',
         productName: a.productName ?? '',
         nextAction: a.nextAction ?? 'continue-to-next-step',
+        moveToBlotter: a.moveToBlotter ?? '',
       }
     }),
   }

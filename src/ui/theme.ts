@@ -97,8 +97,10 @@ export const styles = `
   @page { size: landscape; margin: 0.4in; }
   @media print {
     .app-chrome, .no-print { display: none !important; }
-    .modal-overlay { position: static !important; background: none !important; padding: 0 !important; overflow: visible !important; }
+    .modal-overlay { position: static !important; background: none !important; padding: 0 !important; overflow: visible !important; flex: 1 1 auto !important; width: 100% !important; }
     .modal-panel { max-width: none !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+    .modal-panel { zoom: var(--print-zoom, 1); }
     .modal-scroll { overflow: visible !important; }
+    .field-row { break-inside: avoid; }
   }
 `

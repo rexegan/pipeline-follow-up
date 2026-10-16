@@ -13,6 +13,7 @@ export const blankAsset = (defaultKind = ''): Asset => ({
   productName: '',
   status: 'identified',
   nextAction: 'continue-to-next-step',
+  moveToBlotter: '',
   notes: '',
 })
 
