@@ -103,9 +103,12 @@ row fits the ~980px page instead of wrapping. Chrome/Safari/Edge honor CSS
 Custodian") are two *separate* Settings lists, not one shared one: an
 incoming prospect's money can plausibly be sitting almost anywhere, but
 only a handful of firms are ever the actual destination, so the "moving
-to" list starts out much shorter. New Custodian's options are sorted
-alphabetically (`alphabetical` in `ProspectDetail.tsx`, "Other" pinned last
-rather than sorted in) — Held At's are not, left in Settings' own order.
+to" list starts out much shorter. The dropdown options for New Custodian,
+Held At, both Investment Type fields, and Product Name are all sorted
+alphabetically at display time (`alphabetical` in `ProspectDetail.tsx`;
+"Other" pinned last, and leading symbols ignored so "$MRK" files under M) —
+Settings' own order is left as typed, so new entries land in the right
+place automatically.
 `newAccountType` ("New Account Type,"
 same Account Type list and width as the account's own `kind`) is what the
 account is *becoming* — a rollover often changes type, not just custodian,

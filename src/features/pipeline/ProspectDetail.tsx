@@ -26,10 +26,14 @@ const opts = <T extends string>(values: readonly T[], labels: Record<T, string>)
 
 const listOpts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 
-// "Other" is a fallback, not a firm name — pin it last instead of letting it
-// sort wherever it happens to land alphabetically.
+// "Other" is a fallback, not a real name — pin it last instead of letting it
+// sort wherever it happens to land alphabetically. Leading symbols ("$MRK")
+// are ignored when comparing, so it files under M rather than ahead of A.
+const sortKey = (v: string) => v.replace(/^[^a-z0-9]+/i, '')
 const alphabetical = (values: string[]) =>
-  [...values].sort((a, b) => (a === 'Other' ? 1 : b === 'Other' ? -1 : a.localeCompare(b)))
+  [...values].sort((a, b) =>
+    a === 'Other' ? 1 : b === 'Other' ? -1 : sortKey(a).localeCompare(sortKey(b), undefined, { sensitivity: 'base' }),
+  )
 
 // `Prospect.name` stays one "Last, First" string everywhere else in the app
 // (board cards, search, duplicate) — only the Intake row shows it as two
@@ -201,7 +205,7 @@ export function ProspectDetail({
                 width={130}
                 hideLabel={i > 0} centerLabel
                 value={asset.heldAt}
-                options={listOpts(settings.custodiansHeldAt)}
+                options={listOpts(alphabetical(settings.custodiansHeldAt))}
                 onCommit={(v) => {
                   onAssetChange(asset.id, { heldAt: v })
                   onAddListValue('custodiansHeldAt', v)
@@ -213,7 +217,7 @@ export function ProspectDetail({
                 width={115}
                 hideLabel={i > 0} centerLabel
                 value={asset.currentInvestmentType}
-                options={listOpts(settings.investmentTypes)}
+                options={listOpts(alphabetical(settings.investmentTypes))}
                 onCommit={(v) => {
                   onAssetChange(asset.id, { currentInvestmentType: v })
                   onAddListValue('investmentTypes', v)
@@ -249,7 +253,7 @@ export function ProspectDetail({
                 width={115}
                 hideLabel={i > 0} centerLabel
                 value={asset.investmentType}
-                options={listOpts(settings.investmentTypes)}
+                options={listOpts(alphabetical(settings.investmentTypes))}
                 onCommit={(v) => {
                   onAssetChange(asset.id, { investmentType: v })
                   onAddListValue('investmentTypes', v)
@@ -261,7 +265,7 @@ export function ProspectDetail({
                 width={130}
                 hideLabel={i > 0} centerLabel
                 value={asset.productName}
-                options={listOpts(settings.productNames)}
+                options={listOpts(alphabetical(settings.productNames))}
                 onCommit={(v) => {
                   onAssetChange(asset.id, { productName: v })
                   onAddListValue('productNames', v)
