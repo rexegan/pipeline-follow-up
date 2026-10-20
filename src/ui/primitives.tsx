@@ -189,7 +189,9 @@ export function BoxSelect<T extends string>({
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(-1)
   const pos = useDropdownPosition(open, ref)
+  const selectedIndex = options.findIndex((o) => o.value === value)
   const currentLabel = options.find((o) => o.value === value)?.label || '—'
 
   useEffect(() => {
@@ -204,13 +206,56 @@ export function BoxSelect<T extends string>({
     return () => document.removeEventListener('mousedown', onDocMouseDown)
   }, [open])
 
+  function openPanel() {
+    setActive(selectedIndex)
+    setOpen(true)
+  }
+
+  // Keyboard, so a form can be filled in without the mouse — what a native
+  // <select> gave for free. Closed: arrows step the value, a letter jumps to
+  // the next option starting with it. Open: arrows move the highlight, Enter
+  // picks it, Escape closes. Tab always just moves on (the blur closes it).
+  function onKeyDown(e: React.KeyboardEvent) {
+    const last = options.length - 1
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const step = e.key === 'ArrowDown' ? 1 : -1
+      if (open) setActive((a) => Math.min(last, Math.max(0, (a < 0 ? selectedIndex : a) + step)))
+      else if (options.length) onCommit(options[Math.min(last, Math.max(0, selectedIndex + step))].value)
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (open && active >= 0) {
+        onCommit(options[active].value)
+        setOpen(false)
+      } else if (open) setOpen(false)
+      else openPanel()
+    } else if (e.key === 'Escape' && open) {
+      e.preventDefault()
+      setOpen(false)
+    } else if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const c = e.key.toLowerCase()
+      const from = (open && active >= 0 ? active : selectedIndex) + 1
+      const hit = [...options.slice(from), ...options.slice(0, from)].findIndex((o) => o.label.toLowerCase().startsWith(c))
+      if (hit >= 0) {
+        const idx = (from + hit) % options.length
+        if (open) setActive(idx)
+        else onCommit(options[idx].value)
+      }
+    }
+  }
+
   return (
     <FieldShell label={label} width={width} grow={grow} hideLabel={hideLabel} centerLabel={centerLabel}>
       <div ref={ref} style={{ position: 'relative' }}>
         <button
           type="button"
           aria-label={label}
-          onClick={() => setOpen((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => (open ? setOpen(false) : openPanel())}
+          onKeyDown={onKeyDown}
+          onKeyUp={(e) => e.key === ' ' && e.preventDefault()}
+          onBlur={() => setOpen(false)}
           style={{
             ...BOX_INPUT,
             cursor: 'pointer',
@@ -243,20 +288,198 @@ export function BoxSelect<T extends string>({
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             }}
           >
-            {options.map((o) => (
+            {options.map((o, i) => (
               <div
                 key={o.value}
+                role="option"
+                aria-selected={o.value === value}
                 onMouseDown={(e) => {
                   e.preventDefault()
                   onCommit(o.value)
                   setOpen(false)
                 }}
                 className="combo-option"
-                style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer' }}
+                style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer', background: i === active ? MUTED_BG : undefined }}
               >
                 {o.label || '—'}
               </div>
             ))}
+          </div>,
+          document.body,
+        )}
+      </div>
+    </FieldShell>
+  )
+}
+
+/**
+ * A dropdown with a checkbox beside every option — any number can be checked,
+ * and the checked ones show in the box. Typing a new name into the field at
+ * the bottom adds it to the list (via `onAddOption`, which saves it to
+ * Settings) and checks it. Keyboard: Enter/Space/↓ opens and moves into the
+ * list, ↑/↓ move between boxes, Space ticks, and Escape or Tab closes it and
+ * returns to the field so Tab carries on to the next one.
+ */
+export function MultiSelectBox({
+  label,
+  values,
+  options,
+  onChange,
+  onAddOption,
+  width,
+  hideLabel,
+  centerLabel,
+  placeholder = 'Choose…',
+}: {
+  label: string
+  values: string[]
+  options: string[]
+  onChange: (values: string[]) => void
+  onAddOption?: (text: string) => void
+  width?: number
+  hideLabel?: boolean
+  centerLabel?: boolean
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const focusFirst = useRef(false)
+  const pos = useDropdownPosition(open, ref)
+  // Anything already checked but no longer in the list stays visible/uncheckable.
+  const rows = [...options, ...values.filter((v) => !options.includes(v))]
+  const shown = rows.filter((r) => values.includes(r)).join(', ')
+
+  useEffect(() => {
+    if (!open) return
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node
+      if (ref.current?.contains(target)) return
+      if (panelRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    return () => document.removeEventListener('mousedown', onDocMouseDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open && pos && focusFirst.current) {
+      focusFirst.current = false
+      panelRef.current?.querySelector('input')?.focus()
+    }
+  }, [open, pos])
+
+  function toggle(v: string) {
+    onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v])
+  }
+
+  function addDraft() {
+    const t = draft.trim()
+    if (!t) return
+    onAddOption?.(t)
+    if (!values.includes(t)) onChange([...values, t])
+    setDraft('')
+  }
+
+  function closeToField() {
+    setOpen(false)
+    btnRef.current?.focus()
+  }
+
+  function onPanelKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape' || e.key === 'Tab') {
+      // Tab keeps its default action: focus is back on the field first, so the
+      // browser moves on to whatever follows it.
+      if (e.key === 'Escape') e.preventDefault()
+      closeToField()
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const items = [...(panelRef.current?.querySelectorAll('input') ?? [])]
+      const i = items.indexOf(document.activeElement as HTMLInputElement)
+      items[Math.min(items.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))]?.focus()
+    }
+  }
+
+  return (
+    <FieldShell label={label} width={width} hideLabel={hideLabel} centerLabel={centerLabel}>
+      <div ref={ref} style={{ position: 'relative' }}>
+        <button
+          ref={btnRef}
+          type="button"
+          aria-label={label}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          title={shown || undefined}
+          onClick={() => setOpen((o) => !o)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+              e.preventDefault()
+              focusFirst.current = true
+              setOpen(true)
+            }
+          }}
+          onKeyUp={(e) => e.key === ' ' && e.preventDefault()}
+          style={{
+            ...BOX_INPUT,
+            cursor: 'pointer',
+            color: shown ? FG : MUTED,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 4,
+            textAlign: 'left',
+          }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shown || placeholder}</span>
+          <span style={{ fontSize: 9, color: MUTED, flexShrink: 0 }}>▾</span>
+        </button>
+        {open && pos && createPortal(
+          <div
+            ref={panelRef}
+            onKeyDown={onPanelKeyDown}
+            style={{
+              position: 'fixed',
+              top: pos.top + 2,
+              left: pos.left,
+              minWidth: Math.max(pos.width, 170),
+              zIndex: 1000,
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 6,
+              maxHeight: `calc(100vh - ${pos.top + 2}px - 12px)`,
+              overflowY: 'auto',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              padding: 4,
+            }}
+          >
+            {rows.map((r) => (
+              <label
+                key={r}
+                className="combo-option"
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', fontSize: 13, color: FG, cursor: 'pointer', borderRadius: 5 }}
+              >
+                <input type="checkbox" checked={values.includes(r)} onChange={() => toggle(r)} />
+                {r}
+              </label>
+            ))}
+            {onAddOption && (
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addDraft()
+                  }
+                }}
+                placeholder="Add another…"
+                aria-label={`Add to ${label}`}
+                style={{ ...BOX_INPUT, height: 28, margin: '4px 0 2px', fontSize: 12 }}
+                {...NO_PASSWORD_MANAGER}
+              />
+            )}
           </div>,
           document.body,
         )}

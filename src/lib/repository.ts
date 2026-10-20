@@ -166,6 +166,14 @@ function ensureAwaitingSignaturesStage(stages: StageDef[]): StageDef[] {
   return [...stages.slice(0, i), awaitingSignatures, ...stages.slice(i)]
 }
 
+/** An asset's investment type used to be one string; it's now a list (any
+ *  number can be checked). Wraps an old single value, applies the legacy
+ *  renames to every entry, and drops blanks/duplicates. */
+function investmentTypeList(v: unknown): string[] {
+  const raw = Array.isArray(v) ? v : typeof v === 'string' && v.trim() ? [v] : []
+  return [...new Set(raw.filter((t): t is string => typeof t === 'string' && t.trim() !== '').map((t) => LEGACY_INVESTMENT_TYPE_LABELS[t] ?? t))]
+}
+
 function isProspect(value: unknown): value is Prospect {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
@@ -204,8 +212,8 @@ function normalizeProspect(p: Prospect): Prospect {
         heldAt: LEGACY_HELD_AT_LABELS[LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt] ?? LEGACY_CUSTODIAN_LABELS[a.heldAt] ?? a.heldAt,
         movingTo: LEGACY_CUSTODIAN_LABELS[a.movingTo] ?? a.movingTo,
         newAccountType: a.newAccountType || kind,
-        currentInvestmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.currentInvestmentType] ?? a.currentInvestmentType ?? '',
-        investmentType: LEGACY_INVESTMENT_TYPE_LABELS[a.investmentType] ?? a.investmentType ?? '',
+        currentInvestmentType: investmentTypeList(a.currentInvestmentType),
+        investmentType: investmentTypeList(a.investmentType),
         productName: a.productName ?? '',
         nextAction: a.nextAction ?? 'continue-to-next-step',
         moveToBlotter: a.moveToBlotter ?? '',

@@ -234,20 +234,21 @@ export type Asset = {
   amount: number | null
   /** Where it's at now — current custodian, plan provider, or carrier. */
   heldAt: string
-  /** What kind of vehicle the money is invested in right now (mutual fund,
-   *  ETF, annuity…) — one of Settings' investment types, or free text. Same
-   *  list as `investmentType`, which is this asset's *destination* vehicle. */
-  currentInvestmentType: string
+  /** What kinds of vehicle the money is invested in right now (mutual fund,
+   *  ETF, annuity…) — any number, each one of Settings' investment types or
+   *  free text. Same list as `investmentType`, which is this asset's
+   *  *destination* vehicles. */
+  currentInvestmentType: string[]
   /** What kind of account it's becoming — a rollover often changes type, not
    *  just custodian (a 401(k) landing as a Traditional IRA). One of
    *  Settings' account types, or free text; defaults to matching `kind`. */
   newAccountType: string
   /** Where it needs to go — destination custodian or account. */
   movingTo: string
-  /** What kind of vehicle the money will be invested in after the move —
-   *  one of Settings' investment types, or free text. See
+  /** What kinds of vehicle the money will be invested in after the move —
+   *  any number, each one of Settings' investment types or free text. See
    *  `currentInvestmentType` for what it's invested in now. */
-  investmentType: string
+  investmentType: string[]
   /** The specific carrier product — a Jackson National or F&G contract name,
    *  a specific fund, etc. — one of Settings' product names, or free text. */
   productName: string

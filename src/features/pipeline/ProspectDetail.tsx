@@ -14,12 +14,13 @@ import {
   findStage,
 } from '../../types'
 import { BORDER, DANGER, FG, MUTED, SUCCESS } from '../../ui/theme'
-import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, ReadOnlyBox, TypeaheadSelect } from '../../ui/primitives'
+import { ActionBtn, BoxMoney, BoxPhone, BoxSelect, BoxText, FieldRow, Modal, MultiSelectBox, ReadOnlyBox, TypeaheadSelect } from '../../ui/primitives'
 import { fmtMoney } from '../../lib/dates'
 import { formatElapsed, useElapsedMs } from '../../lib/useElapsed'
 import { ASSET_STATUS_COLOR } from './stageColors'
 
 const ACCOUNT_TYPE_WIDTH = 120
+const INVESTMENT_TYPE_WIDTH = 130
 
 const opts = <T extends string>(values: readonly T[], labels: Record<T, string>) =>
   values.map((v) => ({ value: v, label: labels[v] }))
@@ -96,7 +97,7 @@ export function ProspectDetail({
   const elapsedMs = useElapsedMs(prospect.createdAt, isFunded)
 
   return (
-    <Modal onClose={onClose} width={1600} printZoom={0.85}>
+    <Modal onClose={onClose} width={1600} printZoom={0.82}>
       {/* Header */}
       <div
         style={{
@@ -177,10 +178,10 @@ export function ProspectDetail({
           </FieldRow>
 
           <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
-            <div style={{ width: 484, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
+            <div style={{ width: 499, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
               Current Account
             </div>
-            <div style={{ width: 524, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
+            <div style={{ width: 539, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
               Transition Account
             </div>
           </div>
@@ -212,17 +213,15 @@ export function ProspectDetail({
                 }}
                 placeholder="Type a firm…"
               />
-              <TypeaheadSelect
+              <MultiSelectBox
                 label="Investment Type"
-                width={115}
-                hideLabel={i > 0} centerLabel
-                value={asset.currentInvestmentType}
-                options={listOpts(alphabetical(settings.investmentTypes))}
-                onCommit={(v) => {
-                  onAssetChange(asset.id, { currentInvestmentType: v })
-                  onAddListValue('investmentTypes', v)
-                }}
-                placeholder="Type or choose…"
+                width={INVESTMENT_TYPE_WIDTH}
+                hideLabel={i > 0}
+                centerLabel
+                values={asset.currentInvestmentType}
+                options={alphabetical(settings.investmentTypes)}
+                onChange={(v) => onAssetChange(asset.id, { currentInvestmentType: v })}
+                onAddOption={(t) => onAddListValue('investmentTypes', t)}
               />
               <TypeaheadSelect
                 label="New Account Type"
@@ -248,17 +247,15 @@ export function ProspectDetail({
                 }}
                 placeholder="Type a firm…"
               />
-              <TypeaheadSelect
+              <MultiSelectBox
                 label="Investment Type"
-                width={115}
-                hideLabel={i > 0} centerLabel
-                value={asset.investmentType}
-                options={listOpts(alphabetical(settings.investmentTypes))}
-                onCommit={(v) => {
-                  onAssetChange(asset.id, { investmentType: v })
-                  onAddListValue('investmentTypes', v)
-                }}
-                placeholder="Type or choose…"
+                width={INVESTMENT_TYPE_WIDTH}
+                hideLabel={i > 0}
+                centerLabel
+                values={asset.investmentType}
+                options={alphabetical(settings.investmentTypes)}
+                onChange={(v) => onAssetChange(asset.id, { investmentType: v })}
+                onAddOption={(t) => onAddListValue('investmentTypes', t)}
               />
               <TypeaheadSelect
                 label="Product Name"
@@ -279,6 +276,7 @@ export function ProspectDetail({
                   onClick={() => {
                     if (confirm('Delete this account?')) onDeleteAsset(asset.id)
                   }}
+                  tabIndex={-1}
                   style={{ alignSelf: 'center' }}
                 >
                   ×
