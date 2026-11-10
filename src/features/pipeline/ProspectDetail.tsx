@@ -59,7 +59,9 @@ function joinName(last: string, first: string): string {
 function AccountHeadings() {
   const heading = { display: 'flex', alignItems: 'center', fontSize: 15, fontWeight: 700, color: FG, lineHeight: '20px' } as const
   const spacer = { flex: 1, position: 'relative', alignSelf: 'stretch' } as const
-  const line = { position: 'absolute', top: '50%', height: 1.5, marginTop: -0.75, background: FG, borderRadius: 1 } as const
+  // Pure black, 2.5px — the arrow is a landmark, so it's darker than body text.
+  const ARROW = '#000'
+  const line = { position: 'absolute', top: '50%', height: 2.5, marginTop: -1.25, background: ARROW, borderRadius: 1 } as const
   return (
     <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
       <div style={{ width: 499, ...heading }}>
@@ -72,18 +74,18 @@ function AccountHeadings() {
       </div>
       <div style={{ width: 539, ...heading }}>
         <span style={spacer}>
-          <span style={{ ...line, left: 0, right: 13 }} />
+          <span style={{ ...line, left: 0, right: 9 }} />
           <span
             style={{
               position: 'absolute',
               right: 13,
               top: '50%',
-              width: 7,
-              height: 7,
-              marginTop: -3.5,
-              marginRight: 0.5,
-              borderTop: `1.5px solid ${FG}`,
-              borderRight: `1.5px solid ${FG}`,
+              width: 10,
+              height: 10,
+              boxSizing: 'border-box',
+              marginTop: -5,
+              borderTop: `2.5px solid ${ARROW}`,
+              borderRight: `2.5px solid ${ARROW}`,
               transform: 'translateX(3px) rotate(45deg)',
               borderTopRightRadius: 1,
             }}

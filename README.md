@@ -88,7 +88,7 @@ the record form under two centered headings — **Current Account**
 (Account Type, Amount, Held At, [current] Investment Type), then
 **Transition Account** (always singular, however many accounts there
 are), spanning New Account Type, New Custodian, [destination] Investment
-Type, and Product Name. The two headings are joined by a thin black arrow
+Type, and Product Name. The two headings are joined by a solid black arrow (2.5px, pure black)
 (Current → Transition), drawn with flex spacers and a CSS chevron rather than
 measured positions so it still meets both words under the print zoom. Each account is two lines: the line above, and
 under it Status, Next Action, and **Move to Trade Blotter**
