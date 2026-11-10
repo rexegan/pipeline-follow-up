@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Asset, EditableListKey, Prospect, Settings, SortBy, Stage } from './types'
 import { DEFAULT_SETTINGS, SORTS, displayTotal, findStage } from './types'
-import { BG, BORDER, CARD, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
+import { BG, BORDER, CARD, DANGER, FG, MUTED, MUTED_BG, SANS, SIDEBAR, SUCCESS, WARN, styles } from './ui/theme'
 import { ActionBtn, CheckboxDropdown, Chip, SideLabel, StatCard } from './ui/primitives'
 import { localRepository } from './lib/repository'
 import { seedProspects } from './lib/seedData'
@@ -59,6 +59,8 @@ export default function App() {
   // quickViewSelection empty means every account type. Checking any box adds
   // to the set rather than replacing it — see toggleSort/toggleQuickView.
   const [sortSelection, setSortSelection] = useState<Set<SortBy>>(new Set())
+  // The sidebar's Flagged card: when on, the board shows only flagged opportunities.
+  const [flaggedOnly, setFlaggedOnly] = useState(false)
   const [quickViewSelection, setQuickViewSelection] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFields, setSearchFields] = useState<Set<SearchField>>(new Set())
@@ -225,6 +227,7 @@ export default function App() {
       email: p.email,
       manualTotal: null,
       archived: false,
+      flagged: false,
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],
@@ -279,7 +282,8 @@ export default function App() {
   const filteredProspects = prospects
     .filter((p) => quickViewSelection.size === 0 || p.assets.some((a) => quickViewSelection.has(a.kind)))
     .filter((p) => matchesSearch(p, searchQuery, searchFields))
-  const boardProspects = filteredProspects.filter((p) => !p.archived)
+  const flaggedCount = liveProspects.filter((p) => p.flagged).length
+  const boardProspects = filteredProspects.filter((p) => !p.archived && (!flaggedOnly || p.flagged))
   const archivedProspects = prospects.filter((p) => p.archived)
 
   const sortSummary =
@@ -350,11 +354,22 @@ export default function App() {
         </div>
 
         <SideLabel>Summary</SideLabel>
-        <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
-        <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
-        <StatCard label="Needs Attention" value={fmtMoney(needsAttention)} color={findStage(settings.stages, 'nigo').color} onClick={() => { setSortSelection(new Set(['nigo'])); setQuickViewSelection(new Set()) }} />
-        <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
-        <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <StatCard
+          label="Flagged"
+          value={flaggedCount}
+          color={DANGER}
+          active={flaggedOnly}
+          onClick={() => {
+            setFlaggedOnly((on) => !on)
+            setSortSelection(new Set())
+            setQuickViewSelection(new Set())
+          }}
+        />
+        <StatCard label="Total Opportunities" value={fmtMoney(inPlay)} color={FG} onClick={() => { setFlaggedOnly(false); setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <StatCard label="In Process" value={fmtMoney(moving)} color={WARN} onClick={() => { setFlaggedOnly(false); setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Needs Attention" value={fmtMoney(needsAttention)} color={findStage(settings.stages, 'nigo').color} onClick={() => { setFlaggedOnly(false); setSortSelection(new Set(['nigo'])); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Completed" value={fmtMoney(funded)} color={SUCCESS} onClick={() => { setFlaggedOnly(false); setSortSelection(new Set(['funded'])); setQuickViewSelection(new Set()) }} />
+        <StatCard label="Open Opportunities" value={openProspects.length} onClick={() => { setFlaggedOnly(false); setSortSelection(new Set()); setQuickViewSelection(new Set()) }} />
         <button className="btn-primary" onClick={addProspect}>
           + New Opportunity
         </button>

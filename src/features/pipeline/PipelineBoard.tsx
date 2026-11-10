@@ -93,7 +93,10 @@ export function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; col
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
-        <span style={{ fontSize: 10, color: '#a1a1aa' }}>{inStage === 0 ? 'New today' : `${inStage}d in stage`}</span>
+        <span style={{ fontSize: 10, color: '#a1a1aa' }}>
+          {prospect.flagged && <span style={{ color: '#dc2626', fontWeight: 700, marginRight: 4 }}>⚑</span>}
+          {inStage === 0 ? 'New today' : `${inStage}d in stage`}
+        </span>
         {prospect.activity.length > 0 && <span style={{ fontSize: 10, color: '#a1a1aa' }}>{prospect.activity.length} logged</span>}
       </div>
     </div>

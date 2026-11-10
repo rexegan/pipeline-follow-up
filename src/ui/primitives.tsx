@@ -783,19 +783,23 @@ export function ActionBtn({
   onClick,
   color = FG,
   small,
+  active,
 }: {
   label: string
   onClick: () => void
   color?: string
   small?: boolean
+  /** A toggle that's currently on: filled with its color instead of outlined. */
+  active?: boolean
 }) {
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       style={{
-        background: 'none',
+        background: active ? color : 'none',
         border: `1px solid ${color}`,
-        color,
+        color: active ? '#fff' : color,
         borderRadius: 6,
         padding: small ? '4px 10px' : '7px 14px',
         fontSize: small ? 12 : 13,
@@ -926,11 +930,14 @@ export function StatCard({
   value,
   color = FG,
   onClick,
+  active,
 }: {
   label: string
   value: string | number
   color?: string
   onClick?: () => void
+  /** This card's filter is currently applied — outlined in its color. */
+  active?: boolean
 }) {
   const Tag = onClick ? 'button' : 'div'
   return (
@@ -943,7 +950,8 @@ export function StatCard({
         fontFamily: 'inherit',
         cursor: onClick ? 'pointer' : 'default',
         background: CARD,
-        border: `1px solid ${BORDER}`,
+        border: `1px solid ${active ? color : BORDER}`,
+        boxShadow: active ? `0 0 0 1px ${color}` : undefined,
         borderRadius: 8,
         padding: '10px 12px',
         marginBottom: 6,

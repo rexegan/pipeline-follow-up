@@ -331,6 +331,9 @@ export type Prospect = {
   /** Taken off the board and out of every total, but kept — shown in the
    *  board's Archived strip, where it can be reopened and unarchived. */
   archived: boolean
+  /** Marked to keep an eye on — stacked at the top of the sidebar's Summary
+   *  (click to show just these) and marked with a flag on its board card. */
+  flagged: boolean
   /** One of Settings' stage keys — resolve with `findStage`. */
   stage: Stage
   /** When `stage` last changed — how "days in stage" is measured. */

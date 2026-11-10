@@ -209,6 +209,7 @@ function normalizeProspect(p: Prospect): Prospect {
     relationship: p.relationship ?? '',
     manualTotal: p.manualTotal ?? null,
     archived: p.archived === true,
+    flagged: p.flagged === true,
     activity: Array.isArray(p.activity) ? p.activity : [],
     stageChangedAt: p.stageChangedAt || p.updatedAt || p.createdAt || new Date().toISOString(),
     nextStepStatus: p.nextStepStatus ?? 'in-process',

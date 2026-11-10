@@ -193,6 +193,13 @@ under Settings that opens a window of cards (newest-archived first, not
 narrowed by Quick View or Search); open one to read it or Unarchive it back
 onto the board.
 
+**Flagged** (footer, just left of Next) toggles `Prospect.flagged` — a way to
+stack the opportunities you want to keep an eye on. It fills red when on, a
+small red flag shows on that opportunity's board card, and a **Flagged** card
+at the very top of the sidebar Summary (above Total Opportunities) counts the
+flagged, non-archived ones; click it to show only those on the board, click it
+again (or any other Summary card) to go back. Duplicates start unflagged.
+
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
 change it from the record's own **Status** box (the Stage & Next Step row; it

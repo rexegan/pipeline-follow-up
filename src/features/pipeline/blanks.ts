@@ -31,6 +31,7 @@ export const blankProspect = (defaultStage: string, defaultAccountType = ''): Pr
     email: '',
     manualTotal: null,
     archived: false,
+    flagged: false,
     stage: defaultStage,
     stageChangedAt: now,
     assets: [blankAsset(defaultAccountType)],

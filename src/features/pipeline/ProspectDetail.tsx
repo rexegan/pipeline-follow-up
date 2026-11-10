@@ -417,6 +417,7 @@ export function ProspectDetail({
           }}
         />
         <div style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn label="Flagged" color={DANGER} active={prospect.flagged} onClick={() => onChange({ flagged: !prospect.flagged })} />
           {onNext && <ActionBtn label="Next" color={FG} onClick={onNext} />}
           <ActionBtn label="Duplicate" color={FG} onClick={onDuplicate} />
           <ActionBtn label="Print" color={FG} onClick={() => window.print()} />
