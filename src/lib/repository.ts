@@ -88,7 +88,8 @@ const LEGACY_SOURCE_LABELS: Record<string, string> = {
 const LEGACY_INVESTMENT_TYPE_LABELS: Record<string, string> = {
   'Certificate of Deposit': 'CD',
   'Mutual Fund': 'MF',
-  'Money Market': '$MRK',
+  'Money Market': '$MKT',
+  $MRK: '$MKT',
   'Fixed Annuity': 'FA',
   'Managed $': 'MNGD',
 }

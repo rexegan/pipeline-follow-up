@@ -28,7 +28,7 @@ const opts = <T extends string>(values: readonly T[], labels: Record<T, string>)
 const listOpts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 
 // "Other" is a fallback, not a real name — pin it last instead of letting it
-// sort wherever it happens to land alphabetically. Leading symbols ("$MRK")
+// sort wherever it happens to land alphabetically. Leading symbols ("$MKT")
 // are ignored when comparing, so it files under M rather than ahead of A.
 const sortKey = (v: string) => v.replace(/^[^a-z0-9]+/i, '')
 const alphabetical = (values: string[]) =>
@@ -49,6 +49,51 @@ function joinName(last: string, first: string): string {
   const f = first.trim()
   if (!l) return f
   return f ? `${l}, ${f}` : l
+}
+
+/** The two account headings with a thin arrow running from the end of
+ *  "Current Account" to the start of "Transition Account". Pure layout, no
+ *  measuring: each heading keeps its text centered between two equal flex
+ *  spacers, and the spacers on the facing sides carry the line, so it always
+ *  meets the words however wide they render (and survives print zoom). */
+function AccountHeadings() {
+  const heading = { display: 'flex', alignItems: 'center', fontSize: 15, fontWeight: 700, color: FG, lineHeight: '20px' } as const
+  const spacer = { flex: 1, position: 'relative', alignSelf: 'stretch' } as const
+  const line = { position: 'absolute', top: '50%', height: 1.5, marginTop: -0.75, background: FG, borderRadius: 1 } as const
+  return (
+    <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
+      <div style={{ width: 499, ...heading }}>
+        <span style={spacer} />
+        <span>Current Account</span>
+        <span style={spacer}>
+          {/* Runs on across the 8px gap to the second heading's edge. */}
+          <span style={{ ...line, left: 14, right: -8 }} />
+        </span>
+      </div>
+      <div style={{ width: 539, ...heading }}>
+        <span style={spacer}>
+          <span style={{ ...line, left: 0, right: 13 }} />
+          <span
+            style={{
+              position: 'absolute',
+              right: 13,
+              top: '50%',
+              width: 7,
+              height: 7,
+              marginTop: -3.5,
+              marginRight: 0.5,
+              borderTop: `1.5px solid ${FG}`,
+              borderRight: `1.5px solid ${FG}`,
+              transform: 'translateX(3px) rotate(45deg)',
+              borderTopRightRadius: 1,
+            }}
+          />
+        </span>
+        <span>Transition Account</span>
+        <span style={spacer} />
+      </div>
+    </div>
+  )
 }
 
 type Props = {
@@ -180,14 +225,7 @@ export function ProspectDetail({
             <BoxText label="Email" width={240} type="email" value={prospect.email} onCommit={(v) => onChange({ email: v })} />
           </FieldRow>
 
-          <div style={{ display: 'flex', gap: 8, margin: '24px 0 6px' }}>
-            <div style={{ width: 499, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
-              Current Account
-            </div>
-            <div style={{ width: 539, textAlign: 'center', fontSize: 15, fontWeight: 700, color: FG }}>
-              Transition Account
-            </div>
-          </div>
+          <AccountHeadings />
           {prospect.assets.map((asset, i) => (
           <Fragment key={asset.id}>
             <FieldRow marginBottom={2}>

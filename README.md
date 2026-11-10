@@ -88,7 +88,9 @@ the record form under two centered headings — **Current Account**
 (Account Type, Amount, Held At, [current] Investment Type), then
 **Transition Account** (always singular, however many accounts there
 are), spanning New Account Type, New Custodian, [destination] Investment
-Type, and Product Name. Each account is two lines: the line above, and
+Type, and Product Name. The two headings are joined by a thin black arrow
+(Current → Transition), drawn with flex spacers and a CSS chevron rather than
+measured positions so it still meets both words under the print zoom. Each account is two lines: the line above, and
 under it Status, Next Action, and **Move to Trade Blotter**
 ("BD Trade Blotter" or "INS Trade Blotter", stored as `BD`/`INS`; an unset box
 is blank, not a dash; a stacked two-line caption), indented one column so they start under Amount.
@@ -107,7 +109,7 @@ only a handful of firms are ever the actual destination, so the "moving
 to" list starts out much shorter. The dropdown options for New Custodian,
 Held At, both Investment Type fields, and Product Name are all sorted
 alphabetically at display time (`alphabetical` in `ProspectDetail.tsx`;
-"Other" pinned last, and leading symbols ignored so "$MRK" files under M) —
+"Other" pinned last, and leading symbols ignored so "$MKT" files under M) —
 Settings' own order is left as typed, so new entries land in the right
 place automatically.
 `newAccountType` ("New Account Type,"
@@ -123,7 +125,7 @@ into a one-item list on load by `investmentTypeList` in `repository.ts`) — the
 what the money is invested in *right now* (next to Held At, under Current
 Account), the second is what it'll be invested in *after* the move (next
 to New Custodian, under Transition Account(s)) — written in shorthand:
-Stocks, Bonds, MF, ETF, $MRK (money market), CD, VA, FA, FIA, RILA, Alts,
+Stocks, Bonds, MF, ETF, $MKT (money market), CD, VA, FA, FIA, RILA, Alts,
 REITs, MNGD (managed money).
 `productName` ("Product Name") is the specific carrier
 product — a Jackson National or F&G contract name, a specific fund, etc.
@@ -291,7 +293,7 @@ explicit one-off migration in `repository.ts` (`splitLegacyIgoNigoStage`,
 fallback — the same pattern as the `LEGACY_*` label tables below, just for
 stage keys instead of free-text field values. Renaming a value already in
 one of the plain string lists (e.g. "Certificate of Deposit" → "CD",
-"Mutual Fund" → "MF") needs the same treatment: `LEGACY_INVESTMENT_TYPE_LABELS`
+"Mutual Fund" → "MF", and "$MRK" → "$MKT") needs the same treatment: `LEGACY_INVESTMENT_TYPE_LABELS`
 renames it both inside a saved Settings list and on any asset's
 `currentInvestmentType` / `investmentType` already set to the old text, and
 `LEGACY_HELD_AT_LABELS` does the same for Held At ("Wells Fargo Advisors" →

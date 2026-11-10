@@ -159,7 +159,7 @@ export const DEFAULT_INVESTMENT_TYPES = [
   'Bonds',
   'MF',
   'ETF',
-  '$MRK',
+  '$MKT',
   'CD',
   'VA',
   'FA',
