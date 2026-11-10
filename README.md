@@ -182,7 +182,13 @@ Step, no activity log). **Save** isn't wired to close the record — every
 field already persists on its own commit, so there's nothing left to save
 by the time you'd click it; it stays a no-op deliberately, so you can keep
 working the same opportunity without it closing out from under you. Only
-the × next to the dollar total (top right) actually closes the record.
+the × next to the dollar total (top right) actually closes the record. **Archive** (right of Save; **Unarchive** on an
+already-archived record) sets `Prospect.archived`: the opportunity leaves
+the board and every sidebar total and the record closes, but nothing is
+deleted. Every archived opportunity lives in the **Archive Vault**, a button
+under Settings that opens a window of cards (newest-archived first, not
+narrowed by Quick View or Search); open one to read it or Unarchive it back
+onto the board.
 
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;

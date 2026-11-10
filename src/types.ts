@@ -326,6 +326,9 @@ export type Prospect = {
    *  this is meant for an early discovery-stage estimate before every
    *  account is itemized. Null when not yet entered. */
   manualTotal: number | null
+  /** Taken off the board and out of every total, but kept — shown in the
+   *  board's Archived strip, where it can be reopened and unarchived. */
+  archived: boolean
   /** One of Settings' stage keys — resolve with `findStage`. */
   stage: Stage
   /** When `stage` last changed — how "days in stage" is measured. */

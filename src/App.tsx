@@ -9,6 +9,7 @@ import { blankAsset, blankProspect } from './features/pipeline/blanks'
 import { PipelineBoard } from './features/pipeline/PipelineBoard'
 import { ProspectDetail } from './features/pipeline/ProspectDetail'
 import { SettingsPanel } from './features/settings/SettingsPanel'
+import { ArchiveVault } from './features/pipeline/ArchiveVault'
 import { fmtMoney, uid } from './lib/dates'
 
 /** What Search By can match against — a fixed set of fields, not a Settings
@@ -53,6 +54,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [vaultOpen, setVaultOpen] = useState(false)
   // Both start as "no filter": sortSelection empty means "All Opportunities";
   // quickViewSelection empty means every account type. Checking any box adds
   // to the set rather than replacing it — see toggleSort/toggleQuickView.
@@ -222,6 +224,7 @@ export default function App() {
       phone: p.phone,
       email: p.email,
       manualTotal: null,
+      archived: false,
       stage: defaultStage,
       stageChangedAt: now,
       assets: [blankAsset(settings.accountTypes[0] ?? '')],
@@ -237,12 +240,23 @@ export default function App() {
     setSelectedId(copy.id)
   }
 
+  // Archiving takes the record off the board and out of every total without
+  // deleting anything; it closes the record since it's no longer on the board
+  // you were looking at. The same button on an archived record restores it.
+  function toggleArchive(id: string) {
+    setProspects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, archived: !p.archived, updatedAt: new Date().toISOString() } : p)),
+    )
+    setSelectedId(null)
+  }
+
   function deleteProspect(id: string) {
     setProspects((prev) => prev.filter((p) => p.id !== id))
     setSelectedId((sel) => (sel === id ? null : sel))
   }
 
-  const openProspects = prospects.filter((p) => !findStage(settings.stages, p.stage).offTrack)
+  const liveProspects = prospects.filter((p) => !p.archived)
+  const openProspects = liveProspects.filter((p) => !findStage(settings.stages, p.stage).offTrack)
   const inPlay = openProspects.reduce((s, p) => s + displayTotal(p), 0)
   // Unlike the sums above and below, this one can't defer to a manual total:
   // it's a partial sum across only the assets currently in a given status,
@@ -252,19 +266,21 @@ export default function App() {
     .flatMap((p) => p.assets)
     .filter((a) => a.status !== 'identified' && a.status !== 'funded')
     .reduce((s, a) => s + (a.amount ?? 0), 0)
-  const funded = prospects.filter((p) => p.stage === 'funded').reduce((s, p) => s + displayTotal(p), 0)
+  const funded = liveProspects.filter((p) => p.stage === 'funded').reduce((s, p) => s + displayTotal(p), 0)
   // NIGO is the only trigger for this today; more conditions can feed into
   // it later without changing what "needs attention" means to the user.
-  const needsAttention = prospects.filter((p) => p.stage === 'nigo').reduce((s, p) => s + displayTotal(p), 0)
+  const needsAttention = liveProspects.filter((p) => p.stage === 'nigo').reduce((s, p) => s + displayTotal(p), 0)
 
   // Quick View narrows the board to opportunities holding any of the checked
   // account types (same list as the record form's Account Type field), on
   // top of whatever the Sort checklist is already doing — a second,
   // independent filter. A household can hold more than one account, so this
   // matches if any of them are one of the checked types, not just the first.
-  const boardProspects = prospects
+  const filteredProspects = prospects
     .filter((p) => quickViewSelection.size === 0 || p.assets.some((a) => quickViewSelection.has(a.kind)))
     .filter((p) => matchesSearch(p, searchQuery, searchFields))
+  const boardProspects = filteredProspects.filter((p) => !p.archived)
+  const archivedProspects = prospects.filter((p) => p.archived)
 
   const sortSummary =
     sortSelection.size === 0
@@ -301,7 +317,7 @@ export default function App() {
   const selected = prospects.find((p) => p.id === selectedId) ?? null
   // "Next" cycles through every other opportunity currently on the same
   // stage as the one that's open — only offered when there's another one.
-  const sameStage = selected ? prospects.filter((p) => p.stage === selected.stage) : []
+  const sameStage = selected ? prospects.filter((p) => p.stage === selected.stage && p.archived === selected.archived) : []
   const goToNext =
     selected && sameStage.length > 1
       ? () => {
@@ -403,7 +419,10 @@ export default function App() {
                 />
               </div>
             </div>
-            <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+              <ActionBtn label="⚙ Settings" color={MUTED} onClick={() => setSettingsOpen(true)} small />
+              <ActionBtn label="Archive Vault" color={MUTED} onClick={() => setVaultOpen(true)} small />
+            </div>
           </div>
 
           <PipelineBoard
@@ -415,6 +434,15 @@ export default function App() {
           />
         </div>
       </div>
+
+      {vaultOpen && (
+        <ArchiveVault
+          archived={archivedProspects}
+          stages={settings.stages}
+          onOpen={(p) => setSelectedId(p.id)}
+          onClose={() => setVaultOpen(false)}
+        />
+      )}
 
       {selected && (
         <ProspectDetail
@@ -431,6 +459,7 @@ export default function App() {
           onClose={() => setSelectedId(null)}
           onNext={goToNext}
           onDuplicate={() => duplicateProspect(selected.id)}
+          onArchive={() => toggleArchive(selected.id)}
         />
       )}
 

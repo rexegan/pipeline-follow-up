@@ -25,7 +25,12 @@ const gridStyle = { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLUMNS
 /** A compact opportunity card — the glanceable state; click opens the full
  *  record. Every card is the same fixed height (not just a minimum) so a row
  *  of them lines up regardless of name length or whether a next step is set. */
-function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; color: string; onOpen: () => void }) {
+/** The board's strict N-per-row grid, for anywhere else that lists cards (the Archive Vault). */
+export function CardGrid({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <div style={{ ...gridStyle, ...style }}>{children}</div>
+}
+
+export function BoardCard({ prospect, color, onOpen }: { prospect: Prospect; color: string; onOpen: () => void }) {
   const total = displayTotal(prospect)
   const overdue = (daysUntil(prospect.nextStepOn) ?? 1) < 0
   const inStage = daysSince(prospect.stageChangedAt)

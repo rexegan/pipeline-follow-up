@@ -68,6 +68,8 @@ type Props = {
   onNext?: () => void
   /** Opens a new record for the same person/contact info, with a blank deal. */
   onDuplicate: () => void
+  /** Archives this record (or, if it's already archived, restores it). */
+  onArchive: () => void
 }
 
 export function ProspectDetail({
@@ -84,6 +86,7 @@ export function ProspectDetail({
   onClose,
   onNext,
   onDuplicate,
+  onArchive,
 }: Props) {
   const total = displayTotal(prospect)
   const stageDef = findStage(settings.stages, prospect.stage)
@@ -383,6 +386,7 @@ export function ProspectDetail({
               closes the record; Save staying open lets you keep working the
               same opportunity without reopening it. */}
           <ActionBtn label="Save" color={SUCCESS} onClick={() => {}} />
+          <ActionBtn label={prospect.archived ? 'Unarchive' : 'Archive'} color={FG} onClick={onArchive} />
         </div>
       </div>
     </Modal>
