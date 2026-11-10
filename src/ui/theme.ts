@@ -31,9 +31,14 @@ export const GRP_META: Record<Group, { color: string; bg: string; label: string;
  * into any field they guess is a login field, which on a dense data grid means
  * almost every cell. These are the attributes each vendor documents for
  * opting a field out; autoComplete="off" alone doesn't stop LastPass.
+ * Also what keeps the browser's own typed-before suggestions off every field.
  */
 export const NO_PASSWORD_MANAGER = {
-  autoComplete: 'off',
+  // Not "off": Chrome ignores autocomplete="off" on fields it recognizes as a
+  // name/address/etc. (from the label or aria-label) and still drops down a
+  // list of everything ever typed into a "Last Name" box. An unrecognized
+  // token isn't ignored, so no suggestion list appears — just type.
+  autoComplete: 'nope',
   'data-lpignore': 'true',
   'data-1p-ignore': 'true',
   'data-bwignore': 'true',

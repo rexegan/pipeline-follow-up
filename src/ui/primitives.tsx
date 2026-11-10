@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CSSProperties, ReactNode, RefObject } from 'react'
 import { BORDER, CARD, FG, MUTED, MUTED_BG, NO_PASSWORD_MANAGER, SANS, SUCCESS } from './theme'
@@ -116,10 +116,13 @@ export function BoxText({
   width?: number
   grow?: boolean
 }) {
+  // A unique, meaningless name: browsers key their "typed before" history on it.
+  const fieldName = useId()
   return (
     <FieldShell label={label} width={width} grow={grow}>
       <input
         type={type}
+        name={fieldName}
         aria-label={label}
         value={value}
         placeholder={placeholder}
@@ -144,10 +147,12 @@ export function BoxPhone({
   onCommit: (value: string) => void
   width?: number
 }) {
+  const fieldName = useId()
   return (
     <FieldShell label={label} width={width}>
       <input
         type="tel"
+        name={fieldName}
         aria-label={label}
         value={value}
         placeholder="(555) 555-0100"
