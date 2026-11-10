@@ -366,7 +366,7 @@ export function ProspectDetail({
           </div>
           <FieldRow last>
             <BoxSelect
-              label="Stage"
+              label="Status"
               width={130}
               value={prospect.stage}
               options={settings.stages.map((s) => ({ value: s.key, label: s.formLabel }))}

@@ -195,7 +195,10 @@ onto the board.
 
 The Pipeline board is one grid of every opportunity, not a column per stage —
 stage is shown per card (the colored left border) rather than by grouping;
-change it from the record's own Stage field, not by dragging a card
+change it from the record's own **Status** box (the Stage & Next Step row; it
+lists every per-account Status choice too — Processed was added to the stage list
+for that, via `ensureProcessedStage`; "Identified" is the same stage as Opportunity
+Uncovered), not by dragging a card
 somewhere. Under **Quick View** (its own row under the date) sit two
 checklist dropdowns (`CheckboxDropdown` in `primitives.tsx`) rather than
 plain single-choice selects — each option gets its own checkbox, so any

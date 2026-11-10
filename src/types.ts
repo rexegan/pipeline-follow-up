@@ -27,6 +27,8 @@ export const DEFAULT_STAGES: StageDef[] = [
   // different outcomes, so two separate stages rather than one combined one.
   { key: 'igo', label: 'IGO', shortLabel: 'IGO', formLabel: 'IGO', color: '#0891b2', offTrack: false },
   { key: 'nigo', label: 'NIGO', shortLabel: 'NIGO', formLabel: 'NIGO', color: '#ea580c', offTrack: false },
+  // Mirrors the per-account Status list, which has a Processed step between signed paperwork and Follow Up.
+  { key: 'processed', label: 'Processed', shortLabel: 'Processed', formLabel: 'Processed', color: '#d97706', offTrack: false },
   { key: 'follow-up-check', label: 'Follow Up', shortLabel: 'Follow Up', formLabel: 'Follow Up', color: '#0f766e', offTrack: false },
   { key: 'funded', label: 'Funded', shortLabel: 'Funded', formLabel: 'Funded', color: '#16a34a', offTrack: false },
   { key: 'issued', label: 'Issued', shortLabel: 'Issued', formLabel: 'Issued', color: '#4d7c0f', offTrack: false },
@@ -467,8 +469,8 @@ export const DEFAULT_SETTINGS: Settings = {
  * What the Pipeline page shows: the normal stage-column board, a flat list
  * of every active opportunity in one order, or every opportunity in one
  * specific stage (including the off-track ones, which the board itself
- * otherwise tucks into a collapsed strip). The last six ids below are stage
- * keys, matched directly against `Prospect.stage` — see `PipelineBoard.tsx`.
+ * otherwise tucks into a collapsed strip). Every id after the first four below is a stage
+ * key, matched directly against `Prospect.stage` — see `PipelineBoard.tsx`.
  */
 export const SORTS = [
   { id: 'all', label: 'All Opportunities' },
@@ -480,6 +482,7 @@ export const SORTS = [
   { id: 'docs-signed', label: 'Signed' },
   { id: 'igo', label: 'IGO' },
   { id: 'nigo', label: 'NIGO' },
+  { id: 'processed', label: 'Processed' },
   { id: 'follow-up-check', label: 'Follow Up' },
   { id: 'funded', label: 'Funded' },
   { id: 'issued', label: 'Issued' },

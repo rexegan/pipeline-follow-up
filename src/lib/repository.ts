@@ -167,6 +167,20 @@ function ensureAwaitingSignaturesStage(stages: StageDef[]): StageDef[] {
   return [...stages.slice(0, i), awaitingSignatures, ...stages.slice(i)]
 }
 
+/**
+ * "Processed" joined the stage list so the record's Status box offers every
+ * choice the per-account Status does. Same stale-array problem as the stages
+ * above: add it once, just ahead of Follow Up, if a saved list lacks it.
+ */
+function ensureProcessedStage(stages: StageDef[]): StageDef[] {
+  if (stages.some((s) => s.key === 'processed')) return stages
+  const processed: StageDef = { key: 'processed', label: 'Processed', shortLabel: 'Processed', formLabel: 'Processed', color: '#d97706', offTrack: false }
+  let i = stages.findIndex((s) => s.key === 'follow-up-check')
+  if (i === -1) i = stages.findIndex((s) => s.offTrack)
+  if (i === -1) return [...stages, processed]
+  return [...stages.slice(0, i), processed, ...stages.slice(i)]
+}
+
 /** An asset's investment type used to be one string; it's now a list (any
  *  number can be checked). Wraps an old single value, applies the legacy
  *  renames to every entry, and drops blanks/duplicates. */
@@ -249,7 +263,7 @@ function normalizeSettings(raw: unknown): Settings {
     : suggestionsRest
 
   return {
-    stages: ensureAwaitingSignaturesStage(ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages)))),
+    stages: ensureProcessedStage(ensureAwaitingSignaturesStage(ensureIssuedStage(ensureFirstMeetingStage(splitLegacyIgoNigoStage(rawStages))))),
     custodiansHeldAt: [
       ...new Set(
         (Array.isArray(v.custodiansHeldAt)
