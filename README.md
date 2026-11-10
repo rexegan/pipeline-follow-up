@@ -197,8 +197,8 @@ onto the board.
 stack the opportunities you want to keep an eye on. It fills red when on, a
 small red flag shows on that opportunity's board card, and a **Flagged** card
 at the very top of the sidebar Summary (above Total Opportunities) counts the
-flagged, non-archived ones (big number) and, to the right of the word Flagged,
-shows their cumulative dollar total; click it to show only those on the board, click it
+flagged, non-archived ones (big number) and, on the same line to its right,
+shows their cumulative dollar total in the same bold red size as the other dollar figures; click it to show only those on the board, click it
 again (or any other Summary card) to go back. Duplicates start unflagged.
 
 The Pipeline board is one grid of every opportunity, not a column per stage —

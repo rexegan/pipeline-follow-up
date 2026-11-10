@@ -359,7 +359,7 @@ export default function App() {
         <StatCard
           label="Flagged"
           value={flaggedCount}
-          labelRight={fmtMoney(flaggedTotal)}
+          valueRight={fmtMoney(flaggedTotal)}
           color={DANGER}
           active={flaggedOnly}
           onClick={() => {
