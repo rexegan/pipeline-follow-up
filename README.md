@@ -89,8 +89,9 @@ the record form under two centered headings — **Current Account**
 **Transition Account** (always singular, however many accounts there
 are), spanning New Account Type, New Custodian, [destination] Investment
 Type, and Product Name. Each account is two lines: the line above, and
-under it Status, Next Action, and **Move to Trade Blotter** (BD or INS — a
-stacked two-line caption), indented one column so they start under Amount.
+under it Status, Next Action, and **Move to Trade Blotter**
+("BD Trade Blotter" or "INS Trade Blotter", stored as `BD`/`INS`; an unset box
+is blank, not a dash; a stacked two-line caption), indented one column so they start under Amount.
 The column captions print once, over the first account's lines. The delete
 × sits at the end of the first line. A **Print**
 button in the record's footer prints just that record, landscape, one line
