@@ -282,7 +282,9 @@ export default function App() {
   const filteredProspects = prospects
     .filter((p) => quickViewSelection.size === 0 || p.assets.some((a) => quickViewSelection.has(a.kind)))
     .filter((p) => matchesSearch(p, searchQuery, searchFields))
-  const flaggedCount = liveProspects.filter((p) => p.flagged).length
+  const flaggedProspects = liveProspects.filter((p) => p.flagged)
+  const flaggedCount = flaggedProspects.length
+  const flaggedTotal = flaggedProspects.reduce((s, p) => s + displayTotal(p), 0)
   const boardProspects = filteredProspects.filter((p) => !p.archived && (!flaggedOnly || p.flagged))
   const archivedProspects = prospects.filter((p) => p.archived)
 
@@ -357,6 +359,7 @@ export default function App() {
         <StatCard
           label="Flagged"
           value={flaggedCount}
+          labelRight={fmtMoney(flaggedTotal)}
           color={DANGER}
           active={flaggedOnly}
           onClick={() => {

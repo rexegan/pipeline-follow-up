@@ -931,6 +931,7 @@ export function StatCard({
   color = FG,
   onClick,
   active,
+  labelRight,
 }: {
   label: string
   value: string | number
@@ -938,6 +939,8 @@ export function StatCard({
   onClick?: () => void
   /** This card's filter is currently applied — outlined in its color. */
   active?: boolean
+  /** Small text on the label's line, right-aligned (e.g. a running dollar total). */
+  labelRight?: string
 }) {
   const Tag = onClick ? 'button' : 'div'
   return (
@@ -957,7 +960,10 @@ export function StatCard({
         marginBottom: 6,
       }}
     >
-      <div style={{ fontSize: 11, color: MUTED, marginBottom: 2 }}>{label}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6, fontSize: 11, color: MUTED, marginBottom: 2 }}>
+        <span>{label}</span>
+        {labelRight !== undefined && <span style={{ fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{labelRight}</span>}
+      </div>
       <div style={{ fontSize: 18, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </Tag>
   )
