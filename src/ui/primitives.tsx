@@ -192,7 +192,7 @@ export function BoxSelect<T extends string>({
   const [active, setActive] = useState(-1)
   const pos = useDropdownPosition(open, ref)
   const selectedIndex = options.findIndex((o) => o.value === value)
-  const currentLabel = options.find((o) => o.value === value)?.label || '—'
+  const currentLabel = options.find((o) => o.value === value)?.label ?? ''
 
   useEffect(() => {
     if (!open) return
@@ -301,7 +301,7 @@ export function BoxSelect<T extends string>({
                 className="combo-option"
                 style={{ padding: '6px 10px', fontSize: 13, color: FG, cursor: 'pointer', background: i === active ? MUTED_BG : undefined }}
               >
-                {o.label || '—'}
+                {o.label || <span style={{ color: MUTED }}>None</span>}
               </div>
             ))}
           </div>,

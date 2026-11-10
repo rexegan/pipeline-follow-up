@@ -222,8 +222,8 @@ export type AssetBlotterTarget = (typeof ASSET_BLOTTER_TARGETS)[number]
 
 export const ASSET_BLOTTER_TARGET_LABELS: Record<AssetBlotterTarget, string> = {
   '': '',
-  BD: 'BD',
-  INS: 'INS',
+  BD: 'BD Trade Blotter',
+  INS: 'INS Trade Blotter',
 }
 
 export type Asset = {

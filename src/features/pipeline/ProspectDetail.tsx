@@ -309,7 +309,7 @@ export function ProspectDetail({
               />
               <BoxSelect
                 label={'Move to\nTrade Blotter'}
-                width={100}
+                width={140}
                 hideLabel={i > 0}
                 centerLabel
                 value={asset.moveToBlotter}
